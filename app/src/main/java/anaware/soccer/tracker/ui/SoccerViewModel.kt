@@ -2,12 +2,10 @@ package anaware.soccer.tracker.ui
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import anaware.soccer.tracker.backup.FirebaseService
 import anaware.soccer.tracker.data.ActionType
 import anaware.soccer.tracker.data.SoccerAction
-import anaware.soccer.tracker.data.SoccerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,9 +16,9 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel for managing soccer action data and UI state.
- * Handles business logic and coordinates between UI and repository.
+ * Uses Firebase Firestore for cloud-first data storage.
  */
-class SoccerViewModel(private val repository: SoccerRepository) : ViewModel() {
+class SoccerViewModel : ViewModel() {
 
     // All actions from Firebase (manually managed)
     private val _allActions = MutableStateFlow<List<SoccerAction>>(emptyList())
@@ -366,15 +364,3 @@ data class UiState(
     val message: String? = null
 )
 
-/**
- * Factory for creating SoccerViewModel instances with repository dependency.
- */
-class SoccerViewModelFactory(private val repository: SoccerRepository) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SoccerViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return SoccerViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}

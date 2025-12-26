@@ -3,7 +3,6 @@ package anaware.soccer.tracker.ui
 import android.content.Context
 import anaware.soccer.tracker.data.ActionType
 import anaware.soccer.tracker.data.SoccerAction
-import anaware.soccer.tracker.data.SoccerRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -21,13 +20,11 @@ import java.time.LocalDateTime
  *
  * Note: These tests verify the ViewModel's business logic and state management.
  * Firebase operations are not tested here and should be tested separately.
- * The ViewModel now uses Firebase directly instead of Repository, but Repository
- * is still required by the constructor for backward compatibility.
+ * The ViewModel now uses Firebase directly for all data operations.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SoccerViewModelTest {
 
-    private lateinit var repository: SoccerRepository
     private lateinit var viewModel: SoccerViewModel
     private lateinit var mockContext: Context
     private val testDispatcher = StandardTestDispatcher()
@@ -35,16 +32,9 @@ class SoccerViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        repository = mock()
         mockContext = mock()
 
-        // Setup default repository behavior (though not used in current architecture)
-        whenever(repository.allActions).thenReturn(flowOf(emptyList()))
-        whenever(repository.chartActions).thenReturn(flowOf(emptyList()))
-        whenever(repository.totalActionCount).thenReturn(flowOf(0))
-        whenever(repository.distinctOpponents).thenReturn(flowOf(emptyList()))
-
-        viewModel = SoccerViewModel(repository)
+        viewModel = SoccerViewModel()
     }
 
     @After
@@ -65,8 +55,8 @@ class SoccerViewModelTest {
         viewModel.addAction(actionCount, actionType, isMatch, opponent, context = null)
         advanceUntilIdle()
 
-        // Verify no repository interaction (old architecture no longer used)
-        verifyNoInteractions(repository)
+        // Method should execute without error even without context
+        assertNotNull(viewModel)
     }
 
     @Test
@@ -83,8 +73,8 @@ class SoccerViewModelTest {
         viewModel.addAction(actionCount, actionType, isMatch, dateTime, opponent, context = null)
         advanceUntilIdle()
 
-        // Verify no repository interaction (old architecture no longer used)
-        verifyNoInteractions(repository)
+        // Method should execute without error even without context
+        assertNotNull(viewModel)
     }
 
     @Test
@@ -114,9 +104,6 @@ class SoccerViewModelTest {
         // We don't actually call it as it requires Firebase initialization
         assertNotNull(action)
         assertNotNull(mockContext)
-
-        // Verify no repository interaction (old architecture no longer used)
-        verifyNoInteractions(repository)
     }
 
     @Test
@@ -199,7 +186,7 @@ class SoccerViewModelTest {
     @Test
     fun `distinctOpponents returns empty list initially`() = runTest {
         // distinctOpponents now comes from Flow.map on in-memory data
-        val newViewModel = SoccerViewModel(repository)
+        val newViewModel = SoccerViewModel()
 
         // Wait for StateFlow to initialize
         advanceUntilIdle()
@@ -215,8 +202,8 @@ class SoccerViewModelTest {
         viewModel.addAction(0, ActionType.GOAL, true, "Team A", context = null)
         advanceUntilIdle()
 
-        // No repository interaction (new architecture)
-        verifyNoInteractions(repository)
+        // Method should execute without error
+        assertNotNull(viewModel)
     }
 
     @Test
@@ -225,8 +212,8 @@ class SoccerViewModelTest {
         viewModel.addAction(5, ActionType.GOAL, true, "", context = null)
         advanceUntilIdle()
 
-        // No repository interaction (new architecture)
-        verifyNoInteractions(repository)
+        // Method should execute without error
+        assertNotNull(viewModel)
     }
 
     @Test

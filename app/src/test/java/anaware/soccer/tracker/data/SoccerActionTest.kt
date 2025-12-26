@@ -11,10 +11,13 @@ import java.time.format.DateTimeFormatter
 class SoccerActionTest {
 
     @Test
-    fun `create with current time returns valid SoccerAction`() {
-        val action = SoccerAction.create(
+    fun `constructor with current time returns valid SoccerAction`() {
+        val now = LocalDateTime.now()
+        val action = SoccerAction(
+            id = 1,
+            dateTime = now.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
             actionCount = 5,
-            actionType = ActionType.GOAL,
+            actionType = ActionType.GOAL.name,
             isMatch = true,
             opponent = "Team A"
         )
@@ -27,13 +30,14 @@ class SoccerActionTest {
     }
 
     @Test
-    fun `create with custom datetime returns valid SoccerAction`() {
+    fun `constructor with custom datetime returns valid SoccerAction`() {
         val customDateTime = LocalDateTime.of(2025, 12, 19, 14, 30)
-        val action = SoccerAction.create(
+        val action = SoccerAction(
+            id = 2,
+            dateTime = customDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
             actionCount = 3,
-            actionType = ActionType.ASSIST,
+            actionType = ActionType.ASSIST.name,
             isMatch = false,
-            dateTime = customDateTime,
             opponent = "Team B"
         )
 
@@ -48,10 +52,12 @@ class SoccerActionTest {
     }
 
     @Test
-    fun `create with empty opponent is valid`() {
-        val action = SoccerAction.create(
+    fun `constructor with empty opponent is valid`() {
+        val action = SoccerAction(
+            id = 3,
+            dateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
             actionCount = 2,
-            actionType = ActionType.OFFENSIVE_ACTION,
+            actionType = ActionType.OFFENSIVE_ACTION.name,
             isMatch = false,
             opponent = ""
         )
@@ -60,10 +66,12 @@ class SoccerActionTest {
     }
 
     @Test
-    fun `create with zero actions is valid`() {
-        val action = SoccerAction.create(
+    fun `constructor with zero actions is valid`() {
+        val action = SoccerAction(
+            id = 4,
+            dateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
             actionCount = 0,
-            actionType = ActionType.GOAL,
+            actionType = ActionType.GOAL.name,
             isMatch = true,
             opponent = "Team C"
         )

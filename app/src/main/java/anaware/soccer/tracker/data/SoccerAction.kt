@@ -1,20 +1,16 @@
 package anaware.soccer.tracker.data
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Entity representing a soccer action entry.
+ * Data class representing a soccer action entry.
  * Tracks offensive actions during matches or training sessions.
  */
-@Entity(tableName = "soccer_actions")
 data class SoccerAction(
-    @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
-    val dateTime: String, // Stored as ISO-8601 string for Room compatibility
+    val dateTime: String, // Stored as ISO-8601 string
 
     val actionCount: Int,
 
@@ -55,45 +51,5 @@ data class SoccerAction(
     fun getFormattedTime(): String {
         val dateTime = getLocalDateTime()
         return dateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-    }
-
-    companion object {
-        /**
-         * Creates a SoccerAction with the current date/time.
-         */
-        fun create(
-            actionCount: Int,
-            actionType: ActionType,
-            isMatch: Boolean,
-            opponent: String = ""
-        ): SoccerAction {
-            val now = LocalDateTime.now()
-            return SoccerAction(
-                dateTime = now.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-                actionCount = actionCount,
-                actionType = actionType.name,
-                isMatch = isMatch,
-                opponent = opponent
-            )
-        }
-
-        /**
-         * Creates a SoccerAction with a custom date/time.
-         */
-        fun create(
-            actionCount: Int,
-            actionType: ActionType,
-            isMatch: Boolean,
-            dateTime: LocalDateTime,
-            opponent: String = ""
-        ): SoccerAction {
-            return SoccerAction(
-                dateTime = dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-                actionCount = actionCount,
-                actionType = actionType.name,
-                isMatch = isMatch,
-                opponent = opponent
-            )
-        }
     }
 }

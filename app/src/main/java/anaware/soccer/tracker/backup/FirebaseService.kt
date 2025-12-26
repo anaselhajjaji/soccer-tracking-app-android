@@ -5,9 +5,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import anaware.soccer.tracker.data.BackupData
 import anaware.soccer.tracker.data.SoccerAction
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -23,15 +20,8 @@ class FirebaseService(private val context: Context) {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
-    private val json = Json {
-        prettyPrint = true
-        encodeDefaults = true  // Include fields with default values (e.g., version)
-    }
-
     companion object {
         private const val COLLECTION_USERS = "users"
-        private const val COLLECTION_BACKUPS = "backups"
-        private const val DOCUMENT_LATEST = "latest"
         const val RC_SIGN_IN = 9001
 
         /**
@@ -213,37 +203,4 @@ class FirebaseService(private val context: Context) {
         }
     }
 
-    /**
-     * Listen to real-time updates of soccer actions from Firestore.
-     */
-    fun listenToActions(onUpdate: (List<SoccerAction>) -> Unit, onError: (Exception) -> Unit) {
-        val userId = auth.currentUser?.uid
-        if (userId == null) {
-            onError(Exception("User not signed in"))
-            return
-        }
-
-        firestore.collection(COLLECTION_USERS)
-            .document(userId)
-            .collection("actions")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    onError(error)
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null) {
-                    val actions = snapshot.documents.mapNotNull { doc ->
-                        try {
-                            val backupAction = doc.toObject(anaware.soccer.tracker.data.BackupAction::class.java)
-                            val id = doc.id.toLongOrNull() ?: return@mapNotNull null
-                            backupAction?.toSoccerAction(id)
-                        } catch (e: Exception) {
-                            null
-                        }
-                    }
-                    onUpdate(actions)
-                }
-            }
-    }
 }
