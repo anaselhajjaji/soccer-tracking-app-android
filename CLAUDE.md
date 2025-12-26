@@ -66,7 +66,8 @@ The user requested an Android app with the following features:
 - **Android Best Practice**: Recommended by Google for Android apps
 
 **Implementation**:
-- **Model**: Room entities (unused for now), Firebase models
+
+- **Model**: Data classes and Firebase models
 - **View**: Jetpack Compose screens
 - **ViewModel**: State management with StateFlow and Firebase integration
 
@@ -260,29 +261,22 @@ ExposedDropdownMenuBox(
 
 **Key Learning**: Separate filtering logic from component state management
 
-#### Issue 3: Room Method Naming Collision
+#### Issue 3: Method Naming for Property Conversions
 
-**Problem**: Room annotation processor creates getters that conflict with custom methods
+**Pattern**: When data classes have properties that need type conversion methods
 
-**Example Conflict**:
+**Example**:
 ```kotlin
 data class SoccerAction(
-    val actionType: String,    // Room generates getActionType()
+    val actionType: String,    // Stored as string
 ) {
-    fun getActionType(): ActionType {  // CONFLICT!
+    fun getActionTypeEnum(): ActionType {
         return ActionType.valueOf(actionType)
     }
 }
 ```
 
-**Solution**: Use different method name
-```kotlin
-fun getActionTypeEnum(): ActionType {  // No conflict
-    return ActionType.valueOf(actionType)
-}
-```
-
-**Lesson**: Avoid method names that match field getters in Room entities
+**Best Practice**: Use descriptive method names like `getActionTypeEnum()` instead of generic names that might conflict with auto-generated getters
 
 ## Code Quality & Best Practices
 
@@ -416,7 +410,7 @@ val actions by viewModel.allActions.collectAsState()
 - Pagination with Firestore's `startAfter()` and `limit()`
 - Date range filtering with `where()` queries
 - Real-time listeners for live updates
-- Local caching with Room for offline mode
+- Local caching for offline mode support
 
 ### Memory Management
 
@@ -498,13 +492,11 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
 // Root build.gradle.kts
 AGP: 8.3.0
 Kotlin: 1.9.22
-KSP: 1.9.22-1.0.17
 Gradle Wrapper: 8.5
 
 // app/build.gradle.kts
 Compose BOM: 2023.10.01
 Compose Compiler: 1.5.8
-Room: 2.6.1 (unused, kept for potential offline mode)
 kotlinx-serialization: 1.6.2
 Firebase BOM: Latest
 ```
@@ -535,11 +527,6 @@ implementation("com.patrykandpatrick.vico:compose:1.13.1")
 implementation("com.patrykandpatrick.vico:compose-m3:1.13.1")
 implementation("com.patrykandpatrick.vico:core:1.13.1")
 
-// Room (unused, kept for potential offline mode)
-implementation("androidx.room:room-runtime:2.6.1")
-implementation("androidx.room:room-ktx:2.6.1")
-ksp("androidx.room:room-compiler:2.6.1")
-
 // Desugaring (for LocalDateTime on API 24+)
 coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 ```
@@ -551,9 +538,9 @@ coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 1. **Firestore Deserialization**: Requires no-arg constructors (all parameters need defaults)
 2. **Boolean Field Naming**: Firestore stores without "is" prefix (`match` not `isMatch`)
 3. **ExposedDropdownMenuBox**: Separate filtering logic from component state
-4. **Room Method Naming**: Avoid names that conflict with generated getters
-5. **StateFlow Optimization**: Use `remember` with dependencies in Compose
-6. **Context Passing**: Pass from Composable to ViewModel, don't hold in ViewModel
+4. **StateFlow Optimization**: Use `remember` with dependencies in Compose
+5. **Context Passing**: Pass from Composable to ViewModel, don't hold in ViewModel
+6. **Code Cleanup**: Remove unused dependencies and code regularly to reduce APK size
 
 ### Development Process
 
@@ -583,7 +570,8 @@ coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 ### Potential Next Steps
 
 **High Priority**:
-1. **Offline Mode**: Use Room as local cache, sync when online
+
+1. **Offline Mode**: Add local caching for offline support
 2. **Data Export**: CSV export for coach sharing
 3. **Multi-Player**: Track multiple children
 4. **Real-Time Sync**: Use Firestore real-time listeners

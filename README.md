@@ -78,10 +78,7 @@ app/src/main/java/anaware/soccer/tracker/
 ├── data/
 │   ├── ActionType.kt           # Enum for action types
 │   ├── BackupData.kt           # Firestore data models
-│   ├── SoccerAction.kt         # Entity model for soccer actions
-│   ├── SoccerActionDao.kt      # Database access object (Room, unused)
-│   ├── SoccerDatabase.kt       # Room database (unused)
-│   └── SoccerRepository.kt     # Data repository layer (unused)
+│   └── SoccerAction.kt         # Data model for soccer actions
 ├── ui/
 │   ├── AddActionScreen.kt      # Screen for adding new entries
 │   ├── BackupScreen.kt         # Account and sync status UI
@@ -275,7 +272,6 @@ Data flows:
 - **Optimistic Updates**: Local state updated immediately, then synced to cloud
 - **Reactive Streams**: Kotlin Flow for automatic UI updates
 - **State Management**: MutableStateFlow for in-memory data management
-- **Dependency Injection**: Manual DI through ViewModelFactory
 - **Single Activity**: Navigation Compose for screen management
 
 ## Security Considerations
