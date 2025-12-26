@@ -5,6 +5,7 @@ An Android app for tracking your son's offensive actions during soccer matches a
 ## Features
 
 ### Core Tracking
+
 - **Record Actions**: Log offensive actions with action type specification:
   - Goals
   - Assists
@@ -16,6 +17,7 @@ An Android app for tracking your son's offensive actions during soccer matches a
 - **Increment Controls**: Easy +/- buttons for quick data entry
 
 ### Data Visualization
+
 - **History View**: See all recorded entries with full details including:
   - Date and time
   - Action count with type badges
@@ -36,6 +38,7 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Statistics card showing total actions, session count, and averages
 
 ### Data Management
+
 - **Individual Deletion**: Delete specific entries if mistakes are made
 - **Firebase Cloud Storage**: Direct cloud storage with automatic sync
   - Firebase Authentication with Google Sign-In (required)
@@ -46,6 +49,7 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Real-time data loading on app startup
 
 ### Technical Features
+
 - **Cloud-First Storage**: All data stored directly in Firebase Firestore
 - **Modern UI**: Built with Jetpack Compose and Material Design 3
 - **Responsive Design**: Soccer-themed color scheme with smooth animations
@@ -102,8 +106,9 @@ app/src/main/java/anaware/soccer/tracker/
 ### Steps to Build
 
 1. **Open the project in Android Studio**:
+
    ```bash
-   cd tracking-app-android
+   cd soccer-tracking-app-android
    # Open this directory in Android Studio
    ```
 
@@ -210,13 +215,13 @@ Data is stored in Firebase Firestore with the following structure:
         - dateTime: "2025-12-19T10:00:00"
         - actionCount: 5
         - actionType: "GOAL"
-        - isMatch: true
+        - match: true
         - opponent: "Team A"
       /{timestamp2}
         - dateTime: "2025-12-19T14:30:00"
         - actionCount: 2
         - actionType: "ASSIST"
-        - isMatch: false
+        - match: false
         - opponent: ""
 ```
 
@@ -256,6 +261,7 @@ The app follows MVVM (Model-View-ViewModel) architecture with cloud-first storag
 - **Services**: [FirebaseService.kt](app/src/main/java/anaware/soccer/tracker/backup/FirebaseService.kt) handles all Firestore operations
 
 Data flows:
+
 1. User interacts with Compose UI
 2. UI calls ViewModel methods with Context
 3. ViewModel calls FirebaseService for CRUD operations
@@ -309,51 +315,50 @@ Per organizational coding standards:
 ### Build Issues
 
 **Problem**: `File google-services.json is missing`
+
 **Solution**: Download `google-services.json` from Firebase Console and place it in the `app/` directory. See [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for detailed instructions.
 
 **Problem**: Build fails after adding Firebase
+
 **Solution**: Ensure you've added the Google Services plugin to both root and app `build.gradle.kts` files
 
 ### Runtime Issues
 
 **Problem**: Google Sign-In fails
+
 **Solution**: Ensure device has Google Play Services installed and updated. Verify SHA-1 certificate is added to Firebase project.
 
 **Problem**: Data not syncing
+
 **Solution**: Check internet connectivity, ensure user is signed in, and verify Firestore is enabled in Firebase Console
 
 **Problem**: "Permission denied" errors
+
 **Solution**: Check Firestore security rules are configured correctly to allow user access to their own data
 
 **Problem**: Chart not showing data
+
 **Solution**: Ensure you've added at least one entry and selected appropriate filters
 
 **Problem**: Data not loading on startup
+
 **Solution**: Check that auto sign-in is working. Go to Account tab to verify sign-in status.
 
 ## Future Enhancements
 
-Completed features:
-
-- ✅ Action type tracking (Goal, Assist, Offensive Action)
-- ✅ Advanced chart filtering (action type + session + opponent)
-- ✅ Direct Firebase Firestore storage with automatic sync
-- ✅ Automatic sign-in and data loading on startup
-- ✅ Session type filtering
-- ✅ Opponent tracking with autocomplete
-- ✅ Custom date/time selection
-- ✅ Zero action entries for participation tracking
-
 Potential future features:
 
+- Offline mode with local caching
 - Export data to CSV/Excel
 - Multiple players support
+- Real-time sync with Firestore listeners
 - Statistical insights and trend analysis
 - Share progress charts as images
 - Set goals and track progress towards them
 - Notification reminders to log sessions
 - Dark mode toggle
 - Head-to-head statistics per opponent
+- Photo attachments for entries
 
 ## License
 
@@ -367,13 +372,20 @@ For issues or questions:
 - Refer to Android documentation for platform features
 - See [CLAUDE.md](CLAUDE.md) for development notes and AI assistance context
 
-## Version History
+## Version
 
-- **v1.0** - Initial release with basic tracking
-- **v2.0** - Added action types, advanced filtering, and Google Drive backup
-- **v2.1** - Custom date/time picker, zero action support, package rename
-- **v2.2** - Opponent tracking with autocomplete, opponent-based chart filtering
-- **v2.2.1** - Fixed opponent autocomplete text field (improved filtering and editing)
-- **v3.0** - Direct Firebase Firestore storage with automatic sign-in and sync
-- **v3.0.1** - Fixed Firestore deserialization (data loading on app restart)
-- **v3.1** - Added comprehensive filters to History screen for quick data search
+**v1.0** - Initial Release (December 2025)
+
+### Features
+
+- Action tracking with specific types (Goals, Assists, Offensive Actions)
+- Session type differentiation (Match/Training)
+- Opponent tracking with autocomplete
+- Custom date/time selection
+- Zero action entries for participation tracking
+- Advanced history filters (action type, session type, opponent)
+- Progress charts with triple filtering
+- Firebase Firestore cloud storage
+- Automatic Google Sign-In
+- Cross-device synchronization
+- Individual entry deletion
