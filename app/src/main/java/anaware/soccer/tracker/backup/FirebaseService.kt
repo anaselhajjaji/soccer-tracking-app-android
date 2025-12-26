@@ -1,0 +1,249 @@
+package anaware.soccer.tracker.backup
+
+import android.content.Context
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import anaware.soccer.tracker.data.BackupData
+import anaware.soccer.tracker.data.SoccerAction
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+/**
+ * Service for handling Firebase Authentication and Firestore backup/restore operations.
+ * Data is scoped per authenticated user.
+ */
+class FirebaseService(private val context: Context) {
+
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    private val json = Json {
+        prettyPrint = true
+        encodeDefaults = true  // Include fields with default values (e.g., version)
+    }
+
+    companion object {
+        private const val COLLECTION_USERS = "users"
+        private const val COLLECTION_BACKUPS = "backups"
+        private const val DOCUMENT_LATEST = "latest"
+        const val RC_SIGN_IN = 9001
+
+        /**
+         * Generate a unique ID for a new action based on timestamp.
+         */
+        fun generateActionId(): Long {
+            return System.currentTimeMillis()
+        }
+    }
+
+    /**
+     * Get the currently signed-in user's email.
+     */
+    fun getCurrentUserEmail(): String? {
+        return auth.currentUser?.email
+    }
+
+    /**
+     * Check if a user is currently signed in.
+     */
+    fun isUserSignedIn(): Boolean {
+        return auth.currentUser != null
+    }
+
+    /**
+     * Get Google Sign-In options configured for Firebase.
+     * Note: Requires default_web_client_id from google-services.json
+     */
+    fun getGoogleSignInOptions(): GoogleSignInOptions {
+        // Get the web client ID from the google-services.json generated resources
+        val webClientId = context.resources.getIdentifier(
+            "default_web_client_id",
+            "string",
+            context.packageName
+        )
+        return GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(if (webClientId != 0) context.getString(webClientId) else throw IllegalStateException("default_web_client_id not found - ensure google-services.json is configured"))
+            .requestEmail()
+            .build()
+    }
+
+    /**
+     * Sign in to Firebase with Google credentials.
+     */
+    suspend fun signInWithGoogle(idToken: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val result = auth.signInWithCredential(credential).await()
+            val email = result.user?.email ?: return@withContext Result.failure(
+                Exception("Failed to get user email")
+            )
+            Result.success(email)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Attempt silent sign-in with Google (no UI).
+     * Returns the last signed-in account if available.
+     */
+    suspend fun silentSignIn(): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            // Check if already signed in to Firebase
+            val currentUser = auth.currentUser
+            if (currentUser != null) {
+                return@withContext Result.success(currentUser.email ?: "Unknown")
+            }
+
+            // Try to get last signed-in Google account
+            val googleSignInClient = GoogleSignIn.getClient(context, getGoogleSignInOptions())
+            val account = googleSignInClient.silentSignIn().await()
+            val idToken = account?.idToken
+
+            if (idToken != null) {
+                // Sign in to Firebase with the token
+                return@withContext signInWithGoogle(idToken)
+            } else {
+                Result.failure(Exception("No cached sign-in available"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Sign out the current user.
+     */
+    suspend fun signOut() = withContext(Dispatchers.IO) {
+        try {
+            // Sign out from Firebase
+            auth.signOut()
+
+            // Sign out from Google Sign-In
+            val googleSignInClient = GoogleSignIn.getClient(context, getGoogleSignInOptions())
+            googleSignInClient.signOut().await()
+        } catch (e: Exception) {
+            // Ignore sign-out errors
+        }
+    }
+
+    /**
+     * Add a new soccer action to Firestore.
+     * Data is stored at: users/{userId}/actions/{actionId}
+     */
+    suspend fun addAction(action: SoccerAction): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            // Convert to BackupAction format for storage
+            val backupAction = anaware.soccer.tracker.data.BackupAction.fromSoccerAction(action)
+
+            // Store in Firestore at users/{userId}/actions/{actionId}
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("actions")
+                .document(action.id.toString())
+                .set(backupAction)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Delete a soccer action from Firestore.
+     */
+    suspend fun deleteAction(actionId: Long): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("actions")
+                .document(actionId.toString())
+                .delete()
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get all soccer actions from Firestore for the current user.
+     */
+    suspend fun getAllActions(): Result<List<SoccerAction>> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val snapshot = firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("actions")
+                .get()
+                .await()
+
+            val actions = snapshot.documents.mapNotNull { doc ->
+                try {
+                    val backupAction = doc.toObject(anaware.soccer.tracker.data.BackupAction::class.java)
+                    val id = doc.id.toLongOrNull() ?: return@mapNotNull null
+                    backupAction?.toSoccerAction(id)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            Result.success(actions)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Listen to real-time updates of soccer actions from Firestore.
+     */
+    fun listenToActions(onUpdate: (List<SoccerAction>) -> Unit, onError: (Exception) -> Unit) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            onError(Exception("User not signed in"))
+            return
+        }
+
+        firestore.collection(COLLECTION_USERS)
+            .document(userId)
+            .collection("actions")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    onError(error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val actions = snapshot.documents.mapNotNull { doc ->
+                        try {
+                            val backupAction = doc.toObject(anaware.soccer.tracker.data.BackupAction::class.java)
+                            val id = doc.id.toLongOrNull() ?: return@mapNotNull null
+                            backupAction?.toSoccerAction(id)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                    onUpdate(actions)
+                }
+            }
+    }
+}
