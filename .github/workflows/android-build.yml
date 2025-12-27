@@ -7,7 +7,7 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,11 +33,21 @@ jobs:
     - name: Run lint checks
       run: ./gradlew lintDebug
 
+    - name: Build debug and test APKs
+      run: ./gradlew assembleDebugAndroidTest
+
     - name: Upload debug APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
         path: app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 7
+
+    - name: Upload test APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug-androidTest
+        path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
         retention-days: 7
 
     - name: Upload lint report
@@ -47,3 +57,41 @@ jobs:
         name: lint-report
         path: app/build/reports/lint-results-debug.html
         retention-days: 7
+
+  firebase-test-lab:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download debug APK
+      uses: actions/download-artifact@v4
+      with:
+        name: app-debug
+
+    - name: Download test APK
+      uses: actions/download-artifact@v4
+      with:
+        name: app-debug-androidTest
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Run UI tests on Firebase Test Lab
+      run: |
+        gcloud firebase test android run \
+          --type instrumentation \
+          --app app-debug.apk \
+          --test app-debug-androidTest.apk \
+          --device model=Pixel2,version=30,locale=en,orientation=portrait \
+          --timeout 10m \
+          --no-record-video \
+          --no-performance-metrics

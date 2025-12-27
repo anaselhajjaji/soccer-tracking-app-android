@@ -144,27 +144,61 @@ The CI workflow automatically runs on:
 - Push to `main` or `master` branches
 - Pull requests to `main` or `master` branches
 
-**Workflow steps:**
+**Workflow jobs:**
+
+#### Job 1: Build and Test
 
 1. **Build**: Compiles debug APK with `./gradlew assembleDebug`
-2. **Test**: Runs all unit tests with `./gradlew test`
+2. **Unit Tests**: Runs all unit tests with `./gradlew test` (55 tests)
 3. **Lint**: Performs code quality checks with `./gradlew lintDebug`
-4. **Artifacts**: Uploads debug APK and lint reports (retained for 7 days)
+4. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
+5. **Artifacts**: Uploads debug APK, test APK, and lint reports (7-day retention)
 
-### Workflow Configuration
+#### Job 2: Firebase Test Lab (Push to main/master only)
 
-See [`.github/workflows/android-build.yml`](.github/workflows/android-build.yml) for the complete workflow definition.
+1. **Download APKs**: Retrieves debug and test APKs from previous job
+2. **Authenticate**: Connects to Google Cloud using service account
+3. **Run UI Tests**: Executes instrumentation tests on Firebase Test Lab physical devices
+4. **Upload Results**: Stores test results with 30-day retention
 
-**Requirements:**
+### Firebase Test Lab Setup
 
-- JDK 17 (Temurin distribution)
-- Gradle wrapper with execute permissions
-- Ubuntu latest runner
+UI tests run automatically on Firebase Test Lab when pushing to `main` or `master` branches.
+
+**Setup required:**
+
+- Google Cloud service account with Firebase Test Lab Admin role
+- GitHub secret: `GOOGLE_CLOUD_CREDENTIALS` (JSON service account key)
+- **No billing required** - uses Firebase's default storage
+- See [FIREBASE_TEST_LAB_SETUP.md](FIREBASE_TEST_LAB_SETUP.md) for detailed setup instructions
+
+**Test configuration:**
+
+- **Device:** Pixel 2, Android 11 (API 30)
+- **Tests:** 9 UI tests covering navigation, input controls, and screen interactions
+- **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
+
+### Running Tests Locally
+
+```bash
+# Run unit tests
+./gradlew test
+
+# Run UI tests on connected device/emulator
+./gradlew connectedAndroidTest
+
+# Run UI tests on Firebase Test Lab (requires gcloud CLI)
+./gradlew assembleDebug assembleDebugAndroidTest
+gcloud firebase test android run \
+  --app app/build/outputs/apk/debug/app-debug.apk \
+  --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+```
 
 ### Viewing Results
 
 - Check the "Actions" tab in GitHub to see workflow runs
-- Download artifacts (APK, lint reports) from completed workflow runs
+- Download artifacts (APKs, test results, lint reports) from completed workflow runs
+- View detailed test reports in Firebase Console → Test Lab
 - Build status badge: Add to README if desired
 
 ## Using the App

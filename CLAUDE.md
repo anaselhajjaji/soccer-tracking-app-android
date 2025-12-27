@@ -475,13 +475,26 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
    - Authentication flow
    - Data synchronization
 
-3. **UI Tests**:
+3. **UI Tests** (Implemented):
    - Compose UI interactions
-   - Navigation flows
-   - Filter combinations
-   - Input validation
+   - Navigation flows (between all 4 tabs)
+   - Action count increment/decrement
+   - Action type and session type selection
+   - Filter button existence
+   - Screen element verification
 
-**Why Not Implemented**: Time constraints for personal project, manual testing sufficient for single user
+**Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/SoccerTrackerAppTest.kt`
+
+**Test Count**: 9 UI tests covering:
+
+- App launch and navigation bar
+- Tab switching (Add, History, Progress, Account)
+- Add screen form fields
+- Counter controls (+/- buttons)
+- Action type selection (Goal, Assist, Offensive Action)
+- Session type toggle (Match/Training)
+- History screen empty state
+- Progress chart filter chips
 
 ## Build Configuration
 
@@ -544,22 +557,39 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 - Push to `main` or `master` branches
 - Pull requests targeting `main` or `master`
 
-**Pipeline Steps**:
+**Pipeline Jobs**:
+
+#### Job 1: build-and-test (runs on all pushes and PRs)
 
 1. **Checkout**: Uses `actions/checkout@v4` to fetch repository code
 2. **Java Setup**: Configures JDK 17 (Temurin) with Gradle caching via `actions/setup-java@v4`
 3. **Permissions**: Grants execute permission to `gradlew` wrapper
 4. **Build**: Compiles debug APK with `./gradlew assembleDebug`
-5. **Test**: Runs all unit tests with `./gradlew test` (55 tests across 6 files)
+5. **Unit Tests**: Runs all unit tests with `./gradlew test` (55 tests across 6 files)
 6. **Lint**: Performs static code analysis with `./gradlew lintDebug`
-7. **Artifacts**: Uploads debug APK and lint HTML report (7-day retention)
+7. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
+8. **Artifacts**: Uploads debug APK, test APK, and lint HTML report (7-day retention)
+
+#### Job 2: firebase-test-lab (runs only on push to main/master)
+
+1. **Download APKs**: Retrieves debug and test APKs from previous job
+2. **Authenticate**: Uses Google Cloud service account via `google-github-actions/auth@v2`
+3. **Setup gcloud**: Configures Google Cloud SDK via `google-github-actions/setup-gcloud@v2`
+4. **Run UI Tests**: Executes 9 instrumentation tests on Firebase Test Lab
+   - Device: Pixel 2, Android 11 (API 30)
+   - Timeout: 10 minutes
+   - Results stored in Cloud Storage bucket
+5. **Download Results**: Retrieves test results from Cloud Storage
+6. **Upload Artifacts**: Uploads Firebase test results (30-day retention)
 
 **Benefits**:
 
 - ✅ Automatic build verification on every push/PR
-- ✅ Test suite execution ensures code quality
+- ✅ Unit test suite execution ensures code quality (55 tests)
+- ✅ UI test suite validates user interactions (9 tests)
 - ✅ Lint checks catch potential issues early
-- ✅ Debug APK available for download from workflow runs
+- ✅ Real device testing via Firebase Test Lab
+- ✅ APKs and test results available for download
 - ✅ Consistent build environment (Ubuntu latest, JDK 17)
 
 **Why No Firebase Configuration Required**:
@@ -572,6 +602,40 @@ The CI pipeline runs successfully without `google-services.json` because:
 - Runtime Firebase operations only fail when app is executed, not during build
 
 This allows public repositories to build without exposing Firebase credentials.
+
+### Firebase Test Lab Setup
+
+**Requirements for CI Integration**:
+
+1. **Google Cloud Project**: Enable Cloud Testing API in Firebase project
+2. **Service Account**: Create with Firebase Test Lab Admin role
+3. **GitHub Secret**:
+   - `GOOGLE_CLOUD_CREDENTIALS`: JSON key from service account
+4. **No billing required**: Uses Firebase's default storage for test results
+
+**Setup Documentation**: See [FIREBASE_TEST_LAB_SETUP.md](FIREBASE_TEST_LAB_SETUP.md) for complete setup instructions
+
+**Test Configuration**:
+
+- **Default Device**: Pixel 2, Android 11 (API 30), portrait orientation
+- **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/`
+- **Test Count**: 9 UI tests
+- **Timeout**: 10 minutes per test run
+- **Cost Optimization**: Video recording and performance metrics disabled
+
+**Local Testing**:
+
+```bash
+# Run UI tests on connected device/emulator
+./gradlew connectedAndroidTest
+
+# Run on Firebase Test Lab (requires gcloud CLI setup)
+./gradlew assembleDebug assembleDebugAndroidTest
+gcloud firebase test android run \
+  --app app/build/outputs/apk/debug/app-debug.apk \
+  --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+  --device model=Pixel2,version=30
+```
 
 ## Lessons Learned
 
