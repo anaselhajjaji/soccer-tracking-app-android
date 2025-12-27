@@ -145,7 +145,7 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("Total Actions").assertExists()
 
         // Check if filter button exists
-        composeTestRule.onNodeWithContentDescription("Filter entries").assertExists()
+        composeTestRule.onNodeWithContentDescription("Filter").assertExists()
     }
 
     @Test
@@ -157,9 +157,9 @@ class SoccerTrackerAppTest {
         // Should show title and filter chips
         composeTestRule.onNodeWithText("Progress Chart").assertExists()
 
-        // Check for action type filter chips
-        composeTestRule.onNodeWithText("Goals").assertExists()
-        composeTestRule.onNodeWithText("Assists").assertExists()
-        composeTestRule.onNodeWithText("Offensive Actions").assertExists()
+        // Check for action type filter chips (singular forms)
+        composeTestRule.onNodeWithText("Goal").assertExists()
+        composeTestRule.onNodeWithText("Assist").assertExists()
+        composeTestRule.onNodeWithText("Offensive Action").assertExists()
     }
 }
