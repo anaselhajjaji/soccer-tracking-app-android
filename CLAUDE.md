@@ -586,6 +586,36 @@ The project uses GitHub Actions for automated CI/CD pipeline.
    - Test orchestrator enabled
    - Video recording and performance metrics disabled for cost optimization
 
+#### Job 3: create-release (runs only on push to main/master, after all tests pass)
+
+**Depends on**: `firebase-test-lab` job must pass first
+
+**Steps**:
+
+1. **Download APK**: Retrieves debug APK from previous job artifacts
+2. **Generate Tag**: Creates unique release tag using format `v1.0-build-{run_number}`
+   - Example: `v1.0-build-42` for the 42nd GitHub Actions run
+3. **Create Release**: Uses `softprops/action-gh-release@v1` to publish GitHub release
+
+**Release Contents**:
+
+- **APK Attachment**: `app-debug.apk` ready for installation
+- **Release Notes**: Auto-generated with:
+  - Build number and commit SHA
+  - Branch name
+  - Commit message
+  - Test results summary (55 unit tests + 9 UI tests)
+  - Installation instructions
+- **Tag**: Unique version tag for each successful build
+- **Status**: Published as a full release (not draft or prerelease)
+
+**Accessing Releases**:
+
+- Navigate to repository → "Releases" section (right sidebar)
+- Each successful push to main/master creates a new release
+- Download APK directly from release page
+- View complete build and test information
+
 **Benefits**:
 
 - ✅ Automatic build verification on every push/PR
@@ -593,6 +623,7 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 - ✅ UI test suite validates user interactions (9 tests)
 - ✅ Lint checks catch potential issues early
 - ✅ Virtual device testing via Firebase Test Lab (free tier)
+- ✅ Automatic GitHub releases with APK after all tests pass
 - ✅ APKs and test results available for download
 - ✅ Consistent build environment (Ubuntu latest, JDK 17)
 - ✅ No billing required - uses Firebase's default storage

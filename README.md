@@ -158,8 +158,22 @@ The CI workflow automatically runs on:
 
 1. **Download APKs**: Retrieves debug and test APKs from previous job
 2. **Authenticate**: Connects to Google Cloud using service account
-3. **Run UI Tests**: Executes instrumentation tests on Firebase Test Lab physical devices
-4. **Upload Results**: Stores test results with 30-day retention
+3. **Run UI Tests**: Executes instrumentation tests on Firebase Test Lab virtual devices
+
+#### Job 3: Create Release (Push to main/master only, after tests pass)
+
+1. **Download APK**: Retrieves debug APK from previous job
+2. **Generate Tag**: Creates unique release tag (e.g., `v1.0-build-42`)
+3. **Create Release**: Publishes GitHub release with APK attachment and release notes
+
+**Release includes**:
+
+- Debug APK ready for installation
+- Build number and commit information
+- Test results summary
+- Installation instructions
+
+**Access releases**: Go to repository → "Releases" section on the right sidebar
 
 ### Firebase Test Lab Setup
 
