@@ -94,6 +94,9 @@ jobs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
+    - name: Set GCloud project
+      run: gcloud config set project soccer-tracker-fa049
+
     - name: Run UI tests on Firebase Test Lab
       run: |
         gcloud firebase test android run \
@@ -104,4 +107,5 @@ jobs:
           --timeout 10m \
           --use-orchestrator \
           --no-record-video \
-          --no-performance-metrics
+          --no-performance-metrics \
+          --project soccer-tracker-fa049
