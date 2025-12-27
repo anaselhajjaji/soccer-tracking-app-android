@@ -572,7 +572,11 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 9. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
 10. **Artifacts**: Uploads debug APK, test APK, and lint HTML report (7-day retention)
 
-#### Job 2: firebase-test-lab (runs only on push to main/master, temporarily enabled for PRs)
+#### Job 2: firebase-test-lab (runs only on push to main/master)
+
+**Trigger**: Only executes on push events to `main` or `master` branches (not on PRs)
+
+**Steps**:
 
 1. **Download APKs**: Retrieves debug and test APKs from previous job
 2. **Authenticate**: Uses Google Cloud service account via `google-github-actions/auth@v2`
@@ -589,6 +593,10 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 #### Job 3: create-release (runs only on push to main/master, after all tests pass)
 
 **Depends on**: `firebase-test-lab` job must pass first
+
+**Trigger**: Only executes on push events to `main` or `master` branches (not on PRs)
+
+**Permissions**: Requires `contents: write` permission to create releases and tags
 
 **Steps**:
 
