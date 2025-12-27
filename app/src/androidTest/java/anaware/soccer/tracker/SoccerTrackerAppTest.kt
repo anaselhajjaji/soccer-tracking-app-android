@@ -38,14 +38,14 @@ class SoccerTrackerAppTest {
         // Navigate to History
         composeTestRule.onNodeWithText("History").performClick()
         composeTestRule.waitForIdle()
-        // History screen should show "Soccer Action History" title
-        composeTestRule.onNodeWithText("Soccer Action History").assertExists()
+        // History screen should show "Total Actions" header
+        composeTestRule.onNodeWithText("Total Actions").assertExists()
 
         // Navigate to Progress
         composeTestRule.onNodeWithText("Progress").performClick()
         composeTestRule.waitForIdle()
         // Progress screen should show chart title
-        composeTestRule.onNodeWithText("Performance Over Time").assertExists()
+        composeTestRule.onNodeWithText("Progress Chart").assertExists()
 
         // Navigate to Account
         composeTestRule.onNodeWithText("Account").performClick()
@@ -56,17 +56,17 @@ class SoccerTrackerAppTest {
         // Navigate back to Add
         composeTestRule.onNodeWithText("Add").performClick()
         composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithText("Track Offensive Action").assertExists()
+        composeTestRule.onNodeWithText("Record Offensive Actions").assertExists()
     }
 
     @Test
     fun add_screen_shows_all_required_fields() {
         // Verify Add screen has all input fields
-        composeTestRule.onNodeWithText("Track Offensive Action").assertExists()
+        composeTestRule.onNodeWithText("Record Offensive Actions").assertExists()
 
         // Check for action count controls
-        composeTestRule.onNodeWithContentDescription("Decrease action count").assertExists()
-        composeTestRule.onNodeWithContentDescription("Increase action count").assertExists()
+        composeTestRule.onNodeWithContentDescription("Decrease count").assertExists()
+        composeTestRule.onNodeWithContentDescription("Increase count").assertExists()
 
         // Check for action type buttons
         composeTestRule.onNodeWithText("Goal").assertExists()
@@ -87,22 +87,22 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("0").assertExists()
 
         // Click increment button
-        composeTestRule.onNodeWithContentDescription("Increase action count").performClick()
+        composeTestRule.onNodeWithContentDescription("Increase count").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("1").assertExists()
 
         // Click increment again
-        composeTestRule.onNodeWithContentDescription("Increase action count").performClick()
+        composeTestRule.onNodeWithContentDescription("Increase count").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("2").assertExists()
 
         // Click decrement button
-        composeTestRule.onNodeWithContentDescription("Decrease action count").performClick()
+        composeTestRule.onNodeWithContentDescription("Decrease count").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("1").assertExists()
 
         // Click decrement to zero
-        composeTestRule.onNodeWithContentDescription("Decrease action count").performClick()
+        composeTestRule.onNodeWithContentDescription("Decrease count").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("0").assertExists()
     }
@@ -141,8 +141,8 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("History").performClick()
         composeTestRule.waitForIdle()
 
-        // Should show either empty state or list of entries
-        composeTestRule.onNodeWithText("Soccer Action History").assertExists()
+        // Should show header with Total Actions
+        composeTestRule.onNodeWithText("Total Actions").assertExists()
 
         // Check if filter button exists
         composeTestRule.onNodeWithContentDescription("Filter entries").assertExists()
@@ -155,7 +155,7 @@ class SoccerTrackerAppTest {
         composeTestRule.waitForIdle()
 
         // Should show title and filter chips
-        composeTestRule.onNodeWithText("Performance Over Time").assertExists()
+        composeTestRule.onNodeWithText("Progress Chart").assertExists()
 
         // Check for action type filter chips
         composeTestRule.onNodeWithText("Goals").assertExists()

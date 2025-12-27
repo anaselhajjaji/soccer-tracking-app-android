@@ -167,14 +167,14 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
 
 **Setup required:**
 
-- Google Cloud service account with Firebase Test Lab Admin role
-- GitHub secret: `GOOGLE_CLOUD_CREDENTIALS` (JSON service account key)
+- Google Cloud service account with Firebase Test Lab Admin and Storage Admin roles
+- GitHub secrets: `GOOGLE_CLOUD_CREDENTIALS`, `GOOGLE_SERVICES_JSON`, `DEBUG_KEYSTORE`
 - **No billing required** - uses Firebase's default storage
 - See [FIREBASE_TEST_LAB_SETUP.md](FIREBASE_TEST_LAB_SETUP.md) for detailed setup instructions
 
 **Test configuration:**
 
-- **Device:** Pixel 2, Android 11 (API 30)
+- **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
 - **Tests:** 9 UI tests covering navigation, input controls, and screen interactions
 - **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
 

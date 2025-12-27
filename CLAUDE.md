@@ -564,23 +564,27 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 1. **Checkout**: Uses `actions/checkout@v4` to fetch repository code
 2. **Java Setup**: Configures JDK 17 (Temurin) with Gradle caching via `actions/setup-java@v4`
 3. **Permissions**: Grants execute permission to `gradlew` wrapper
-4. **Build**: Compiles debug APK with `./gradlew assembleDebug`
-5. **Unit Tests**: Runs all unit tests with `./gradlew test` (55 tests across 6 files)
-6. **Lint**: Performs static code analysis with `./gradlew lintDebug`
-7. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
-8. **Artifacts**: Uploads debug APK, test APK, and lint HTML report (7-day retention)
+4. **Firebase Config**: Creates `google-services.json` from `GOOGLE_SERVICES_JSON` secret
+5. **Debug Keystore**: Creates debug keystore from base64-encoded `DEBUG_KEYSTORE` secret
+6. **Build**: Compiles debug APK with `./gradlew assembleDebug`
+7. **Unit Tests**: Runs all unit tests with `./gradlew test` (55 tests across 6 files)
+8. **Lint**: Performs static code analysis with `./gradlew lintDebug`
+9. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
+10. **Artifacts**: Uploads debug APK, test APK, and lint HTML report (7-day retention)
 
-#### Job 2: firebase-test-lab (runs only on push to main/master)
+#### Job 2: firebase-test-lab (runs only on push to main/master, temporarily enabled for PRs)
 
 1. **Download APKs**: Retrieves debug and test APKs from previous job
 2. **Authenticate**: Uses Google Cloud service account via `google-github-actions/auth@v2`
 3. **Setup gcloud**: Configures Google Cloud SDK via `google-github-actions/setup-gcloud@v2`
-4. **Run UI Tests**: Executes 9 instrumentation tests on Firebase Test Lab
-   - Device: Pixel 2, Android 11 (API 30)
+4. **Set Project**: Sets GCloud project to `soccer-tracker-fa049`
+5. **Run UI Tests**: Executes 9 instrumentation tests on Firebase Test Lab
+   - Device: MediumPhone.arm (virtual device, free tier)
+   - Android Version: 30 (Android 11)
+   - Locale: en, Orientation: portrait
    - Timeout: 10 minutes
-   - Results stored in Cloud Storage bucket
-5. **Download Results**: Retrieves test results from Cloud Storage
-6. **Upload Artifacts**: Uploads Firebase test results (30-day retention)
+   - Test orchestrator enabled
+   - Video recording and performance metrics disabled for cost optimization
 
 **Benefits**:
 
@@ -588,40 +592,53 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 - ✅ Unit test suite execution ensures code quality (55 tests)
 - ✅ UI test suite validates user interactions (9 tests)
 - ✅ Lint checks catch potential issues early
-- ✅ Real device testing via Firebase Test Lab
+- ✅ Virtual device testing via Firebase Test Lab (free tier)
 - ✅ APKs and test results available for download
 - ✅ Consistent build environment (Ubuntu latest, JDK 17)
+- ✅ No billing required - uses Firebase's default storage
 
-**Why No Firebase Configuration Required**:
+**Security**:
 
-The CI pipeline runs successfully without `google-services.json` because:
+All sensitive data stored as GitHub secrets:
 
-- Build process doesn't require Firebase credentials at compile time
-- Firebase plugin generates stub resources when file is missing
-- Unit tests mock Firebase dependencies
-- Runtime Firebase operations only fail when app is executed, not during build
-
-This allows public repositories to build without exposing Firebase credentials.
+- `GOOGLE_CLOUD_CREDENTIALS`: Service account JSON key (Firebase Test Lab Admin + Storage Admin roles)
+- `GOOGLE_SERVICES_JSON`: Firebase configuration file
+- `DEBUG_KEYSTORE`: Base64-encoded debug signing key
 
 ### Firebase Test Lab Setup
 
 **Requirements for CI Integration**:
 
-1. **Google Cloud Project**: Enable Cloud Testing API in Firebase project
-2. **Service Account**: Create with Firebase Test Lab Admin role
-3. **GitHub Secret**:
+1. **Google Cloud Project**: Enable Cloud Testing API and Cloud Tool Results API in Firebase project
+2. **Service Account**: Create with Firebase Test Lab Admin and Storage Admin roles
+3. **GitHub Secrets**:
    - `GOOGLE_CLOUD_CREDENTIALS`: JSON key from service account
+   - `GOOGLE_SERVICES_JSON`: Firebase configuration file
+   - `DEBUG_KEYSTORE`: Base64-encoded debug signing key
 4. **No billing required**: Uses Firebase's default storage for test results
 
 **Setup Documentation**: See [FIREBASE_TEST_LAB_SETUP.md](FIREBASE_TEST_LAB_SETUP.md) for complete setup instructions
 
 **Test Configuration**:
 
-- **Default Device**: Pixel 2, Android 11 (API 30), portrait orientation
+- **Device**: MediumPhone.arm (virtual device, free tier)
+- **Android Version**: 30 (Android 11)
+- **Locale**: en, Orientation: portrait
 - **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/`
-- **Test Count**: 9 UI tests
+- **Test Count**: 9 UI tests covering navigation, input controls, and screen interactions
 - **Timeout**: 10 minutes per test run
-- **Cost Optimization**: Video recording and performance metrics disabled
+- **Cost Optimization**: Test orchestrator enabled, video recording and performance metrics disabled
+
+**UI Tests** (`SoccerTrackerAppTest.kt`):
+
+1. `app_launches_successfully` - Verifies bottom navigation appears
+2. `navigation_switches_between_tabs` - Tests navigation between all 4 tabs
+3. `add_screen_shows_all_required_fields` - Checks Add screen UI elements
+4. `action_count_increment_decrement_works` - Tests counter buttons
+5. `action_type_selection_works` - Tests action type selection
+6. `session_type_toggle_works` - Tests Match/Training toggle
+7. `history_screen_shows_empty_state_or_entries` - Verifies History screen
+8. `progress_screen_requires_action_type_selection` - Checks Progress screen UI
 
 **Local Testing**:
 
@@ -634,7 +651,7 @@ This allows public repositories to build without exposing Firebase credentials.
 gcloud firebase test android run \
   --app app/build/outputs/apk/debug/app-debug.apk \
   --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
-  --device model=Pixel2,version=30
+  --device model=MediumPhone.arm,version=30
 ```
 
 ## Lessons Learned
