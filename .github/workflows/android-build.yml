@@ -92,7 +92,8 @@ jobs:
           --type instrumentation \
           --app app-debug.apk \
           --test app-debug-androidTest.apk \
-          --device model=Pixel2,version=30,locale=en,orientation=portrait \
+          --device model=MediumPhone.arm,version=30,locale=en,orientation=portrait \
           --timeout 10m \
+          --use-orchestrator \
           --no-record-video \
           --no-performance-metrics
