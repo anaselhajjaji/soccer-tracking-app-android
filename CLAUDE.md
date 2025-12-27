@@ -531,6 +531,48 @@ implementation("com.patrykandpatrick.vico:core:1.13.1")
 coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 ```
 
+## Continuous Integration
+
+### GitHub Actions Workflow
+
+The project uses GitHub Actions for automated CI/CD pipeline.
+
+**Workflow File**: [`.github/workflows/android-build.yml`](.github/workflows/android-build.yml)
+
+**Triggers**:
+
+- Push to `main` or `master` branches
+- Pull requests targeting `main` or `master`
+
+**Pipeline Steps**:
+
+1. **Checkout**: Uses `actions/checkout@v4` to fetch repository code
+2. **Java Setup**: Configures JDK 17 (Temurin) with Gradle caching via `actions/setup-java@v4`
+3. **Permissions**: Grants execute permission to `gradlew` wrapper
+4. **Build**: Compiles debug APK with `./gradlew assembleDebug`
+5. **Test**: Runs all unit tests with `./gradlew test` (55 tests across 6 files)
+6. **Lint**: Performs static code analysis with `./gradlew lintDebug`
+7. **Artifacts**: Uploads debug APK and lint HTML report (7-day retention)
+
+**Benefits**:
+
+- ✅ Automatic build verification on every push/PR
+- ✅ Test suite execution ensures code quality
+- ✅ Lint checks catch potential issues early
+- ✅ Debug APK available for download from workflow runs
+- ✅ Consistent build environment (Ubuntu latest, JDK 17)
+
+**Why No Firebase Configuration Required**:
+
+The CI pipeline runs successfully without `google-services.json` because:
+
+- Build process doesn't require Firebase credentials at compile time
+- Firebase plugin generates stub resources when file is missing
+- Unit tests mock Firebase dependencies
+- Runtime Firebase operations only fail when app is executed, not during build
+
+This allows public repositories to build without exposing Firebase credentials.
+
 ## Lessons Learned
 
 ### Technical Insights

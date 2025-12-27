@@ -133,6 +133,40 @@ app/src/main/java/anaware/soccer/tracker/
 ./gradlew test
 ```
 
+## Continuous Integration
+
+This project uses GitHub Actions for automated build, test, and quality checks.
+
+### CI Pipeline
+
+The CI workflow automatically runs on:
+
+- Push to `main` or `master` branches
+- Pull requests to `main` or `master` branches
+
+**Workflow steps:**
+
+1. **Build**: Compiles debug APK with `./gradlew assembleDebug`
+2. **Test**: Runs all unit tests with `./gradlew test`
+3. **Lint**: Performs code quality checks with `./gradlew lintDebug`
+4. **Artifacts**: Uploads debug APK and lint reports (retained for 7 days)
+
+### Workflow Configuration
+
+See [`.github/workflows/android-build.yml`](.github/workflows/android-build.yml) for the complete workflow definition.
+
+**Requirements:**
+
+- JDK 17 (Temurin distribution)
+- Gradle wrapper with execute permissions
+- Ubuntu latest runner
+
+### Viewing Results
+
+- Check the "Actions" tab in GitHub to see workflow runs
+- Download artifacts (APK, lint reports) from completed workflow runs
+- Build status badge: Add to README if desired
+
 ## Using the App
 
 ### Adding an Entry
