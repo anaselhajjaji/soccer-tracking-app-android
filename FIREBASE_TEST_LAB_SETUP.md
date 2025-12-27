@@ -39,9 +39,10 @@ You need to enable two APIs in Google Cloud Console:
 
 ### Assign Roles
 
-Add the following role to the service account:
+Add the following roles to the service account:
 
 - **Firebase Test Lab Admin** - Allows running tests
+- **Storage Object Admin** - Allows uploading test APKs and storing results
 
 Click **Continue** → **Done**
 
