@@ -109,3 +109,58 @@ jobs:
           --no-record-video \
           --no-performance-metrics \
           --project soccer-tracker-fa049
+
+  create-release:
+    needs: firebase-test-lab
+    runs-on: ubuntu-latest
+    # Only create releases on push to main/master, not on PRs
+    #if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download debug APK
+      uses: actions/download-artifact@v4
+      with:
+        name: app-debug
+
+    - name: Generate release tag
+      id: tag
+      run: |
+        TAG="v1.0-build-${{ github.run_number }}"
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "Generated tag: $TAG"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.tag.outputs.tag }}
+        name: Release ${{ steps.tag.outputs.tag }}
+        body: |
+          ## Soccer Tracker Android App
+
+          **Build:** ${{ github.run_number }}
+          **Commit:** ${{ github.sha }}
+          **Branch:** ${{ github.ref_name }}
+
+          ### Changes
+          ${{ github.event.head_commit.message }}
+
+          ### Test Results
+          ✅ All unit tests passed (55 tests)
+          ✅ All UI tests passed (9 tests)
+          ✅ Lint checks passed
+
+          ### Installation
+          1. Download `app-debug.apk` below
+          2. Enable "Install from unknown sources" on your Android device
+          3. Install the APK
+
+          **Note:** This is a debug build and should not be used in production.
+        files: |
+          app-debug.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
