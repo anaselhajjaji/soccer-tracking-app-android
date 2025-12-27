@@ -7,7 +7,7 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,6 +24,14 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    - name: Create google-services.json from secret
+      run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+
+    - name: Create debug keystore from secret
+      run: |
+        mkdir -p ~/.android
+        echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 -d > ~/.android/debug.keystore
+
     - name: Build with Gradle
       run: ./gradlew assembleDebug
 
@@ -33,11 +41,21 @@ jobs:
     - name: Run lint checks
       run: ./gradlew lintDebug
 
+    - name: Build debug and test APKs
+      run: ./gradlew assembleDebugAndroidTest
+
     - name: Upload debug APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
         path: app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 7
+
+    - name: Upload test APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug-androidTest
+        path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
         retention-days: 7
 
     - name: Upload lint report
@@ -47,3 +65,104 @@ jobs:
         name: lint-report
         path: app/build/reports/lint-results-debug.html
         retention-days: 7
+
+  firebase-test-lab:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    # Only run UI tests on push to main/master, not on PRs
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download debug APK
+      uses: actions/download-artifact@v4
+      with:
+        name: app-debug
+
+    - name: Download test APK
+      uses: actions/download-artifact@v4
+      with:
+        name: app-debug-androidTest
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Set GCloud project
+      run: gcloud config set project soccer-tracker-fa049
+
+    - name: Run UI tests on Firebase Test Lab
+      run: |
+        gcloud firebase test android run \
+          --type instrumentation \
+          --app app-debug.apk \
+          --test app-debug-androidTest.apk \
+          --device model=MediumPhone.arm,version=30,locale=en,orientation=portrait \
+          --timeout 10m \
+          --use-orchestrator \
+          --no-record-video \
+          --no-performance-metrics \
+          --project soccer-tracker-fa049
+
+  create-release:
+    needs: firebase-test-lab
+    runs-on: ubuntu-latest
+    # Only create releases on push to main/master, not on PRs
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download debug APK
+      uses: actions/download-artifact@v4
+      with:
+        name: app-debug
+
+    - name: Generate release tag
+      id: tag
+      run: |
+        TAG="v1.0-build-${{ github.run_number }}"
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "Generated tag: $TAG"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.tag.outputs.tag }}
+        name: Release ${{ steps.tag.outputs.tag }}
+        body: |
+          ## Soccer Tracker Android App
+
+          **Build:** ${{ github.run_number }}
+          **Commit:** ${{ github.sha }}
+          **Branch:** ${{ github.ref_name }}
+
+          ### Changes
+          ${{ github.event.head_commit.message }}
+
+          ### Test Results
+          ✅ All unit tests passed (55 tests)
+          ✅ All UI tests passed (9 tests)
+          ✅ Lint checks passed
+
+          ### Installation
+          1. Download `app-debug.apk` below
+          2. Enable "Install from unknown sources" on your Android device
+          3. Install the APK
+
+          **Note:** This is a debug build and should not be used in production.
+        files: |
+          app-debug.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

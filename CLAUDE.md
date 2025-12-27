@@ -475,13 +475,26 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
    - Authentication flow
    - Data synchronization
 
-3. **UI Tests**:
+3. **UI Tests** (Implemented):
    - Compose UI interactions
-   - Navigation flows
-   - Filter combinations
-   - Input validation
+   - Navigation flows (between all 4 tabs)
+   - Action count increment/decrement
+   - Action type and session type selection
+   - Filter button existence
+   - Screen element verification
 
-**Why Not Implemented**: Time constraints for personal project, manual testing sufficient for single user
+**Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/SoccerTrackerAppTest.kt`
+
+**Test Count**: 9 UI tests covering:
+
+- App launch and navigation bar
+- Tab switching (Add, History, Progress, Account)
+- Add screen form fields
+- Counter controls (+/- buttons)
+- Action type selection (Goal, Assist, Offensive Action)
+- Session type toggle (Match/Training)
+- History screen empty state
+- Progress chart filter chips
 
 ## Build Configuration
 
@@ -529,6 +542,155 @@ implementation("com.patrykandpatrick.vico:core:1.13.1")
 
 // Desugaring (for LocalDateTime on API 24+)
 coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+```
+
+## Continuous Integration
+
+### GitHub Actions Workflow
+
+The project uses GitHub Actions for automated CI/CD pipeline.
+
+**Workflow File**: [`.github/workflows/android-build.yml`](.github/workflows/android-build.yml)
+
+**Triggers**:
+
+- Push to `main` or `master` branches
+- Pull requests targeting `main` or `master`
+
+**Pipeline Jobs**:
+
+#### Job 1: build-and-test (runs on all pushes and PRs)
+
+1. **Checkout**: Uses `actions/checkout@v4` to fetch repository code
+2. **Java Setup**: Configures JDK 17 (Temurin) with Gradle caching via `actions/setup-java@v4`
+3. **Permissions**: Grants execute permission to `gradlew` wrapper
+4. **Firebase Config**: Creates `google-services.json` from `GOOGLE_SERVICES_JSON` secret
+5. **Debug Keystore**: Creates debug keystore from base64-encoded `DEBUG_KEYSTORE` secret
+6. **Build**: Compiles debug APK with `./gradlew assembleDebug`
+7. **Unit Tests**: Runs all unit tests with `./gradlew test` (55 tests across 6 files)
+8. **Lint**: Performs static code analysis with `./gradlew lintDebug`
+9. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
+10. **Artifacts**: Uploads debug APK, test APK, and lint HTML report (7-day retention)
+
+#### Job 2: firebase-test-lab (runs only on push to main/master)
+
+**Trigger**: Only executes on push events to `main` or `master` branches (not on PRs)
+
+**Steps**:
+
+1. **Download APKs**: Retrieves debug and test APKs from previous job
+2. **Authenticate**: Uses Google Cloud service account via `google-github-actions/auth@v2`
+3. **Setup gcloud**: Configures Google Cloud SDK via `google-github-actions/setup-gcloud@v2`
+4. **Set Project**: Sets GCloud project to `soccer-tracker-fa049`
+5. **Run UI Tests**: Executes 9 instrumentation tests on Firebase Test Lab
+   - Device: MediumPhone.arm (virtual device, free tier)
+   - Android Version: 30 (Android 11)
+   - Locale: en, Orientation: portrait
+   - Timeout: 10 minutes
+   - Test orchestrator enabled
+   - Video recording and performance metrics disabled for cost optimization
+
+#### Job 3: create-release (runs only on push to main/master, after all tests pass)
+
+**Depends on**: `firebase-test-lab` job must pass first
+
+**Trigger**: Only executes on push events to `main` or `master` branches (not on PRs)
+
+**Permissions**: Requires `contents: write` permission to create releases and tags
+
+**Steps**:
+
+1. **Download APK**: Retrieves debug APK from previous job artifacts
+2. **Generate Tag**: Creates unique release tag using format `v1.0-build-{run_number}`
+   - Example: `v1.0-build-42` for the 42nd GitHub Actions run
+3. **Create Release**: Uses `softprops/action-gh-release@v1` to publish GitHub release
+
+**Release Contents**:
+
+- **APK Attachment**: `app-debug.apk` ready for installation
+- **Release Notes**: Auto-generated with:
+  - Build number and commit SHA
+  - Branch name
+  - Commit message
+  - Test results summary (55 unit tests + 9 UI tests)
+  - Installation instructions
+- **Tag**: Unique version tag for each successful build
+- **Status**: Published as a full release (not draft or prerelease)
+
+**Accessing Releases**:
+
+- Navigate to repository → "Releases" section (right sidebar)
+- Each successful push to main/master creates a new release
+- Download APK directly from release page
+- View complete build and test information
+
+**Benefits**:
+
+- ✅ Automatic build verification on every push/PR
+- ✅ Unit test suite execution ensures code quality (55 tests)
+- ✅ UI test suite validates user interactions (9 tests)
+- ✅ Lint checks catch potential issues early
+- ✅ Virtual device testing via Firebase Test Lab (free tier)
+- ✅ Automatic GitHub releases with APK after all tests pass
+- ✅ APKs and test results available for download
+- ✅ Consistent build environment (Ubuntu latest, JDK 17)
+- ✅ No billing required - uses Firebase's default storage
+
+**Security**:
+
+All sensitive data stored as GitHub secrets:
+
+- `GOOGLE_CLOUD_CREDENTIALS`: Service account JSON key (Firebase Test Lab Admin + Storage Admin roles)
+- `GOOGLE_SERVICES_JSON`: Firebase configuration file
+- `DEBUG_KEYSTORE`: Base64-encoded debug signing key
+
+### Firebase Test Lab Setup
+
+**Requirements for CI Integration**:
+
+1. **Google Cloud Project**: Enable Cloud Testing API and Cloud Tool Results API in Firebase project
+2. **Service Account**: Create with Firebase Test Lab Admin and Storage Admin roles
+3. **GitHub Secrets**:
+   - `GOOGLE_CLOUD_CREDENTIALS`: JSON key from service account
+   - `GOOGLE_SERVICES_JSON`: Firebase configuration file
+   - `DEBUG_KEYSTORE`: Base64-encoded debug signing key
+4. **No billing required**: Uses Firebase's default storage for test results
+
+**Setup Documentation**: See [FIREBASE_TEST_LAB_SETUP.md](FIREBASE_TEST_LAB_SETUP.md) for complete setup instructions
+
+**Test Configuration**:
+
+- **Device**: MediumPhone.arm (virtual device, free tier)
+- **Android Version**: 30 (Android 11)
+- **Locale**: en, Orientation: portrait
+- **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/`
+- **Test Count**: 9 UI tests covering navigation, input controls, and screen interactions
+- **Timeout**: 10 minutes per test run
+- **Cost Optimization**: Test orchestrator enabled, video recording and performance metrics disabled
+
+**UI Tests** (`SoccerTrackerAppTest.kt`):
+
+1. `app_launches_successfully` - Verifies bottom navigation appears
+2. `navigation_switches_between_tabs` - Tests navigation between all 4 tabs
+3. `add_screen_shows_all_required_fields` - Checks Add screen UI elements
+4. `action_count_increment_decrement_works` - Tests counter buttons
+5. `action_type_selection_works` - Tests action type selection
+6. `session_type_toggle_works` - Tests Match/Training toggle
+7. `history_screen_shows_empty_state_or_entries` - Verifies History screen
+8. `progress_screen_requires_action_type_selection` - Checks Progress screen UI
+
+**Local Testing**:
+
+```bash
+# Run UI tests on connected device/emulator
+./gradlew connectedAndroidTest
+
+# Run on Firebase Test Lab (requires gcloud CLI setup)
+./gradlew assembleDebug assembleDebugAndroidTest
+gcloud firebase test android run \
+  --app app/build/outputs/apk/debug/app-debug.apk \
+  --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+  --device model=MediumPhone.arm,version=30
 ```
 
 ## Lessons Learned

@@ -133,6 +133,88 @@ app/src/main/java/anaware/soccer/tracker/
 ./gradlew test
 ```
 
+## Continuous Integration
+
+This project uses GitHub Actions for automated build, test, and quality checks.
+
+### CI Pipeline
+
+The CI workflow automatically runs on:
+
+- Push to `main` or `master` branches
+- Pull requests to `main` or `master` branches
+
+**Workflow jobs:**
+
+#### Job 1: Build and Test
+
+1. **Build**: Compiles debug APK with `./gradlew assembleDebug`
+2. **Unit Tests**: Runs all unit tests with `./gradlew test` (55 tests)
+3. **Lint**: Performs code quality checks with `./gradlew lintDebug`
+4. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
+5. **Artifacts**: Uploads debug APK, test APK, and lint reports (7-day retention)
+
+#### Job 2: Firebase Test Lab (Push to main/master only)
+
+1. **Download APKs**: Retrieves debug and test APKs from previous job
+2. **Authenticate**: Connects to Google Cloud using service account
+3. **Run UI Tests**: Executes instrumentation tests on Firebase Test Lab virtual devices
+
+#### Job 3: Create Release (Push to main/master only, after tests pass)
+
+1. **Download APK**: Retrieves debug APK from previous job
+2. **Generate Tag**: Creates unique release tag (e.g., `v1.0-build-42`)
+3. **Create Release**: Publishes GitHub release with APK attachment and release notes
+
+**Release includes**:
+
+- Debug APK ready for installation
+- Build number and commit information
+- Test results summary
+- Installation instructions
+
+**Access releases**: Go to repository → "Releases" section on the right sidebar
+
+### Firebase Test Lab Setup
+
+UI tests run automatically on Firebase Test Lab when pushing to `main` or `master` branches.
+
+**Setup required:**
+
+- Google Cloud service account with Firebase Test Lab Admin and Storage Admin roles
+- GitHub secrets: `GOOGLE_CLOUD_CREDENTIALS`, `GOOGLE_SERVICES_JSON`, `DEBUG_KEYSTORE`
+- **No billing required** - uses Firebase's default storage
+- See [FIREBASE_TEST_LAB_SETUP.md](FIREBASE_TEST_LAB_SETUP.md) for detailed setup instructions
+
+**Test configuration:**
+
+- **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
+- **Tests:** 9 UI tests covering navigation, input controls, and screen interactions
+- **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
+
+### Running Tests Locally
+
+```bash
+# Run unit tests
+./gradlew test
+
+# Run UI tests on connected device/emulator
+./gradlew connectedAndroidTest
+
+# Run UI tests on Firebase Test Lab (requires gcloud CLI)
+./gradlew assembleDebug assembleDebugAndroidTest
+gcloud firebase test android run \
+  --app app/build/outputs/apk/debug/app-debug.apk \
+  --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+```
+
+### Viewing Results
+
+- Check the "Actions" tab in GitHub to see workflow runs
+- Download artifacts (APKs, test results, lint reports) from completed workflow runs
+- View detailed test reports in Firebase Console → Test Lab
+- Build status badge: Add to README if desired
+
 ## Using the App
 
 ### Adding an Entry
