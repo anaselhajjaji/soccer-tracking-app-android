@@ -9,13 +9,25 @@ This guide explains how to set up Firebase Test Lab integration with GitHub Acti
 - GitHub repository with admin access
 - **No billing required** - Tests use Firebase's default storage
 
-## Step 1: Enable Firebase Test Lab API
+## Step 1: Enable Required APIs
+
+You need to enable two APIs in Google Cloud Console:
+
+### Enable Cloud Testing API
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Select your Firebase project
 3. Navigate to **APIs & Services** → **Library**
 4. Search for "**Cloud Testing API**"
 5. Click **Enable**
+
+### Enable Cloud Tool Results API
+
+1. In the same **APIs & Services** → **Library** page
+2. Search for "**Cloud Tool Results API**"
+3. Click **Enable**
+
+**Note**: Wait a few minutes after enabling APIs for changes to propagate.
 
 ## Step 2: Create Service Account
 
