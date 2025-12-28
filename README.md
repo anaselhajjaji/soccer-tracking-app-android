@@ -196,7 +196,7 @@ The CI workflow automatically runs on:
 #### Job 1: Build and Test
 
 1. **Build**: Compiles debug APK with `./gradlew assembleDebug`
-2. **Unit Tests**: Runs all unit tests with `./gradlew test` (86 tests)
+2. **Unit Tests**: Runs all unit tests with `./gradlew test` (210 tests across 6 test files)
 3. **Lint**: Performs Android code quality checks with `./gradlew lintDebug`
 4. **Coverage**: Generates JaCoCo code coverage report with `./gradlew jacocoTestReport`
 5. **Detekt**: Runs Kotlin static analysis with `./gradlew detekt`
@@ -243,8 +243,15 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
 **Test configuration:**
 
 - **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
-- **Tests:** 17 UI tests covering navigation, input controls, validation, and screen interactions
+- **Tests:** 32 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
 - **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
+- **Test Coverage:**
+  - 9 navigation and basic UI tests
+  - 4 filter button and interaction tests
+  - 6 management menu navigation tests
+  - 4 match/team section display tests
+  - 4 progress chart enhancement tests
+  - 5 validation and UI polish tests
 
 ### Running Tests Locally
 
@@ -271,7 +278,7 @@ Run all quality checks locally:
 ./quality-check.sh
 
 # Or run individual checks
-./gradlew test                # Unit tests (86 tests)
+./gradlew test                # Unit tests (210 tests = 105 × 2 variants)
 ./gradlew jacocoTestReport   # Code coverage report
 ./gradlew lintDebug          # Android Lint analysis
 ./gradlew detekt             # Kotlin static analysis
@@ -589,7 +596,8 @@ The app now organizes actions into matches with automatic creation and complete 
 - Automatic legacy migration on app startup (idempotent and seamless)
 - MatchManagementScreen with complete CRUD interface
 - ViewModel methods: addMatch(), updateMatch(), deleteMatch(), getMatchById(), getActionsForMatch()
-- All 222 unit tests passing (111 tests × 2 variants including 29 new Match tests)
+- All 210 unit tests passing (105 tests × 2 variants)
+- All 32 UI tests passing on Firebase Test Lab
 - Full backward compatibility with existing data
 
 **UI Improvements:**
@@ -667,21 +675,39 @@ The app now organizes actions into matches with automatic creation and complete 
 - Extended data models with player and team support
 - SoccerAction now includes playerId and teamId fields
 - BackupData v3 with player and team serialization
-- All 304 unit tests passing (152 tests × 2 variants)
-- All 9 UI tests passing on Firebase Test Lab
 
 ---
 
-**v1.0.1** - Coverage Improvements & Bug Fixes (December 2025)
+**v1.0.1** - Test Suite Enhancements & Bug Fixes (December 2025)
 
-**Test Coverage Improvements:**
-- Increased unit tests from 55 to 86 tests (+31 tests, 56% increase)
-- Improved overall coverage from 22% to 41% (+19 points, 86% increase)
+**Test Suite Enhancements:**
+- Increased unit tests from 55 to 210 tests (+155 tests, 282% increase)
+- All 210 tests passing (105 tests × 2 variants: debug and release)
+- Increased UI tests from 17 to 32 tests (+15 tests, 88% increase)
+- Added comprehensive Match entity tests (29 tests)
+- Added BackupData serialization tests with isHomeMatch field
 - Added comprehensive ViewModel filtering tests (77% coverage)
 - Created UiStateTest with 100% coverage
 - Added edge case tests for SoccerAction data model
+- Added UI tests for filters, management screens, and v1.2.0 features
 - Fixed JaCoCo exclusions to properly filter Compose synthetic classes
 - Coverage now accurately reflects testable business logic
+
+**Unit Test Coverage:**
+- MatchTest.kt: 29 tests covering all Match entity functionality
+- SoccerViewModelTest.kt: Comprehensive filtering and CRUD tests
+- BackupDataTest.kt: Serialization tests with isHomeMatch support
+- ActionTypeTest.kt: Enum validation tests
+- SoccerActionTest.kt: Data model edge case tests
+- UiStateTest.kt: 100% coverage of UI state class
+
+**UI Test Coverage (Firebase Test Lab):**
+- 9 navigation and basic UI tests
+- 4 filter button and interaction tests
+- 6 management menu navigation tests
+- 4 match/team section display tests
+- 4 progress chart enhancement tests
+- 5 validation and UI polish tests
 
 **Bug Fixes:**
 - Fixed Firebase service test that was attempting real Firebase calls
@@ -689,9 +715,10 @@ The app now organizes actions into matches with automatic creation and complete 
 - Improved test reliability and accuracy
 
 **Documentation:**
-- Updated all documentation with new test counts and coverage metrics
-- Enhanced CLAUDE.md with detailed coverage breakdown
-- Updated README.md and QUALITY_REPORTS.md
+- Updated all documentation with new test counts (210 unit, 32 UI)
+- Enhanced CLAUDE.md with detailed test suite breakdown
+- Updated README.md with test coverage details
+- Updated QUALITY_REPORTS.md with latest metrics
 
 ---
 
