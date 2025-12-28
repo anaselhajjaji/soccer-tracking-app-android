@@ -526,7 +526,6 @@ Potential future features:
 - Match Details screen with all associated actions
 - Match filtering in History and Progress screens
 - Match statistics and analytics
-- Match badges on action cards
 - Offline mode with local caching
 - Export data to CSV/Excel
 - Real-time sync with Firestore listeners
@@ -590,12 +589,17 @@ The app now organizes actions into matches with automatic creation and complete 
 - All 222 unit tests passing (111 tests × 2 variants including 29 new Match tests)
 - Full backward compatibility with existing data
 
+**UI Improvements:**
+
+- **AddActionScreen**: Default player selection, match selection UI, inline match creation
+- **HistoryScreen**: Match names displayed instead of separate team/opponent fields
+- **Cleaner Display**: More concise action cards with match grouping information
+
 **Future Enhancements** (planned but not yet implemented):
 
 - Match Details screen showing all actions in a match
 - Match filtering in History and Progress screens
 - Match statistics and analytics
-- Match badges on action cards in History screen
 
 ---
 

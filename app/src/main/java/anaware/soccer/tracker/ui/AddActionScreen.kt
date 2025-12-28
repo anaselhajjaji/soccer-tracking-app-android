@@ -39,14 +39,28 @@ fun AddActionScreen(
     var showOpponentSuggestions by remember { mutableStateOf(false) }
 
     // Player and Team selection
+    val players by viewModel.distinctPlayers.collectAsState(initial = emptyList())
+    val teams by viewModel.distinctTeams.collectAsState(initial = emptyList())
+    val matches by viewModel.allMatches.collectAsState()
+
     var selectedPlayerId by remember { mutableStateOf("") }
     var selectedTeamId by remember { mutableStateOf("") }
     var showPlayerDropdown by remember { mutableStateOf(false) }
     var showTeamDropdown by remember { mutableStateOf(false) }
 
+    // Match selection
+    var selectedMatchId by remember { mutableStateOf("") }
+    var showMatchDropdown by remember { mutableStateOf(false) }
+    var showCreateMatchDialog by remember { mutableStateOf(false) }
+
     val opponents by viewModel.distinctOpponents.collectAsState(initial = emptyList())
-    val players by viewModel.distinctPlayers.collectAsState(initial = emptyList())
-    val teams by viewModel.distinctTeams.collectAsState(initial = emptyList())
+
+    // Set first player as default when players become available
+    LaunchedEffect(players) {
+        if (players.isNotEmpty() && selectedPlayerId.isEmpty()) {
+            selectedPlayerId = players.first().id
+        }
+    }
 
     // Date and Time state
     var useCurrentDateTime by remember { mutableStateOf(true) }
@@ -295,61 +309,114 @@ fun AddActionScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Opponent Section
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Column(
+        // Match Selection Section (only for match actions)
+        if (isMatch) {
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(vertical = 8.dp)
             ) {
-                Text(
-                    text = "Opponent (Optional)",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                // Calculate filtered opponents
-                val filteredOpponents = opponents.filter {
-                    it.contains(opponent, ignoreCase = true) && it != opponent
-                }
-
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = opponent,
-                        onValueChange = { newValue ->
-                            opponent = newValue
-                            showOpponentSuggestions = newValue.isNotEmpty() && opponents.isNotEmpty()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Enter opponent name...") },
-                        singleLine = true
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Match (Optional)",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 12.dp)
                     )
 
-                    // Show dropdown only if there are filtered suggestions
-                    DropdownMenu(
-                        expanded = showOpponentSuggestions && filteredOpponents.isNotEmpty(),
-                        onDismissRequest = { showOpponentSuggestions = false },
+                    if (matches.isEmpty()) {
+                        Text(
+                            text = "No matches yet. Create your first match below or it will be created automatically.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                    } else {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedButton(
+                                onClick = { showMatchDropdown = !showMatchDropdown },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = if (selectedMatchId.isNotEmpty()) {
+                                        val match = viewModel.getMatchById(selectedMatchId)
+                                        if (match != null) {
+                                            val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
+                                            val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
+                                            "$playerTeam vs $opponentTeam (${match.getFormattedDate()})"
+                                        } else {
+                                            "Select Match (or create new)"
+                                        }
+                                    } else {
+                                        "Select Match (or create new)"
+                                    }
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = showMatchDropdown,
+                                onDismissRequest = { showMatchDropdown = false },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                // Option to clear selection (auto-create)
+                                DropdownMenuItem(
+                                    text = { Text("Auto-create match (no selection)") },
+                                    onClick = {
+                                        selectedMatchId = ""
+                                        showMatchDropdown = false
+                                    }
+                                )
+
+                                HorizontalDivider()
+
+                                // List existing matches
+                                matches.sortedByDescending { it.date }.forEach { match ->
+                                    val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
+                                    val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text("$playerTeam vs $opponentTeam")
+                                                Text(
+                                                    text = match.getFormattedDate(),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            selectedMatchId = match.id
+                                            showMatchDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // Create New Match Button
+                    OutlinedButton(
+                        onClick = { showCreateMatchDialog = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        filteredOpponents.forEach { suggestion ->
-                            DropdownMenuItem(
-                                text = { Text(suggestion) },
-                                onClick = {
-                                    opponent = suggestion
-                                    showOpponentSuggestions = false
-                                }
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Create New Match")
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+        }
 
         // Player Selection
         Card(
@@ -490,24 +557,41 @@ fun AddActionScreen(
                 } else {
                     LocalDateTime.of(selectedDate, selectedTime)
                 }
+
+                // If a specific match is selected, get opponent from match
+                // Otherwise, use auto-creation (opponent will be derived from match selection or empty for training)
+                val opponentForAction = if (isMatch && selectedMatchId.isNotEmpty()) {
+                    val match = viewModel.getMatchById(selectedMatchId)
+                    if (match != null) {
+                        teams.find { it.id == match.opponentTeamId }?.name ?: ""
+                    } else {
+                        ""
+                    }
+                } else if (isMatch) {
+                    opponent
+                } else {
+                    ""
+                }
+
                 viewModel.addAction(
                     actionCount = actionCount,
                     actionType = actionType,
                     isMatch = isMatch,
                     dateTime = dateTime,
-                    opponent = opponent,
+                    opponent = opponentForAction,
                     playerId = selectedPlayerId,
                     teamId = selectedTeamId,
                     context = context
                 )
-                // Reset form
+                // Reset form but keep first player as default
                 actionCount = 0
                 actionType = ActionType.default()
                 isMatch = true
                 selectedDate = LocalDate.now()
                 selectedTime = LocalTime.now()
                 opponent = ""
-                selectedPlayerId = ""
+                selectedMatchId = ""
+                // Keep selectedPlayerId as the first player (will be maintained by LaunchedEffect)
                 selectedTeamId = ""
                 showSuccessMessage = true
             },
@@ -555,6 +639,192 @@ fun AddActionScreen(
                     color = MaterialTheme.colorScheme.onTertiaryContainer,
                     modifier = Modifier.padding(16.dp)
                 )
+            }
+        }
+    }
+
+    // Create Match Dialog
+    if (showCreateMatchDialog) {
+        var newMatchDate by remember { mutableStateOf(LocalDate.now()) }
+        var newMatchPlayerTeamId by remember { mutableStateOf(selectedTeamId) }
+        var newMatchOpponentTeamId by remember { mutableStateOf("") }
+        var newMatchLeague by remember { mutableStateOf("") }
+        var showNewMatchDatePicker by remember { mutableStateOf(false) }
+        var newMatchPlayerTeamExpanded by remember { mutableStateOf(false) }
+        var newMatchOpponentTeamExpanded by remember { mutableStateOf(false) }
+
+        val isNewMatchValid = newMatchPlayerTeamId.isNotEmpty() && newMatchOpponentTeamId.isNotEmpty()
+
+        AlertDialog(
+            onDismissRequest = { showCreateMatchDialog = false }
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.large,
+                tonalElevation = AlertDialogDefaults.TonalElevation
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp)
+                ) {
+                    Text(
+                        text = "Create New Match",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    // Date picker
+                    OutlinedTextField(
+                        value = newMatchDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
+                        onValueChange = { },
+                        label = { Text("Date *") },
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { showNewMatchDatePicker = true }) {
+                                Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    )
+
+                    // Player team dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = newMatchPlayerTeamExpanded,
+                        onExpandedChange = { newMatchPlayerTeamExpanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = teams.find { it.id == newMatchPlayerTeamId }?.name ?: "",
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Player Team *") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = newMatchPlayerTeamExpanded) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                                .padding(bottom = 8.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = newMatchPlayerTeamExpanded,
+                            onDismissRequest = { newMatchPlayerTeamExpanded = false }
+                        ) {
+                            teams.forEach { team ->
+                                DropdownMenuItem(
+                                    text = { Text(team.name) },
+                                    onClick = {
+                                        newMatchPlayerTeamId = team.id
+                                        newMatchPlayerTeamExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Opponent team dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = newMatchOpponentTeamExpanded,
+                        onExpandedChange = { newMatchOpponentTeamExpanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = teams.find { it.id == newMatchOpponentTeamId }?.name ?: "",
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Opponent Team *") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = newMatchOpponentTeamExpanded) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                                .padding(bottom = 8.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = newMatchOpponentTeamExpanded,
+                            onDismissRequest = { newMatchOpponentTeamExpanded = false }
+                        ) {
+                            teams.forEach { team ->
+                                DropdownMenuItem(
+                                    text = { Text(team.name) },
+                                    onClick = {
+                                        newMatchOpponentTeamId = team.id
+                                        newMatchOpponentTeamExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // League/tournament (optional)
+                    OutlinedTextField(
+                        value = newMatchLeague,
+                        onValueChange = { newMatchLeague = it },
+                        label = { Text("League/Tournament (Optional)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+
+                    // Buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showCreateMatchDialog = false }) {
+                            Text("Cancel")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                viewModel.addMatch(
+                                    date = newMatchDate.toString(),
+                                    playerTeamId = newMatchPlayerTeamId,
+                                    opponentTeamId = newMatchOpponentTeamId,
+                                    league = newMatchLeague,
+                                    playerScore = -1,
+                                    opponentScore = -1,
+                                    context = context
+                                )
+                                // Select the newly created match (we'll need to get its ID from the ViewModel)
+                                // For now, just close the dialog
+                                showCreateMatchDialog = false
+                            },
+                            enabled = isNewMatchValid
+                        ) {
+                            Text("Create")
+                        }
+                    }
+                }
+            }
+        }
+
+        // Date picker for new match
+        if (showNewMatchDatePicker) {
+            val newMatchDatePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = newMatchDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+            )
+            DatePickerDialog(
+                onDismissRequest = { showNewMatchDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            newMatchDatePickerState.selectedDateMillis?.let { millis ->
+                                newMatchDate = java.time.Instant.ofEpochMilli(millis)
+                                    .atZone(java.time.ZoneId.systemDefault())
+                                    .toLocalDate()
+                            }
+                            showNewMatchDatePicker = false
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showNewMatchDatePicker = false }) {
+                        Text("Cancel")
+                    }
+                }
+            ) {
+                DatePicker(state = newMatchDatePickerState)
             }
         }
     }

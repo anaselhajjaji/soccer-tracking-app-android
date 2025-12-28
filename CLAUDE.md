@@ -169,7 +169,24 @@ Major feature release adding Match entity to group related actions into matches 
    - **getMatchById()**: Retrieves match by ID for display
    - **getActionsForMatch()**: Gets all actions linked to a specific match
 
-9. **Testing**:
+9. **AddActionScreen Improvements**:
+   - **Default Player Selection**: First player automatically selected when players exist
+   - **LaunchedEffect**: Automatically sets first player as default on app startup
+   - **Match Selection UI**: Replace opponent text field with match selection interface
+   - **Match Dropdown**: Select from existing matches sorted by date
+   - **Auto-Create Option**: Option to auto-create match (existing behavior)
+   - **Create New Match**: Inline match creation dialog with date, teams, league
+   - **Smart Opponent Resolution**: Get opponent from selected match or use auto-creation
+   - **Form Reset**: Maintains first player as default after saving
+
+10. **HistoryScreen Display Updates**:
+   - **Match Name Display**: Show "Team A vs Team B" when action has matchId
+   - **Simplified Display**: Remove separate team and opponent fields when match exists
+   - **Legacy Support**: Still show "Legacy Entry" badge for actions without player
+   - **Player-Only Display**: Show only player name for actions without match
+   - **Cleaner UI**: More concise information per action card
+
+11. **Testing**:
    - **MatchTest.kt**: 29 new tests covering date formatting, score display, result calculation
    - **SoccerActionTest.kt**: Added 7 tests for matchId field handling
    - **BackupDataTest.kt**: Updated for version 4 with 8 BackupMatch tests
@@ -190,7 +207,6 @@ Major feature release adding Match entity to group related actions into matches 
 - MatchDetailsScreen.kt - View match details with all associated actions
 - Match filtering in History and Progress screens
 - Match statistics and analytics
-- Match badges on action cards in History screen
 
 ### v1.0.1 - Coverage Improvements & Bug Fixes (December 2025)
 

@@ -39,6 +39,7 @@ fun HistoryScreen(
     val opponents by viewModel.distinctOpponents.collectAsState()
     val players by viewModel.distinctPlayers.collectAsState()
     val teams by viewModel.distinctTeams.collectAsState()
+    val matches by viewModel.allMatches.collectAsState()
     val totalCount by viewModel.totalActionCount.collectAsState()
     var actionToDelete by remember { mutableStateOf<SoccerAction?>(null) }
     var actionToEdit by remember { mutableStateOf<SoccerAction?>(null) }
@@ -435,6 +436,8 @@ fun HistoryScreen(
                     ActionEntryCard(
                         action = action,
                         viewModel = viewModel,
+                        teams = teams,
+                        matches = matches,
                         onEditClick = { actionToEdit = action },
                         onDeleteClick = { actionToDelete = action }
                     )
@@ -501,6 +504,8 @@ fun HistoryScreen(
 private fun ActionEntryCard(
     action: SoccerAction,
     viewModel: SoccerViewModel,
+    teams: List<anaware.soccer.tracker.data.Team>,
+    matches: List<anaware.soccer.tracker.data.Match>,
     onDeleteClick: () -> Unit,
     onEditClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -575,19 +580,21 @@ private fun ActionEntryCard(
                     )
                 }
 
-                // Opponent if present
-                if (action.opponent.isNotBlank()) {
-                    Text(
-                        text = "vs ${action.opponent}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-
-                // Player and Team info
-                if (action.isLegacyAction()) {
+                // Match name if present (replaces opponent and team display)
+                if (action.matchId.isNotBlank()) {
+                    val match = matches.find { it.id == action.matchId }
+                    if (match != null) {
+                        val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
+                        val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
+                        Text(
+                            text = "$playerTeam vs $opponentTeam",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                } else if (action.isLegacyAction()) {
                     // Show "Legacy Entry" badge for actions without player
                     AssistChip(
                         onClick = { },
@@ -604,10 +611,9 @@ private fun ActionEntryCard(
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 } else {
-                    // Show player and team information
+                    // Show player information only (no team or opponent)
                     Column(modifier = Modifier.padding(top = 8.dp)) {
                         val player = viewModel.getPlayerById(action.playerId)
-                        val team = viewModel.getTeamById(action.teamId)
 
                         if (player != null) {
                             Text(
@@ -615,15 +621,6 @@ private fun ActionEntryCard(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium
-                            )
-                        }
-
-                        if (team != null) {
-                            Text(
-                                text = "Team: ${team.getDisplayName()}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 2.dp)
                             )
                         }
                     }
