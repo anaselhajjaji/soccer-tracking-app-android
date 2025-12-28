@@ -135,9 +135,9 @@ fun AddActionScreen(
                     }
                 }
 
-                // Info text about zero actions
+                // Info text about minimum actions
                 Text(
-                    text = "Tip: You can save with 0 actions to track participation",
+                    text = "Tip: At least 1 action is required to save an entry",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                     modifier = Modifier.padding(top = 12.dp)
@@ -488,7 +488,7 @@ fun AddActionScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Save Button (now enabled even with 0 actions)
+        // Save Button (requires at least 1 action)
         Button(
             onClick = {
                 val dateTime = if (useCurrentDateTime) {
@@ -517,6 +517,7 @@ fun AddActionScreen(
                 selectedTeamId = ""
                 showSuccessMessage = true
             },
+            enabled = actionCount > 0,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
