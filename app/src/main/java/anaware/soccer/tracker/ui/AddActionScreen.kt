@@ -363,7 +363,7 @@ fun AddActionScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Player (Optional)",
+                    text = "Player *",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
@@ -394,14 +394,6 @@ fun AddActionScreen(
                             onDismissRequest = { showPlayerDropdown = false },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            DropdownMenuItem(
-                                text = { Text("None") },
-                                onClick = {
-                                    selectedPlayerId = ""
-                                    selectedTeamId = ""
-                                    showPlayerDropdown = false
-                                }
-                            )
                             players.forEach { player ->
                                 DropdownMenuItem(
                                     text = { Text(player.getDisplayName()) },
@@ -437,7 +429,7 @@ fun AddActionScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = "Team",
+                        text = "Team *",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
@@ -488,7 +480,9 @@ fun AddActionScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Save Button (requires at least 1 action)
+        // Save Button (requires at least 1 action, player, and team)
+        val canSave = actionCount > 0 && selectedPlayerId.isNotEmpty() && selectedTeamId.isNotEmpty()
+
         Button(
             onClick = {
                 val dateTime = if (useCurrentDateTime) {
@@ -517,7 +511,7 @@ fun AddActionScreen(
                 selectedTeamId = ""
                 showSuccessMessage = true
             },
-            enabled = actionCount > 0,
+            enabled = canSave,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -525,6 +519,21 @@ fun AddActionScreen(
             Text(
                 text = "Save Entry",
                 style = MaterialTheme.typography.titleMedium
+            )
+        }
+
+        // Validation message
+        if (!canSave) {
+            Text(
+                text = when {
+                    actionCount == 0 -> "Add at least 1 action to save"
+                    selectedPlayerId.isEmpty() -> "Select a player to save"
+                    selectedTeamId.isEmpty() -> "Select a team to save"
+                    else -> ""
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
 
