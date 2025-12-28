@@ -402,8 +402,9 @@ class SoccerTrackerAppTest {
         composeTestRule.onAllNodesWithText("Match")[0].performClick()
         composeTestRule.waitForIdle()
 
-        // Match section should be visible
-        composeTestRule.onNodeWithText("Match").assertExists()
+        // Match section should be visible - check for unique element in the section
+        // "Create New Match" button is unique to the Match section
+        composeTestRule.onNodeWithText("Create New Match").assertExists()
     }
 
     @Test
@@ -416,8 +417,9 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("Training").performClick()
         composeTestRule.waitForIdle()
 
-        // Team section should be visible (may need scrolling)
-        // Check for Team section header (not the TextField label)
+        // Team section requires scrolling to be visible
+        // Scroll to the Team section header (not the TextField label)
+        composeTestRule.onNodeWithText("Team").performScrollTo()
         composeTestRule.onNodeWithText("Team").assertExists()
     }
 
