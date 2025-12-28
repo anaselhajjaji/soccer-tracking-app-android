@@ -231,20 +231,20 @@ fun ChartScreen(
                             onExpandedChange = { opponentTeamDropdownExpanded = it },
                             modifier = Modifier.weight(1f)
                         ) {
-                            OutlinedButton(
-                                onClick = { opponentTeamDropdownExpanded = !opponentTeamDropdownExpanded },
+                            OutlinedTextField(
+                                value = if (selectedOpponentTeamId != null) {
+                                    opponentTeams.find { it.id == selectedOpponentTeamId }?.name ?: "Select Team"
+                                } else {
+                                    "Select Team"
+                                },
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Opponent") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = opponentTeamDropdownExpanded) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .menuAnchor()
-                            ) {
-                                Text(
-                                    text = if (selectedOpponentTeamId != null) {
-                                        opponentTeams.find { it.id == selectedOpponentTeamId }?.name ?: "Select Team"
-                                    } else {
-                                        "Select Team"
-                                    }
-                                )
-                            }
+                            )
                             ExposedDropdownMenu(
                                 expanded = opponentTeamDropdownExpanded,
                                 onDismissRequest = { opponentTeamDropdownExpanded = false }
@@ -353,20 +353,20 @@ fun ChartScreen(
                             onExpandedChange = { playerTeamDropdownExpanded = it },
                             modifier = Modifier.weight(1f)
                         ) {
-                            OutlinedButton(
-                                onClick = { playerTeamDropdownExpanded = !playerTeamDropdownExpanded },
+                            OutlinedTextField(
+                                value = if (selectedTeamId != null) {
+                                    teams.find { it.id == selectedTeamId }?.getDisplayName() ?: "Select Team"
+                                } else {
+                                    "Select Team"
+                                },
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Team") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = playerTeamDropdownExpanded) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .menuAnchor()
-                            ) {
-                                Text(
-                                    text = if (selectedTeamId != null) {
-                                        teams.find { it.id == selectedTeamId }?.getDisplayName() ?: "Select Team"
-                                    } else {
-                                        "Select Team"
-                                    }
-                                )
-                            }
+                            )
                             ExposedDropdownMenu(
                                 expanded = playerTeamDropdownExpanded,
                                 onDismissRequest = { playerTeamDropdownExpanded = false }
