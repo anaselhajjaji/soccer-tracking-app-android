@@ -178,12 +178,18 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "**/BackupScreen*.*",        // Jetpack Compose UI screen
         "**/ChartScreen*.*",         // Jetpack Compose UI screen
         "**/HistoryScreen*.*",       // Jetpack Compose UI screen
+        "**/PlayerManagementScreen*.*",  // Jetpack Compose UI screen (v1.1.0)
+        "**/TeamManagementScreen*.*",    // Jetpack Compose UI screen (v1.1.0)
+        "**/MatchManagementScreen*.*",   // Jetpack Compose UI screen (v1.2.0)
         "**/SoccerTrackerApp*.*",    // Jetpack Compose navigation root
         // Exclude Compose-generated synthetic classes (lambdas, singletons)
         "**/ComposableSingletons\$AddActionScreenKt*.*",
         "**/ComposableSingletons\$BackupScreenKt*.*",
         "**/ComposableSingletons\$ChartScreenKt*.*",
         "**/ComposableSingletons\$HistoryScreenKt*.*",
+        "**/ComposableSingletons\$PlayerManagementScreenKt*.*",
+        "**/ComposableSingletons\$TeamManagementScreenKt*.*",
+        "**/ComposableSingletons\$MatchManagementScreenKt*.*",
         "**/ComposableSingletons\$SoccerTrackerAppKt*.*",
         "**/Screen\$*.*",            // Sealed class navigation items
         "**/theme/**",               // Theme configuration files
