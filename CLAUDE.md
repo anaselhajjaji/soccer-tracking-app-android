@@ -152,7 +152,24 @@ Major feature release adding Match entity to group related actions into matches 
    - **BackupData v4**: Updated serialization with match support
    - **BackupMatch**: Conversion methods between Match and BackupMatch
 
-7. **Testing**:
+7. **Match Management UI**:
+   - **MatchManagementScreen.kt**: Complete match list and management interface
+   - **Match Cards**: Display team names, date, scores, result chips, league, action count
+   - **Add/Edit Dialog**: Date picker, team dropdowns, league field, optional score inputs
+   - **Delete Confirmation**: Alert dialog with explanation of matchId clearing
+   - **Navigation Integration**: "Manage Matches" menu item in Account screen
+   - **Material 3 Design**: Consistent with existing management screens (Players, Teams)
+   - **Empty State**: Helpful message when no matches exist
+   - **Result Badges**: Color-coded Win/Loss/Draw chips based on scores
+
+8. **ViewModel Match Management**:
+   - **addMatch()**: Creates new match with all metadata
+   - **updateMatch()**: Updates existing match details
+   - **deleteMatch()**: Deletes match and clears matchId from associated actions
+   - **getMatchById()**: Retrieves match by ID for display
+   - **getActionsForMatch()**: Gets all actions linked to a specific match
+
+9. **Testing**:
    - **MatchTest.kt**: 29 new tests covering date formatting, score display, result calculation
    - **SoccerActionTest.kt**: Added 7 tests for matchId field handling
    - **BackupDataTest.kt**: Updated for version 4 with 8 BackupMatch tests
@@ -163,17 +180,17 @@ Major feature release adding Match entity to group related actions into matches 
 - All 222 unit tests passing (111 tests × 2 variants)
 - All 17 UI tests passing on Firebase Test Lab
 - Full backward compatibility with existing data
-- Automatic match creation eliminates manual match management
+- Automatic match creation during action entry
+- Manual match CRUD through dedicated management UI
 - Legacy data automatically upgraded to use matches
-- Foundation for future match management UI screens
+- Complete match lifecycle management (view, add, edit, delete)
 
 **Future Enhancements** (planned but not yet implemented):
 
-- MatchManagementScreen.kt - UI to view and manage all matches
 - MatchDetailsScreen.kt - View match details with all associated actions
-- EditMatchDialog.kt - Edit match metadata (date, teams, league, scores)
 - Match filtering in History and Progress screens
 - Match statistics and analytics
+- Match badges on action cards in History screen
 
 ### v1.0.1 - Coverage Improvements & Bug Fixes (December 2025)
 
@@ -1012,8 +1029,11 @@ gcloud firebase test android run \
 - [FirebaseService.kt](app/src/main/java/anaware/soccer/tracker/backup/FirebaseService.kt) - Firebase CRUD operations
 
 ### Data Models
-- [SoccerAction.kt](app/src/main/java/anaware/soccer/tracker/data/SoccerAction.kt) - Main entity
+- [SoccerAction.kt](app/src/main/java/anaware/soccer/tracker/data/SoccerAction.kt) - Main entity with matchId support
 - [ActionType.kt](app/src/main/java/anaware/soccer/tracker/data/ActionType.kt) - Enum for types
+- [Player.kt](app/src/main/java/anaware/soccer/tracker/data/Player.kt) - Player entity with multi-team support
+- [Team.kt](app/src/main/java/anaware/soccer/tracker/data/Team.kt) - Team entity with color and league
+- [Match.kt](app/src/main/java/anaware/soccer/tracker/data/Match.kt) - Match entity with scores and result
 - [BackupData.kt](app/src/main/java/anaware/soccer/tracker/data/BackupData.kt) - Firebase serialization models
 
 ### UI Screens
@@ -1021,6 +1041,9 @@ gcloud firebase test android run \
 - [HistoryScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/HistoryScreen.kt) - List view with advanced filters
 - [ChartScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/ChartScreen.kt) - Progress chart with triple filtering
 - [BackupScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/BackupScreen.kt) - Account and sync status
+- [PlayerManagementScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/PlayerManagementScreen.kt) - Player CRUD interface
+- [TeamManagementScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/TeamManagementScreen.kt) - Team CRUD interface
+- [MatchManagementScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/MatchManagementScreen.kt) - Match CRUD interface
 
 ### Configuration
 - [build.gradle.kts](app/build.gradle.kts) - Dependencies

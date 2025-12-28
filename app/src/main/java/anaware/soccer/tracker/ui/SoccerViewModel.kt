@@ -797,6 +797,107 @@ class SoccerViewModel : ViewModel() {
     }
 
     /**
+     * Adds a new match manually.
+     */
+    fun addMatch(
+        date: String,
+        playerTeamId: String,
+        opponentTeamId: String,
+        league: String,
+        playerScore: Int,
+        opponentScore: Int,
+        context: Context
+    ) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val matchId = FirebaseService.generateMatchId()
+            val match = Match(
+                id = matchId,
+                date = date,
+                playerTeamId = playerTeamId,
+                opponentTeamId = opponentTeamId,
+                league = league,
+                playerScore = playerScore,
+                opponentScore = opponentScore
+            )
+
+            val result = service.addMatch(match)
+            if (result.isSuccess) {
+                _allMatches.value = (_allMatches.value + match).sortedByDescending { it.date }
+                _uiState.value = _uiState.value.copy(message = "Match added successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to add match: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Updates an existing match.
+     */
+    fun updateMatch(match: Match, context: Context) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val result = service.updateMatch(match)
+            if (result.isSuccess) {
+                _allMatches.value = _allMatches.value.map {
+                    if (it.id == match.id) match else it
+                }.sortedByDescending { it.date }
+                _uiState.value = _uiState.value.copy(message = "Match updated successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to update match: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Deletes a match and clears matchId from all associated actions.
+     */
+    fun deleteMatch(match: Match, context: Context) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+
+            // Clear matchId from all associated actions
+            val associatedActions = _allActions.value.filter { it.matchId == match.id }
+            associatedActions.forEach { action ->
+                val updatedAction = action.copy(matchId = "")
+                service.addAction(updatedAction) // Overwrites with empty matchId
+                _allActions.value = _allActions.value.map {
+                    if (it.id == action.id) updatedAction else it
+                }
+            }
+
+            // Delete match
+            val result = service.deleteMatch(match.id)
+            if (result.isSuccess) {
+                _allMatches.value = _allMatches.value.filter { it.id != match.id }
+                _uiState.value = _uiState.value.copy(message = "Match deleted successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to delete match: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Retrieves a match by its ID.
+     */
+    fun getMatchById(matchId: String): Match? {
+        return _allMatches.value.find { it.id == matchId }
+    }
+
+    /**
+     * Retrieves all actions for a specific match.
+     */
+    fun getActionsForMatch(matchId: String): List<SoccerAction> {
+        return _allActions.value.filter { it.matchId == matchId }
+    }
+
+    /**
      * Automatically migrates legacy match actions to matches.
      * Creates matches from existing opponent strings and links actions to them.
      * This is idempotent and can be run multiple times safely.

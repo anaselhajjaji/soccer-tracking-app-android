@@ -18,6 +18,12 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Team name, color, league, and season
   - Players can belong to multiple teams
   - Assign team when recording actions
+- **Match Management**: Organize actions into matches
+  - Automatic match creation when recording match actions
+  - Manual match management via dedicated UI
+  - View, add, edit, and delete matches
+  - Track match metadata: date, teams, league, scores
+  - Match result calculation (Win/Loss/Draw)
 - **Session Types**: Distinguish between match and training sessions
 - **Opponent Tracking**: Record opponent name with autocomplete suggestions
 - **Optional Date & Time**: Choose current time or select custom date/time
@@ -65,6 +71,12 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Access via floating menu on Account screen
   - Custom team colors with color picker
   - Track league and season information
+- **Match Management**: Add, edit, and delete matches
+  - Access via floating menu on Account screen
+  - Automatic match creation when adding match actions
+  - Track match date, teams, league/tournament, scores
+  - View all actions linked to each match
+  - Color-coded result badges (Win/Loss/Draw)
 - **Firebase Cloud Storage**: Direct cloud storage with automatic sync
   - Firebase Authentication with Google Sign-In (required)
   - All data stored directly in Firebase Firestore
@@ -102,21 +114,27 @@ An Android app for tracking your son's offensive actions during soccer matches a
 ```
 app/src/main/java/anaware/soccer/tracker/
 ├── backup/
-│   └── FirebaseService.kt      # Firebase Firestore CRUD operations
+│   └── FirebaseService.kt              # Firebase Firestore CRUD operations
 ├── data/
-│   ├── ActionType.kt           # Enum for action types
-│   ├── BackupData.kt           # Firestore data models
-│   └── SoccerAction.kt         # Data model for soccer actions
+│   ├── ActionType.kt                   # Enum for action types
+│   ├── BackupData.kt                   # Firestore data models
+│   ├── Match.kt                        # Match entity with scores and result
+│   ├── Player.kt                       # Player entity with multi-team support
+│   ├── SoccerAction.kt                 # Data model for soccer actions
+│   └── Team.kt                         # Team entity with color and league
 ├── ui/
-│   ├── AddActionScreen.kt      # Screen for adding new entries
-│   ├── BackupScreen.kt         # Account and sync status UI
-│   ├── ChartScreen.kt          # Progress chart with filtering
-│   ├── HistoryScreen.kt        # Screen showing all entries
-│   ├── SoccerTrackerApp.kt     # Main app navigation
-│   ├── SoccerViewModel.kt      # ViewModel with Firebase integration
-│   └── theme/                  # Material 3 theme files
-├── MainActivity.kt             # Main activity
-└── SoccerTrackerApp.kt         # Application class
+│   ├── AddActionScreen.kt              # Screen for adding new entries
+│   ├── BackupScreen.kt                 # Account and sync status UI
+│   ├── ChartScreen.kt                  # Progress chart with filtering
+│   ├── HistoryScreen.kt                # Screen showing all entries
+│   ├── MatchManagementScreen.kt        # Match CRUD interface
+│   ├── PlayerManagementScreen.kt       # Player CRUD interface
+│   ├── SoccerTrackerApp.kt             # Main app navigation
+│   ├── SoccerViewModel.kt              # ViewModel with Firebase integration
+│   ├── TeamManagementScreen.kt         # Team CRUD interface
+│   └── theme/                          # Material 3 theme files
+├── MainActivity.kt                     # Main activity
+└── SoccerTrackerApp.kt                 # Application class
 ```
 
 ## Building and Running
@@ -366,7 +384,9 @@ Data is stored in Firebase Firestore with the following structure:
         - opponent: ""
 ```
 
-### SoccerAction Data Model
+### Data Models
+
+**SoccerAction:**
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
@@ -376,6 +396,21 @@ Data is stored in Firebase Firestore with the following structure:
 | actionType | String | GOAL, ASSIST, or OFFENSIVE_ACTION |
 | isMatch | Boolean | true = match, false = training |
 | opponent | String | Name of opponent team (optional) |
+| playerId | String | ID of player who performed action |
+| teamId | String | ID of team player was representing |
+| matchId | String | ID of match this action belongs to |
+
+**Match:**
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| id | String | UUID-based unique ID |
+| date | String | ISO date format (yyyy-MM-dd) |
+| playerTeamId | String | ID of player's team |
+| opponentTeamId | String | ID of opponent team |
+| league | String | League/tournament name (optional) |
+| playerScore | Int | Player team's score (-1 = not recorded) |
+| opponentScore | Int | Opponent team's score (-1 = not recorded) |
 
 ## Customization
 
@@ -488,9 +523,12 @@ Per organizational coding standards:
 
 Potential future features:
 
+- Match Details screen with all associated actions
+- Match filtering in History and Progress screens
+- Match statistics and analytics
+- Match badges on action cards
 - Offline mode with local caching
 - Export data to CSV/Excel
-- Multiple players support
 - Real-time sync with Firestore listeners
 - Statistical insights and trend analysis
 - Share progress charts as images
@@ -520,9 +558,11 @@ For issues or questions:
 
 **Match Entity with Automatic Match Creation:**
 
-The app now organizes actions into matches with automatic creation and management:
+The app now organizes actions into matches with automatic creation and complete management UI:
 
 - **Automatic Match Creation**: When recording a match action, the app automatically creates or finds the appropriate match
+- **Match Management UI**: Dedicated screen to view, add, edit, and delete matches
+- **Match Cards**: Display team names, date, scores, result chips (Win/Loss/Draw), league, and action count
 - **Match Grouping**: Actions are linked to matches, making it easy to see all actions from a specific game
 - **Match Metadata**: Each match stores date, player team, opponent team, league/tournament, and final score
 - **Match Name**: Automatically generated display name (e.g., "Team Blue vs Team Red")
@@ -530,6 +570,7 @@ The app now organizes actions into matches with automatic creation and managemen
 - **Smart Matching**: Same date + same teams = same match (prevents duplicates)
 - **Score Tracking**: Optional match scores (playerScore and opponentScore) with win/loss/draw calculation
 - **Legacy Migration**: Existing opponent strings automatically converted to Team entities and linked to matches
+- **Easy Access**: "Manage Matches" option in Account screen's floating action menu
 
 **Data Model Updates:**
 
@@ -544,15 +585,17 @@ The app now organizes actions into matches with automatic creation and managemen
 - findOrCreateMatch() helper prevents duplicate match creation
 - findOrCreateOpponentTeam() converts opponent strings to Team entities
 - Automatic legacy migration on app startup (idempotent and seamless)
+- MatchManagementScreen with complete CRUD interface
+- ViewModel methods: addMatch(), updateMatch(), deleteMatch(), getMatchById(), getActionsForMatch()
 - All 222 unit tests passing (111 tests × 2 variants including 29 new Match tests)
 - Full backward compatibility with existing data
 
 **Future Enhancements** (planned but not yet implemented):
 
-- Match Management UI to view and edit all matches
 - Match Details screen showing all actions in a match
 - Match filtering in History and Progress screens
 - Match statistics and analytics
+- Match badges on action cards in History screen
 
 ---
 
