@@ -457,7 +457,8 @@ class BackupDataTest {
             opponentTeamId = "team-2",
             league = "Premier League",
             playerScore = 3,
-            opponentScore = 2
+            opponentScore = 2,
+            isHomeMatch = false
         )
 
         val backupMatch = BackupMatch.fromMatch(match)
@@ -469,6 +470,7 @@ class BackupDataTest {
         assertEquals("Premier League", backupMatch.league)
         assertEquals(3, backupMatch.playerScore)
         assertEquals(2, backupMatch.opponentScore)
+        assertFalse(backupMatch.isHomeMatch)
     }
 
     @Test
@@ -480,7 +482,8 @@ class BackupDataTest {
             opponentTeamId = "team-4",
             league = "Youth League",
             playerScore = 1,
-            opponentScore = 1
+            opponentScore = 1,
+            isHomeMatch = true
         )
 
         val match = backupMatch.toMatch()
@@ -492,6 +495,7 @@ class BackupDataTest {
         assertEquals("Youth League", match.league)
         assertEquals(1, match.playerScore)
         assertEquals(1, match.opponentScore)
+        assertTrue(match.isHomeMatch)
     }
 
     @Test
@@ -503,7 +507,8 @@ class BackupDataTest {
             opponentTeamId = "team-2",
             league = "Premier",
             playerScore = 3,
-            opponentScore = 2
+            opponentScore = 2,
+            isHomeMatch = false
         )
 
         val jsonString = json.encodeToString(backupMatch)
@@ -515,6 +520,7 @@ class BackupDataTest {
         assertTrue(jsonString.contains("\"league\""))
         assertTrue(jsonString.contains("\"playerScore\""))
         assertTrue(jsonString.contains("\"opponentScore\""))
+        assertTrue(jsonString.contains("\"isHomeMatch\""))
         assertTrue(jsonString.contains("match-1"))
         assertTrue(jsonString.contains("Premier"))
     }
@@ -535,6 +541,26 @@ class BackupDataTest {
 
         assertEquals(-1, backupMatch.playerScore)
         assertEquals(-1, backupMatch.opponentScore)
+        assertTrue(backupMatch.isHomeMatch) // Default is true
+    }
+
+    @Test
+    fun `BackupMatch deserialization with missing isHomeMatch uses default`() {
+        val jsonWithoutHomeField = """
+            {
+                "id": "match-1",
+                "date": "2025-12-28",
+                "playerTeamId": "team-1",
+                "opponentTeamId": "team-2",
+                "league": "Premier",
+                "playerScore": 3,
+                "opponentScore": 2
+            }
+        """.trimIndent()
+
+        val backupMatch = json.decodeFromString<BackupMatch>(jsonWithoutHomeField)
+
+        assertTrue(backupMatch.isHomeMatch) // Default is true for legacy data
     }
 
     @Test

@@ -21,6 +21,7 @@ class MatchTest {
         assertEquals("", match.league)
         assertEquals(-1, match.playerScore)
         assertEquals(-1, match.opponentScore)
+        assertTrue(match.isHomeMatch)
     }
 
     @Test
@@ -32,7 +33,8 @@ class MatchTest {
             opponentTeamId = "team-2",
             league = "Premier League",
             playerScore = 3,
-            opponentScore = 2
+            opponentScore = 2,
+            isHomeMatch = false
         )
 
         assertEquals("match-123", match.id)
@@ -42,6 +44,7 @@ class MatchTest {
         assertEquals("Premier League", match.league)
         assertEquals(3, match.playerScore)
         assertEquals(2, match.opponentScore)
+        assertFalse(match.isHomeMatch)
     }
 
     @Test
@@ -244,7 +247,8 @@ class MatchTest {
             opponentTeamId = "team-2",
             league = "Premier",
             playerScore = 3,
-            opponentScore = 2
+            opponentScore = 2,
+            isHomeMatch = true
         )
 
         val match2 = Match(
@@ -254,7 +258,8 @@ class MatchTest {
             opponentTeamId = "team-2",
             league = "Premier",
             playerScore = 3,
-            opponentScore = 2
+            opponentScore = 2,
+            isHomeMatch = true
         )
 
         assertEquals(match1, match2)
@@ -270,7 +275,8 @@ class MatchTest {
             opponentTeamId = "team-2",
             league = "Premier",
             playerScore = 3,
-            opponentScore = 2
+            opponentScore = 2,
+            isHomeMatch = true
         )
 
         val match2 = Match(
@@ -280,7 +286,8 @@ class MatchTest {
             opponentTeamId = "team-2",
             league = "Premier",
             playerScore = 3,
-            opponentScore = 2
+            opponentScore = 2,
+            isHomeMatch = true
         )
 
         assertEquals(match1.hashCode(), match2.hashCode())
@@ -343,5 +350,67 @@ class MatchTest {
         assertTrue(stringRepresentation.contains("Match"))
         assertTrue(stringRepresentation.contains("match-1"))
         assertTrue(stringRepresentation.contains("2025-12-28"))
+    }
+
+    @Test
+    fun `Match isHomeMatch defaults to true`() {
+        val match = Match(
+            id = "match-1",
+            date = "2025-12-28",
+            playerTeamId = "team-1",
+            opponentTeamId = "team-2"
+        )
+
+        assertTrue(match.isHomeMatch)
+    }
+
+    @Test
+    fun `Match isHomeMatch can be set to false for away matches`() {
+        val match = Match(
+            id = "match-1",
+            date = "2025-12-28",
+            playerTeamId = "team-1",
+            opponentTeamId = "team-2",
+            isHomeMatch = false
+        )
+
+        assertFalse(match.isHomeMatch)
+    }
+
+    @Test
+    fun `Match copy updates isHomeMatch correctly`() {
+        val homeMatch = Match(
+            id = "match-1",
+            date = "2025-12-28",
+            playerTeamId = "team-1",
+            opponentTeamId = "team-2",
+            isHomeMatch = true
+        )
+
+        val awayMatch = homeMatch.copy(isHomeMatch = false)
+
+        assertTrue(homeMatch.isHomeMatch)
+        assertFalse(awayMatch.isHomeMatch)
+    }
+
+    @Test
+    fun `Match with different isHomeMatch values are not equal`() {
+        val homeMatch = Match(
+            id = "match-1",
+            date = "2025-12-28",
+            playerTeamId = "team-1",
+            opponentTeamId = "team-2",
+            isHomeMatch = true
+        )
+
+        val awayMatch = Match(
+            id = "match-1",
+            date = "2025-12-28",
+            playerTeamId = "team-1",
+            opponentTeamId = "team-2",
+            isHomeMatch = false
+        )
+
+        assertNotEquals(homeMatch, awayMatch)
     }
 }
