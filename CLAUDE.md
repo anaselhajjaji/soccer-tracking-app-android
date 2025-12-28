@@ -22,25 +22,24 @@ The user requested an Android app with the following features:
    - Goals
    - Assists
    - General Offensive Actions
-2. **Action Counts**: Track number of each action type per session
+2. **Action Counts**: Track number of each action type per session (minimum 1 action required)
 3. **Session Types**: Distinguish between match and training sessions
 4. **Opponent Tracking**: Record opponent name with autocomplete for previously entered teams
 5. **Custom Date/Time**: Choose when the action occurred (not just current time)
-6. **Zero Actions Support**: Save entries with 0 actions to track participation without scoring
-7. **History View**: Display all entries with advanced filtering capabilities
+6. **History View**: Display all entries with advanced filtering capabilities
    - Filter by action type (All, Goals, Assists, Offensive Actions)
    - Filter by session type (Both, Match, Training)
    - Filter by opponent (All, No Opponent, or specific opponent)
    - Combine filters for precise searches
-8. **Progress Charts**: Visualize performance over time with triple filtering
+7. **Progress Charts**: Visualize performance over time with triple filtering
    - Select action type (required): Goals, Assists, or Offensive Actions
    - Filter by session type: Both, Match, or Training
    - Filter by opponent: All or specific opponent
-9. **Firebase Cloud Storage**: Direct cloud storage with automatic sync
+8. **Firebase Cloud Storage**: Direct cloud storage with automatic sync
    - Automatic sign-in on app startup
    - Data saved directly to Firebase Firestore
    - Cross-device synchronization
-10. **Data Management**: Delete individual entries if mistakes are made
+9. **Data Management**: Delete individual entries if mistakes are made
 
 **Technology Choices Made**:
 
@@ -241,7 +240,7 @@ Focused release improving test coverage and fixing test-related issues:
 data class SoccerAction(
     val id: Long = 0,              // Timestamp-based unique ID
     val dateTime: String,          // ISO-8601 format
-    val actionCount: Int,          // Number of actions (0+)
+    val actionCount: Int,          // Number of actions (1+, minimum 1 required)
     val actionType: String,        // "GOAL", "ASSIST", "OFFENSIVE_ACTION"
     val isMatch: Boolean,          // true = match, false = training
     val opponent: String = "",     // Opponent name (optional)
@@ -286,10 +285,10 @@ data class Team(
    - **Pattern**: Boolean properties stored without "is" prefix
    - **Solution**: Convert between `isMatch` (app) and `match` (Firestore) in serialization layer
 
-4. **Zero Actions Support**: Allow entries with 0 actions
-   - **Use Case**: Track participation without scoring
-   - **Implementation**: Removed `actionCount > 0` validation
-   - **Benefit**: Complete session tracking
+4. **Action Count Validation**: Require at least 1 action per entry
+   - **Rationale**: Ensure meaningful data tracking
+   - **Implementation**: Save button disabled when `actionCount == 0`
+   - **User Feedback**: Helper text indicates minimum 1 action required
 
 ### Firebase Service Design
 
@@ -428,10 +427,11 @@ data class SoccerAction(
 ### Input Validation
 
 **Action Entry Validation**:
-- Action count can be 0 or positive (zero allowed for participation tracking)
+- Action count must be 1 or greater (save button disabled at 0)
 - Action type selected from enum (no invalid values possible)
 - Session type is boolean toggle (always valid)
 - Opponent field accepts any string (autocomplete helps consistency)
+- Player and team selection optional (backward compatible with legacy entries)
 
 **Firebase Validation**:
 - Firebase enforces document structure

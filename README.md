@@ -23,8 +23,7 @@ An Android app for tracking your son's offensive actions during soccer matches a
 - **Optional Date & Time**: Choose current time or select custom date/time
   - "Use current date & time" checkbox (default)
   - Custom selection available when needed
-- **Zero Actions Support**: Save entries with 0 actions to track participation
-- **Increment Controls**: Easy +/- buttons for quick data entry
+- **Increment Controls**: Easy +/- buttons for quick data entry (minimum 1 action required)
 - **Edit Entries**: Modify any recorded action from history screen
 
 ### Data Visualization
@@ -281,12 +280,13 @@ See [QUALITY_REPORTS.md](QUALITY_REPORTS.md) for detailed information about each
 ### Adding an Entry
 
 1. Open the app to the "Add" screen
-2. Use the + and - buttons to set the number of offensive actions (0 or more)
+2. Use the + and - buttons to set the number of offensive actions (at least 1 required)
 3. Select custom date and time (or use current time)
 4. Select the action type: Goal, Assist, or Offensive Action
 5. Select whether it was a Match or Training session
 6. Optionally enter opponent name (autocomplete will suggest previously entered opponents)
-7. Tap "Save Entry"
+7. Optionally select a player and team
+8. Tap "Save Entry"
 
 ### Viewing History
 
@@ -590,7 +590,6 @@ For issues or questions:
 - Session type differentiation (Match/Training)
 - Opponent tracking with autocomplete
 - Custom date/time selection
-- Zero action entries for participation tracking
 - Advanced history filters (action type, session type, opponent)
 - Progress charts with triple filtering
 - Firebase Firestore cloud storage
