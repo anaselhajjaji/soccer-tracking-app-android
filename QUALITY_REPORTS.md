@@ -4,7 +4,43 @@ This document explains all the quality reports generated for the Soccer Tracker 
 
 ## Available Reports
 
-### 1. Test Results Report
+### 1. Detekt Static Analysis Report (Kotlin)
+
+**What it shows:**
+- Code smells and anti-patterns
+- Complexity metrics
+- Style violations
+- Potential bugs
+- Best practice violations
+- 164 issues found (formatting, wildcards, complexity)
+
+**Location (Local):**
+```
+app/build/reports/detekt/detekt.html
+```
+
+**Location (CI):**
+- Go to GitHub Actions → Select workflow run
+- Download "detekt-report" artifact
+- Extract and open `detekt.html`
+
+**Generate locally:**
+```bash
+./gradlew detekt
+open app/build/reports/detekt/detekt.html
+```
+
+**Categories analyzed:**
+- Complexity (method length, nesting, parameters)
+- Empty blocks
+- Exceptions handling
+- Formatting (spacing, naming)
+- Naming conventions
+- Performance issues
+- Potential bugs
+- Style issues
+
+### 2. Test Results Report
 
 **What it shows:**
 - All unit test results (55 tests)
@@ -28,7 +64,7 @@ app/build/reports/tests/testDebugUnitTest/index.html
 open app/build/reports/tests/testDebugUnitTest/index.html
 ```
 
-### 2. Code Coverage Report (JaCoCo)
+### 3. Code Coverage Report (JaCoCo)
 
 **What it shows:**
 - Line coverage percentage
@@ -59,7 +95,7 @@ open app/build/reports/jacoco/jacocoTestReport/html/index.html
 - Services: Firebase operations (may need mocking for 100%)
 - UI Screens: Limited coverage (Compose UI testing needed)
 
-### 3. Android Lint Report
+### 4. Android Lint Report
 
 **What it shows:**
 - Code quality issues
@@ -89,7 +125,12 @@ open app/build/reports/lint-results-debug.html
 - 8 warnings (all for dependencies requiring SDK 36)
 - 0 errors
 
-### 4. Build Report
+**Detekt:**
+- 164 issues found (formatting, wildcards, complexity)
+- Report generated successfully
+- Does not fail build (informational only)
+
+### 5. Build Report
 
 **What it shows:**
 - Build success/failure
@@ -120,7 +161,8 @@ This will:
 2. Run tests
 3. Generate coverage report
 4. Run lint
-5. Open all reports in browser
+5. Run Detekt static analysis
+6. Open all reports in browser
 
 ### Individual Commands
 
@@ -134,8 +176,11 @@ This will:
 # Lint only
 ./gradlew lintDebug
 
+# Detekt only
+./gradlew detekt
+
 # All quality checks
-./gradlew clean test jacocoTestReport lintDebug
+./gradlew clean test jacocoTestReport lintDebug detekt
 ```
 
 ## CI/CD Artifacts
@@ -146,6 +191,7 @@ Every GitHub Actions run generates these artifacts:
 |--------------|----------|-----------|
 | `app-debug` | Debug APK | 7 days |
 | `app-debug-androidTest` | Test APK | 7 days |
+| `detekt-report` | Detekt HTML | 7 days |
 | `lint-report` | Lint HTML report | 7 days |
 | `coverage-report` | JaCoCo HTML + XML | 7 days |
 | `test-report` | Unit test HTML | 7 days |

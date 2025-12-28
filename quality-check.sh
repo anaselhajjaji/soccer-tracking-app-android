@@ -42,13 +42,13 @@ else
     echo -e "\033[0;31m⚠️  Lint report not generated${NC}"
 fi
 
-# Run detekt (if available)
-if ./gradlew tasks --all 2>/dev/null | grep -q "detekt"; then
-    echo -e "${YELLOW}🔍 Running Detekt analysis...${NC}"
-    ./gradlew detekt --quiet
-    if [ -f "app/build/reports/detekt/detekt.html" ]; then
-        echo -e "${GREEN}✅ Detekt report generated${NC}"
-    fi
+# Run detekt
+echo -e "${YELLOW}🔍 Running Detekt static analysis...${NC}"
+./gradlew detekt --quiet
+if [ -f "app/build/reports/detekt/detekt.html" ]; then
+    echo -e "${GREEN}✅ Detekt report generated${NC}"
+else
+    echo -e "\033[0;31m⚠️  Detekt report not generated${NC}"
 fi
 
 echo ""
@@ -85,6 +85,11 @@ fi
 if [ -f "app/build/reports/lint-results-debug.html" ]; then
     open app/build/reports/lint-results-debug.html 2>/dev/null || \
     xdg-open app/build/reports/lint-results-debug.html 2>/dev/null
+fi
+
+if [ -f "app/build/reports/tests/testDebugUnitTest/index.html" ]; then
+    open app/build/reports/tests/testDebugUnitTest/index.html 2>/dev/null || \
+    xdg-open app/build/reports/tests/testDebugUnitTest/index.html 2>/dev/null
 fi
 
 if [ -f "app/build/reports/detekt/detekt.html" ]; then

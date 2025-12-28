@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
     id("com.google.gms.google-services")
     id("jacoco")
+    id("io.gitlab.arturbosch.detekt") version "1.23.4"
 }
 
 android {
@@ -128,6 +129,24 @@ dependencies {
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Detekt - Static code analysis
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.4")
+}
+
+// Detekt configuration for Kotlin static analysis
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom("$projectDir/config/detekt.yml")
+    ignoreFailures = true  // Generate report but don't fail build
+
+    reports {
+        html.required.set(true)
+        xml.required.set(false)
+        txt.required.set(false)
+        sarif.required.set(false)
+    }
 }
 
 // JaCoCo configuration for code coverage
