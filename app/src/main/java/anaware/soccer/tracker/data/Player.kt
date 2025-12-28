@@ -32,7 +32,7 @@ data class Player(
      */
     fun getFormattedBirthdate(): String {
         val date = getBirthdate()
-        return date.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+        return date.format(DateTimeFormatter.ofPattern("MMM dd, yyyy", java.util.Locale.US))
     }
 
     /**

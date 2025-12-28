@@ -67,9 +67,9 @@ class PlayerTest {
     @Test
     fun `getFormattedBirthdate handles different months correctly`() {
         val players = listOf(
-            Player(birthdate = "2010-01-15") to "Jan. 15, 2010",
-            Player(birthdate = "2010-12-25") to "Dec. 25, 2010",
-            Player(birthdate = "2015-07-04") to "Jul. 04, 2015"
+            Player(birthdate = "2010-01-15") to "Jan 15, 2010",
+            Player(birthdate = "2010-12-25") to "Dec 25, 2010",
+            Player(birthdate = "2015-07-04") to "Jul 04, 2015"
         )
 
         players.forEach { (player, expected) ->
