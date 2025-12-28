@@ -38,7 +38,15 @@ fun AddActionScreen(
     var showSuccessMessage by remember { mutableStateOf(false) }
     var showOpponentSuggestions by remember { mutableStateOf(false) }
 
+    // Player and Team selection
+    var selectedPlayerId by remember { mutableStateOf("") }
+    var selectedTeamId by remember { mutableStateOf("") }
+    var showPlayerDropdown by remember { mutableStateOf(false) }
+    var showTeamDropdown by remember { mutableStateOf(false) }
+
     val opponents by viewModel.distinctOpponents.collectAsState(initial = emptyList())
+    val players by viewModel.distinctPlayers.collectAsState(initial = emptyList())
+    val teams by viewModel.distinctTeams.collectAsState(initial = emptyList())
 
     // Date and Time state
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -320,7 +328,144 @@ fun AddActionScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Player Selection
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Player (Optional)",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                if (players.isEmpty()) {
+                    Text(
+                        text = "No players yet. Add players from the Account tab.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { showPlayerDropdown = !showPlayerDropdown },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = if (selectedPlayerId.isNotEmpty()) {
+                                    viewModel.getPlayerById(selectedPlayerId)?.getDisplayName() ?: "Select Player"
+                                } else {
+                                    "Select Player"
+                                }
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showPlayerDropdown,
+                            onDismissRequest = { showPlayerDropdown = false },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("None") },
+                                onClick = {
+                                    selectedPlayerId = ""
+                                    selectedTeamId = ""
+                                    showPlayerDropdown = false
+                                }
+                            )
+                            players.forEach { player ->
+                                DropdownMenuItem(
+                                    text = { Text(player.getDisplayName()) },
+                                    onClick = {
+                                        selectedPlayerId = player.id
+                                        showPlayerDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Team Selection (only if player selected)
+        if (selectedPlayerId.isNotEmpty()) {
+            val selectedPlayer = viewModel.getPlayerById(selectedPlayerId)
+            val playerTeams = selectedPlayer?.teams?.mapNotNull { teamId ->
+                viewModel.getTeamById(teamId)
+            } ?: emptyList()
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Team",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    if (playerTeams.isEmpty()) {
+                        Text(
+                            text = "This player has no teams. Edit player to add teams.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedButton(
+                                onClick = { showTeamDropdown = !showTeamDropdown },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = if (selectedTeamId.isNotEmpty()) {
+                                        viewModel.getTeamById(selectedTeamId)?.getDisplayName() ?: "Select Team"
+                                    } else {
+                                        "Select Team"
+                                    }
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = showTeamDropdown,
+                                onDismissRequest = { showTeamDropdown = false },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                playerTeams.forEach { team ->
+                                    DropdownMenuItem(
+                                        text = { Text(team.getDisplayName()) },
+                                        onClick = {
+                                            selectedTeamId = team.id
+                                            showTeamDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Save Button (now enabled even with 0 actions)
         Button(
@@ -332,6 +477,8 @@ fun AddActionScreen(
                     isMatch = isMatch,
                     dateTime = dateTime,
                     opponent = opponent,
+                    playerId = selectedPlayerId,
+                    teamId = selectedTeamId,
                     context = context
                 )
                 // Reset form
@@ -341,6 +488,8 @@ fun AddActionScreen(
                 selectedDate = LocalDate.now()
                 selectedTime = LocalTime.now()
                 opponent = ""
+                selectedPlayerId = ""
+                selectedTeamId = ""
                 showSuccessMessage = true
             },
             modifier = Modifier

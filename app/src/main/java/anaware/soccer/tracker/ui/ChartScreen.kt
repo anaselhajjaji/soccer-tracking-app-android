@@ -40,54 +40,35 @@ fun ChartScreen(
         )
     } // null = both, true = match, false = training
     var selectedOpponent by remember { mutableStateOf<String?>(null) } // null = all opponents
+    var selectedPlayerId by remember { mutableStateOf<String?>(null) } // null = all players
+    var selectedTeamId by remember { mutableStateOf<String?>(null) } // null = all teams
 
     val opponents by viewModel.distinctOpponents.collectAsState(initial = emptyList())
+    val players by viewModel.distinctPlayers.collectAsState(initial = emptyList())
+    val teams by viewModel.distinctTeams.collectAsState(initial = emptyList())
 
-    val actions by remember(selectedActionType, selectedSessionType, selectedOpponent) {
-        when {
-            selectedActionType == null -> {
-                // No action type selected - return empty flow
-                kotlinx.coroutines.flow.flowOf(emptyList())
-            }
-            selectedActionType != null && selectedSessionType != null && selectedOpponent != null ->
-                viewModel.getActionsByTypeSessionAndOpponent(
-                    selectedActionType!!,
-                    selectedSessionType!!,
-                    selectedOpponent!!
-                )
-            selectedActionType != null && selectedOpponent != null ->
-                viewModel.getActionsByTypeAndOpponent(selectedActionType!!, selectedOpponent!!)
-            selectedActionType != null && selectedSessionType != null ->
-                viewModel.getActionsByTypeAndSessionType(selectedActionType!!, selectedSessionType!!)
-            selectedActionType != null ->
-                viewModel.getActionsByType(selectedActionType!!)
-            else ->
-                kotlinx.coroutines.flow.flowOf(emptyList())
-        }
-    }.collectAsState(initial = emptyList())
+    val allActions by viewModel.allActions.collectAsState()
 
-    val totalCount by remember(selectedActionType, selectedSessionType, selectedOpponent) {
-        when {
-            selectedActionType == null -> {
-                // No action type selected
-                kotlinx.coroutines.flow.flowOf(null)
+    val actions = remember(allActions, selectedActionType, selectedSessionType, selectedOpponent, selectedPlayerId, selectedTeamId) {
+        if (selectedActionType == null) {
+            emptyList()
+        } else {
+            allActions.filter { action ->
+                val matchesActionType = action.getActionTypeEnum() == selectedActionType
+                val matchesSessionType = selectedSessionType == null || action.isMatch == selectedSessionType
+                val matchesOpponent = selectedOpponent == null || action.opponent == selectedOpponent
+                val matchesPlayer = selectedPlayerId == null ||
+                    (selectedPlayerId == "Legacy" && action.isLegacyAction()) ||
+                    action.playerId == selectedPlayerId
+                val matchesTeam = selectedTeamId == null || action.teamId == selectedTeamId
+                matchesActionType && matchesSessionType && matchesOpponent && matchesPlayer && matchesTeam
             }
-            selectedActionType != null && selectedSessionType != null && selectedOpponent != null ->
-                viewModel.getTotalCountByTypeSessionAndOpponent(
-                    selectedActionType!!,
-                    selectedSessionType!!,
-                    selectedOpponent!!
-                )
-            selectedActionType != null && selectedOpponent != null ->
-                viewModel.getTotalCountByTypeAndOpponent(selectedActionType!!, selectedOpponent!!)
-            selectedActionType != null && selectedSessionType != null ->
-                viewModel.getTotalCountByTypeAndSessionType(selectedActionType!!, selectedSessionType!!)
-            selectedActionType != null ->
-                viewModel.getTotalCountByType(selectedActionType!!)
-            else ->
-                kotlinx.coroutines.flow.flowOf(null)
         }
-    }.collectAsState(initial = null)
+    }
+
+    val totalCount = remember(actions) {
+        actions.sumOf { it.actionCount }
+    }
 
     Column(
         modifier = modifier
@@ -226,6 +207,140 @@ fun ChartScreen(
                     } else {
                         TextButton(onClick = { showAllOpponents = true }) {
                             Text("Show More (${opponents.size - 3} more)")
+                        }
+                    }
+                }
+
+                // Player Filter (only show if there are players)
+                if (players.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Filter by Player",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        FilterChip(
+                            selected = selectedPlayerId == null,
+                            onClick = { selectedPlayerId = null },
+                            label = { Text("All") }
+                        )
+
+                        FilterChip(
+                            selected = selectedPlayerId == "Legacy",
+                            onClick = {
+                                selectedPlayerId = if (selectedPlayerId == "Legacy") null else "Legacy"
+                            },
+                            label = { Text("Legacy") }
+                        )
+
+                        players.take(2).forEach { player ->
+                            FilterChip(
+                                selected = selectedPlayerId == player.id,
+                                onClick = {
+                                    selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
+                                },
+                                label = { Text(player.getDisplayName()) }
+                            )
+                        }
+                    }
+
+                    if (players.size > 2) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        var showAllPlayers by remember { mutableStateOf(false) }
+
+                        if (showAllPlayers) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                players.drop(2).forEach { player ->
+                                    FilterChip(
+                                        selected = selectedPlayerId == player.id,
+                                        onClick = {
+                                            selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
+                                        },
+                                        label = { Text(player.getDisplayName()) }
+                                    )
+                                }
+                            }
+                            TextButton(onClick = { showAllPlayers = false }) {
+                                Text("Show Less")
+                            }
+                        } else {
+                            TextButton(onClick = { showAllPlayers = true }) {
+                                Text("Show More (${players.size - 2} more)")
+                            }
+                        }
+                    }
+                }
+
+                // Team Filter (only show if there are teams)
+                if (teams.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Filter by Team",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        FilterChip(
+                            selected = selectedTeamId == null,
+                            onClick = { selectedTeamId = null },
+                            label = { Text("All") }
+                        )
+
+                        teams.take(3).forEach { team ->
+                            FilterChip(
+                                selected = selectedTeamId == team.id,
+                                onClick = {
+                                    selectedTeamId = if (selectedTeamId == team.id) null else team.id
+                                },
+                                label = { Text(team.getDisplayName()) }
+                            )
+                        }
+                    }
+
+                    if (teams.size > 3) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        var showAllTeams by remember { mutableStateOf(false) }
+
+                        if (showAllTeams) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                teams.drop(3).forEach { team ->
+                                    FilterChip(
+                                        selected = selectedTeamId == team.id,
+                                        onClick = {
+                                            selectedTeamId = if (selectedTeamId == team.id) null else team.id
+                                        },
+                                        label = { Text(team.getDisplayName()) }
+                                    )
+                                }
+                            }
+                            TextButton(onClick = { showAllTeams = false }) {
+                                Text("Show Less")
+                            }
+                        } else {
+                            TextButton(onClick = { showAllTeams = true }) {
+                                Text("Show More (${teams.size - 3} more)")
+                            }
                         }
                     }
                 }

@@ -119,7 +119,28 @@ fun SoccerTrackerApp(
                 ChartScreen(viewModel = viewModel)
             }
             composable(Screen.Backup.route) {
-                BackupScreen(viewModel = viewModel)
+                BackupScreen(
+                    viewModel = viewModel,
+                    navController = navController
+                )
+            }
+            composable(Screen.Players.route) {
+                PlayerManagementScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.navigateUp() }
+                )
+            }
+            composable(Screen.Teams.route) {
+                TeamManagementScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.navigateUp() }
+                )
+            }
+            composable(Screen.Migration.route) {
+                MigrationScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.navigateUp() }
+                )
             }
         }
     }
@@ -133,6 +154,9 @@ sealed class Screen(val route: String) {
     data object History : Screen("history")
     data object Chart : Screen("chart")
     data object Backup : Screen("backup")
+    data object Players : Screen("players")
+    data object Teams : Screen("teams")
+    data object Migration : Screen("migration")
 }
 
 /**

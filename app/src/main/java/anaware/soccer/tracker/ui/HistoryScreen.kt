@@ -30,6 +30,8 @@ fun HistoryScreen(
     val context = LocalContext.current
     val allActions by viewModel.allActions.collectAsState()
     val opponents by viewModel.distinctOpponents.collectAsState()
+    val players by viewModel.distinctPlayers.collectAsState()
+    val teams by viewModel.distinctTeams.collectAsState()
     val totalCount by viewModel.totalActionCount.collectAsState()
     var actionToDelete by remember { mutableStateOf<SoccerAction?>(null) }
 
@@ -41,22 +43,28 @@ fun HistoryScreen(
         )
     } // null = Both, true = Match, false = Training
     var selectedOpponent by remember { mutableStateOf<String?>(null) }
+    var selectedPlayerId by remember { mutableStateOf<String?>(null) }
+    var selectedTeamId by remember { mutableStateOf<String?>(null) }
     var showFilters by remember { mutableStateOf(false) }
 
     // Apply filters
-    val filteredActions = remember(allActions, selectedActionType, selectedSessionType, selectedOpponent) {
+    val filteredActions = remember(allActions, selectedActionType, selectedSessionType, selectedOpponent, selectedPlayerId, selectedTeamId) {
         allActions.filter { action ->
             val matchesActionType = selectedActionType == null || action.getActionTypeEnum() == selectedActionType
             val matchesSessionType = selectedSessionType == null || action.isMatch == selectedSessionType
             val matchesOpponent = selectedOpponent == null ||
                 (selectedOpponent == "No Opponent" && action.opponent.isBlank()) ||
                 action.opponent == selectedOpponent
-            matchesActionType && matchesSessionType && matchesOpponent
+            val matchesPlayer = selectedPlayerId == null ||
+                (selectedPlayerId == "Legacy" && action.isLegacyAction()) ||
+                action.playerId == selectedPlayerId
+            val matchesTeam = selectedTeamId == null || action.teamId == selectedTeamId
+            matchesActionType && matchesSessionType && matchesOpponent && matchesPlayer && matchesTeam
         }
     }
 
     // Check if any filters are active
-    val hasActiveFilters = selectedActionType != null || selectedSessionType != null || selectedOpponent != null
+    val hasActiveFilters = selectedActionType != null || selectedSessionType != null || selectedOpponent != null || selectedPlayerId != null || selectedTeamId != null
 
     Column(
         modifier = modifier
@@ -153,6 +161,8 @@ fun HistoryScreen(
                                     selectedActionType = null
                                     selectedSessionType = null
                                     selectedOpponent = null
+                                    selectedPlayerId = null
+                                    selectedTeamId = null
                                 }
                             ) {
                                 Text("Clear All")
@@ -271,6 +281,105 @@ fun HistoryScreen(
                             }
                         }
                     }
+
+                    // Player Filter (only show if there are players)
+                    if (players.isNotEmpty()) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                        Text(
+                            text = "Player",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        // Show "All" and "Legacy Entries" options
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            FilterChip(
+                                selected = selectedPlayerId == null,
+                                onClick = { selectedPlayerId = null },
+                                label = { Text("All") }
+                            )
+                            FilterChip(
+                                selected = selectedPlayerId == "Legacy",
+                                onClick = {
+                                    selectedPlayerId = if (selectedPlayerId == "Legacy") null else "Legacy"
+                                },
+                                label = { Text("Legacy Entries") }
+                            )
+                        }
+
+                        // Show player chips
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            players.chunked(2).forEach { chunk ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    chunk.forEach { player ->
+                                        FilterChip(
+                                            selected = selectedPlayerId == player.id,
+                                            onClick = {
+                                                selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
+                                            },
+                                            label = { Text(player.getDisplayName()) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Team Filter (only show if there are teams)
+                    if (teams.isNotEmpty()) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                        Text(
+                            text = "Team",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        // Show "All" option
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            FilterChip(
+                                selected = selectedTeamId == null,
+                                onClick = { selectedTeamId = null },
+                                label = { Text("All") }
+                            )
+                        }
+
+                        // Show team chips
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            teams.chunked(2).forEach { chunk ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    chunk.forEach { team ->
+                                        FilterChip(
+                                            selected = selectedTeamId == team.id,
+                                            onClick = {
+                                                selectedTeamId = if (selectedTeamId == team.id) null else team.id
+                                            },
+                                            label = { Text(team.getDisplayName()) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -317,6 +426,7 @@ fun HistoryScreen(
                 items(filteredActions, key = { it.id }) { action ->
                     ActionEntryCard(
                         action = action,
+                        viewModel = viewModel,
                         onDeleteClick = { actionToDelete = action }
                     )
                 }
@@ -366,6 +476,7 @@ fun HistoryScreen(
 @Composable
 private fun ActionEntryCard(
     action: SoccerAction,
+    viewModel: SoccerViewModel,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -448,6 +559,49 @@ private fun ActionEntryCard(
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(top = 8.dp)
                     )
+                }
+
+                // Player and Team info
+                if (action.isLegacyAction()) {
+                    // Show "Legacy Entry" badge for actions without player
+                    AssistChip(
+                        onClick = { },
+                        label = {
+                            Text(
+                                text = "Legacy Entry",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            labelColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        ),
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                } else {
+                    // Show player and team information
+                    Column(modifier = Modifier.padding(top = 8.dp)) {
+                        val player = viewModel.getPlayerById(action.playerId)
+                        val team = viewModel.getTeamById(action.teamId)
+
+                        if (player != null) {
+                            Text(
+                                text = "Player: ${player.getDisplayName()}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        if (team != null) {
+                            Text(
+                                text = "Team: ${team.getDisplayName()}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+                    }
                 }
             }
 
