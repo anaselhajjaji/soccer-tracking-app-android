@@ -2,17 +2,16 @@ package anaware.soccer.tracker.ui
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -36,7 +35,7 @@ fun SoccerTrackerApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val uiState by viewModel.uiState.collectAsState()
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     // Attempt automatic sign-in on app startup
     LaunchedEffect(Unit) {
@@ -162,7 +161,7 @@ private val bottomNavItems = listOf(
     ),
     BottomNavItem(
         route = Screen.Chart.route,
-        icon = Icons.Default.ShowChart,
+        icon = Icons.AutoMirrored.Filled.ShowChart,
         label = "Progress"
     ),
     BottomNavItem(

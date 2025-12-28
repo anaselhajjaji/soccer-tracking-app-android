@@ -180,7 +180,7 @@ fun HistoryScreen(
                         }
                     }
 
-                    Divider(modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                     // Session Type Filter
                     Text(
@@ -215,7 +215,7 @@ fun HistoryScreen(
 
                     // Opponent Filter (only show if there are opponents)
                     if (opponents.isNotEmpty()) {
-                        Divider(modifier = Modifier.padding(vertical = 4.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                         Text(
                             text = "Opponent",
