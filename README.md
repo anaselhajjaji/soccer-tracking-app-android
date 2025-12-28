@@ -411,6 +411,7 @@ Data is stored in Firebase Firestore with the following structure:
 | league | String | League/tournament name (optional) |
 | playerScore | Int | Player team's score (-1 = not recorded) |
 | opponentScore | Int | Opponent team's score (-1 = not recorded) |
+| isHomeMatch | Boolean | True if home match, false if away (default: true) |
 
 ## Customization
 
@@ -563,8 +564,9 @@ The app now organizes actions into matches with automatic creation and complete 
 - **Match Management UI**: Dedicated screen to view, add, edit, and delete matches
 - **Match Cards**: Display team names, date, scores, result chips (Win/Loss/Draw), league, and action count
 - **Match Grouping**: Actions are linked to matches, making it easy to see all actions from a specific game
-- **Match Metadata**: Each match stores date, player team, opponent team, league/tournament, and final score
+- **Match Metadata**: Each match stores date, player team, opponent team, league/tournament, final score, and home/away status
 - **Match Name**: Automatically generated display name (e.g., "Team Blue vs Team Red")
+- **Home/Away Field**: Specify whether each match is home or away with FilterChip toggle
 - **Unified Team Entity**: Opponent teams are now full Team entities (same as player teams)
 - **Smart Matching**: Same date + same teams = same match (prevents duplicates)
 - **Score Tracking**: Optional match scores (playerScore and opponentScore) with win/loss/draw calculation
@@ -573,10 +575,11 @@ The app now organizes actions into matches with automatic creation and complete 
 
 **Data Model Updates:**
 
-- Added Match entity with date, teams, league, and scores
+- Added Match entity with date, teams, league, scores, and home/away status (8 fields)
 - SoccerAction now includes matchId field linking to matches
 - BackupData updated to version 4 with match serialization
 - Firestore schema now includes `/users/{userId}/matches/` collection
+- Match.isHomeMatch field (Boolean, default: true) for home/away tracking
 
 **Technical Implementation:**
 
@@ -591,15 +594,30 @@ The app now organizes actions into matches with automatic creation and complete 
 
 **UI Improvements:**
 
-- **AddActionScreen**: Default player selection, match selection UI, inline match creation
+- **AddActionScreen**: Default player selection, match selection UI, inline match creation, home/away toggle
 - **HistoryScreen**: Match names displayed instead of separate team/opponent fields
+- **MatchManagementScreen**: Home/away toggle in add/edit match dialog
+- **ChartScreen**: Improved filtering with collapsible panel and team-based opponent selection
 - **Cleaner Display**: More concise action cards with match grouping information
+
+**Progress Chart Filter Improvements:**
+
+- **Collapsible Filter Panel**: All filters hidden behind toggle button (matches History screen pattern)
+- **Filter Button Highlight**: Button changes color when filters are active
+- **Opponent Team Dropdown**: Replaced opponent string chips with proper Team entity dropdown
+- **Opponent Teams from Matches**: Sources opponent teams from matches collection (consistent data model)
+- **Player Filter Cleanup**: Removed "Legacy" option from player filter chips
+- **Team Dropdown Selector**: Replaced team filter chips with dropdown for cleaner, more scalable UI
+- **"All" Chip Plus Dropdown**: Each filter section has "All" chip + dropdown selector pattern
+- **Clear All Filters**: Single button to reset all filters at once
+- **Consistent UX**: Matches the collapsible filter pattern used in History screen
 
 **Future Enhancements** (planned but not yet implemented):
 
 - Match Details screen showing all actions in a match
 - Match filtering in History and Progress screens
 - Match statistics and analytics
+- Home/Away badge display in match cards
 
 ---
 

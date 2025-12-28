@@ -652,6 +652,7 @@ fun AddActionScreen(
         var newMatchPlayerTeamId by remember { mutableStateOf("") }
         var newMatchOpponentTeamId by remember { mutableStateOf("") }
         var newMatchLeague by remember { mutableStateOf("") }
+        var newMatchIsHome by remember { mutableStateOf(true) }
         var showNewMatchDatePicker by remember { mutableStateOf(false) }
         var newMatchPlayerTeamExpanded by remember { mutableStateOf(false) }
         var newMatchOpponentTeamExpanded by remember { mutableStateOf(false) }
@@ -764,8 +765,29 @@ fun AddActionScreen(
                         label = { Text("League/Tournament (Optional)") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 16.dp)
+                            .padding(bottom = 8.dp)
                     )
+
+                    // Home/Away toggle
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = newMatchIsHome,
+                            onClick = { newMatchIsHome = true },
+                            label = { Text("Home") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = !newMatchIsHome,
+                            onClick = { newMatchIsHome = false },
+                            label = { Text("Away") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
 
                     // Buttons
                     Row(
@@ -785,6 +807,7 @@ fun AddActionScreen(
                                     league = newMatchLeague,
                                     playerScore = -1,
                                     opponentScore = -1,
+                                    isHomeMatch = newMatchIsHome,
                                     context = context
                                 )
                                 // The newly created match will be available after ViewModel updates

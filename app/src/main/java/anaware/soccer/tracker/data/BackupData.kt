@@ -166,7 +166,8 @@ data class BackupMatch(
     val opponentTeamId: String = "",
     val league: String = "",
     val playerScore: Int = -1,
-    val opponentScore: Int = -1
+    val opponentScore: Int = -1,
+    val isHomeMatch: Boolean = true
 ) {
     /**
      * Converts this backup match to a Match entity.
@@ -179,7 +180,8 @@ data class BackupMatch(
             opponentTeamId = opponentTeamId,
             league = league,
             playerScore = playerScore,
-            opponentScore = opponentScore
+            opponentScore = opponentScore,
+            isHomeMatch = isHomeMatch
         )
     }
 
@@ -195,7 +197,8 @@ data class BackupMatch(
                 opponentTeamId = match.opponentTeamId,
                 league = match.league,
                 playerScore = match.playerScore,
-                opponentScore = match.opponentScore
+                opponentScore = match.opponentScore,
+                isHomeMatch = match.isHomeMatch
             )
         }
     }

@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter
  * @property league Optional league or tournament name
  * @property playerScore Player team's score (-1 if not recorded)
  * @property opponentScore Opponent team's score (-1 if not recorded)
+ * @property isHomeMatch True if home match, false if away match (default true)
  */
 data class Match(
     val id: String = "",
@@ -24,7 +25,8 @@ data class Match(
     val opponentTeamId: String = "",
     val league: String = "",
     val playerScore: Int = -1,
-    val opponentScore: Int = -1
+    val opponentScore: Int = -1,
+    val isHomeMatch: Boolean = true
 ) {
     /**
      * Converts the ISO date string to LocalDate.

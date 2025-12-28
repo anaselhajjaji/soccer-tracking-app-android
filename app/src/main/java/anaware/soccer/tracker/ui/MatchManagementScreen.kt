@@ -128,7 +128,7 @@ fun MatchManagementScreen(
                 showAddDialog = false
                 editingMatch = null
             },
-            onSave = { date, playerTeamId, opponentTeamId, league, playerScore, opponentScore ->
+            onSave = { date, playerTeamId, opponentTeamId, league, playerScore, opponentScore, isHomeMatch ->
                 if (editingMatch != null) {
                     // Edit existing match
                     val updated = editingMatch!!.copy(
@@ -137,7 +137,8 @@ fun MatchManagementScreen(
                         opponentTeamId = opponentTeamId,
                         league = league,
                         playerScore = playerScore,
-                        opponentScore = opponentScore
+                        opponentScore = opponentScore,
+                        isHomeMatch = isHomeMatch
                     )
                     viewModel.updateMatch(updated, context)
                 } else {
@@ -149,6 +150,7 @@ fun MatchManagementScreen(
                         league = league,
                         playerScore = playerScore,
                         opponentScore = opponentScore,
+                        isHomeMatch = isHomeMatch,
                         context = context
                     )
                 }
@@ -304,7 +306,7 @@ private fun MatchDialog(
     match: Match?,
     teams: List<Team>,
     onDismiss: () -> Unit,
-    onSave: (String, String, String, String, Int, Int) -> Unit,
+    onSave: (String, String, String, String, Int, Int, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedDate by remember {
@@ -321,6 +323,7 @@ private fun MatchDialog(
     var league by remember { mutableStateOf(match?.league ?: "") }
     var playerScore by remember { mutableStateOf(match?.playerScore ?: -1) }
     var opponentScore by remember { mutableStateOf(match?.opponentScore ?: -1) }
+    var isHomeMatch by remember { mutableStateOf(match?.isHomeMatch ?: true) }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var playerTeamExpanded by remember { mutableStateOf(false) }
@@ -475,6 +478,27 @@ private fun MatchDialog(
                     )
                 }
 
+                // Home/Away toggle
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = isHomeMatch,
+                        onClick = { isHomeMatch = true },
+                        label = { Text("Home") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = !isHomeMatch,
+                        onClick = { isHomeMatch = false },
+                        label = { Text("Away") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
                 // Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -492,7 +516,8 @@ private fun MatchDialog(
                                 selectedOpponentTeam!!.id,
                                 league,
                                 playerScore,
-                                opponentScore
+                                opponentScore,
+                                isHomeMatch
                             )
                         },
                         enabled = isValid

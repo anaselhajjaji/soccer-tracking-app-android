@@ -113,10 +113,11 @@ Major feature release adding Match entity to group related actions into matches 
 
 1. **Match Entity**:
    - **Match Model**: Group actions into matches with metadata
-   - **7 Fields**: id (UUID), date, playerTeamId, opponentTeamId, league, playerScore, opponentScore
+   - **8 Fields**: id (UUID), date, playerTeamId, opponentTeamId, league, playerScore, opponentScore, isHomeMatch
    - **Computed Properties**: getLocalDate(), getFormattedDate(), getScoreDisplay(), getResult(), hasScores()
    - **Match Result Enum**: WIN, LOSS, DRAW for match outcomes
    - **Match Name**: Auto-generated display name "Player Team vs Opponent Team" (not stored)
+   - **Home/Away Field**: Boolean field to specify whether match is home or away (default: true)
 
 2. **Automatic Match Creation**:
    - **Smart Detection**: When adding match action, automatically creates/finds match
@@ -193,6 +194,25 @@ Major feature release adding Match entity to group related actions into matches 
    - **All 222 unit tests passing** (111 tests × 2 variants)
    - **Test Coverage**: Match entity has comprehensive unit test coverage
 
+12. **Progress Chart Filter Improvements** (v1.2.0 Update):
+   - **Collapsible Filter Panel**: All filters hidden behind toggle button (like History screen)
+   - **Filter Button Highlight**: Button changes color when filters are active
+   - **Opponent Team Dropdown**: Replaced opponent string chips with proper team dropdown selector
+   - **Opponent Teams from Matches**: Sources opponent teams from matches collection (Team entities)
+   - **Player Filter Cleanup**: Removed "Legacy" option from player filter chips
+   - **Team Dropdown Selector**: Replaced team filter chips with dropdown for cleaner UI
+   - **"All" Chip Plus Dropdown**: Each filter section has "All" chip + dropdown selector
+   - **Clear All Filters**: Single button to reset all filters at once
+   - **Consistent UI**: Matches the collapsible filter pattern from History screen
+
+13. **Home/Away Match Field** (v1.2.0 Update):
+   - **isHomeMatch Field**: New boolean field in Match entity (default: true)
+   - **UI Toggle**: Home/Away FilterChip toggle in match creation/editing dialogs
+   - **AddActionScreen**: Home/Away selection when creating new match inline
+   - **MatchManagementScreen**: Home/Away selection in add/edit match dialog
+   - **Backward Compatibility**: Existing matches default to home matches
+   - **Full Integration**: Included in all match CRUD operations and serialization
+
 **Impact**:
 - All 222 unit tests passing (111 tests × 2 variants)
 - All 17 UI tests passing on Firebase Test Lab
@@ -201,12 +221,15 @@ Major feature release adding Match entity to group related actions into matches 
 - Manual match CRUD through dedicated management UI
 - Legacy data automatically upgraded to use matches
 - Complete match lifecycle management (view, add, edit, delete)
+- Improved Progress Chart filtering UX with collapsible panel
+- Home/Away match specification for better tracking
 
 **Future Enhancements** (planned but not yet implemented):
 
 - MatchDetailsScreen.kt - View match details with all associated actions
 - Match filtering in History and Progress screens
 - Match statistics and analytics
+- Home/Away match badge display in match cards
 
 ### v1.0.1 - Coverage Improvements & Bug Fixes (December 2025)
 

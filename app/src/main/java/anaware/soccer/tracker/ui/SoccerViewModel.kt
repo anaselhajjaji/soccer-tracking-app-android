@@ -851,6 +851,7 @@ class SoccerViewModel : ViewModel() {
         league: String,
         playerScore: Int,
         opponentScore: Int,
+        isHomeMatch: Boolean,
         context: Context
     ) {
         viewModelScope.launch {
@@ -863,7 +864,8 @@ class SoccerViewModel : ViewModel() {
                 opponentTeamId = opponentTeamId,
                 league = league,
                 playerScore = playerScore,
-                opponentScore = opponentScore
+                opponentScore = opponentScore,
+                isHomeMatch = isHomeMatch
             )
 
             val result = service.addMatch(match)
