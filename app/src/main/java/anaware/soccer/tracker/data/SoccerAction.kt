@@ -22,7 +22,9 @@ data class SoccerAction(
 
     val playerId: String = "", // ID of the player who performed the action
 
-    val teamId: String = "" // ID of the team the player was representing
+    val teamId: String = "", // ID of the team the player was representing
+
+    val matchId: String = "" // ID of the match this action belongs to (empty for training or legacy)
 ) {
     /**
      * Returns the action type as an ActionType enum.

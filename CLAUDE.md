@@ -102,10 +102,78 @@ Major feature release adding comprehensive player and team management capabiliti
 
 **Impact**:
 - All 304 unit tests passing (152 tests × 2 variants)
-- All 9 UI tests passing on Firebase Test Lab
+- All 17 UI tests passing on Firebase Test Lab
 - Full backward compatibility with existing data
 - Enhanced tracking capabilities for multi-player households
 - Improved data organization and filtering
+
+### v1.2.0 - Match Entity with Automatic Match Creation (December 2025)
+
+Major feature release adding Match entity to group related actions into matches with automatic creation:
+
+1. **Match Entity**:
+   - **Match Model**: Group actions into matches with metadata
+   - **7 Fields**: id (UUID), date, playerTeamId, opponentTeamId, league, playerScore, opponentScore
+   - **Computed Properties**: getLocalDate(), getFormattedDate(), getScoreDisplay(), getResult(), hasScores()
+   - **Match Result Enum**: WIN, LOSS, DRAW for match outcomes
+   - **Match Name**: Auto-generated display name "Player Team vs Opponent Team" (not stored)
+
+2. **Automatic Match Creation**:
+   - **Smart Detection**: When adding match action, automatically creates/finds match
+   - **Match Matching**: Same date + same teams = same match (prevents duplicates)
+   - **Opponent Team Creation**: Converts opponent strings to Team entities automatically
+   - **Seamless Integration**: No UI changes needed - works with existing Add screen
+   - **Optional for Training**: Training actions can optionally be linked to matches
+
+3. **Legacy Migration**:
+   - **Automatic Migration**: Runs on app startup, converts legacy match actions
+   - **Opponent Conversion**: Creates Team entities from existing opponent strings
+   - **Match Creation**: Creates matches from legacy action dates and opponents
+   - **Idempotent**: Safe to run multiple times, preserves existing data
+   - **Zero User Intervention**: All migration happens automatically in background
+
+4. **Firebase Service Enhancements**:
+   - **Match CRUD Operations**: addMatch(), updateMatch(), deleteMatch(), getAllMatches(), getMatchById()
+   - **Helper Methods**:
+     - `findOrCreateMatch()` - Looks for existing match, creates if not found
+     - `findOrCreateOpponentTeam()` - Converts opponent names to Team entities
+   - **Firestore Structure**: `/users/{userId}/matches/{matchId}`
+   - **UUID Generation**: `generateMatchId()` for match identification
+
+5. **ViewModel Updates**:
+   - **Match State Management**: `_allMatches` StateFlow for reactive UI updates
+   - **Enhanced addAction()**: Integrated automatic match creation logic
+   - **Migration Method**: `migrateLegacyActionsToMatches()` for backward compatibility
+   - **Startup Loading**: Matches loaded automatically with players and teams
+
+6. **Data Model Extensions**:
+   - **SoccerAction**: Added `matchId: String = ""` field (default empty for training/legacy)
+   - **Match Model**: id, date, playerTeamId, opponentTeamId, league, playerScore, opponentScore
+   - **BackupData v4**: Updated serialization with match support
+   - **BackupMatch**: Conversion methods between Match and BackupMatch
+
+7. **Testing**:
+   - **MatchTest.kt**: 29 new tests covering date formatting, score display, result calculation
+   - **SoccerActionTest.kt**: Added 7 tests for matchId field handling
+   - **BackupDataTest.kt**: Updated for version 4 with 8 BackupMatch tests
+   - **All 222 unit tests passing** (111 tests × 2 variants)
+   - **Test Coverage**: Match entity has comprehensive unit test coverage
+
+**Impact**:
+- All 222 unit tests passing (111 tests × 2 variants)
+- All 17 UI tests passing on Firebase Test Lab
+- Full backward compatibility with existing data
+- Automatic match creation eliminates manual match management
+- Legacy data automatically upgraded to use matches
+- Foundation for future match management UI screens
+
+**Future Enhancements** (planned but not yet implemented):
+
+- MatchManagementScreen.kt - UI to view and manage all matches
+- MatchDetailsScreen.kt - View match details with all associated actions
+- EditMatchDialog.kt - Edit match metadata (date, teams, league, scores)
+- Match filtering in History and Progress screens
+- Match statistics and analytics
 
 ### v1.0.1 - Coverage Improvements & Bug Fixes (December 2025)
 

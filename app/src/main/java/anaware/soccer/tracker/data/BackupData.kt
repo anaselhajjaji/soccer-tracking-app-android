@@ -8,14 +8,15 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class BackupData(
-    val version: Int = 3,
+    val version: Int = 4,
     val exportDate: String,
     val actions: List<BackupAction>,
     val players: List<BackupPlayer> = emptyList(),
-    val teams: List<BackupTeam> = emptyList()
+    val teams: List<BackupTeam> = emptyList(),
+    val matches: List<BackupMatch> = emptyList()
 ) {
     companion object {
-        const val CURRENT_VERSION = 3
+        const val CURRENT_VERSION = 4
     }
 }
 
@@ -31,7 +32,8 @@ data class BackupAction(
     val match: Boolean = false, // Firestore uses "match" not "isMatch"
     val opponent: String = "",
     val playerId: String = "",
-    val teamId: String = ""
+    val teamId: String = "",
+    val matchId: String = ""
 ) {
     /**
      * Converts this backup action to a SoccerAction entity.
@@ -46,7 +48,8 @@ data class BackupAction(
             isMatch = match, // Convert from Firestore "match" to "isMatch"
             opponent = opponent,
             playerId = playerId,
-            teamId = teamId
+            teamId = teamId,
+            matchId = matchId
         )
     }
 
@@ -62,7 +65,8 @@ data class BackupAction(
                 match = action.isMatch, // Convert from "isMatch" to Firestore "match"
                 opponent = action.opponent,
                 playerId = action.playerId,
-                teamId = action.teamId
+                teamId = action.teamId,
+                matchId = action.matchId
             )
         }
     }
@@ -145,6 +149,53 @@ data class BackupTeam(
                 color = team.color,
                 league = team.league,
                 season = team.season
+            )
+        }
+    }
+}
+
+/**
+ * Serializable representation of a Match for backup.
+ * Must have no-arg constructor for Firestore deserialization.
+ */
+@Serializable
+data class BackupMatch(
+    val id: String = "",
+    val date: String = "",
+    val playerTeamId: String = "",
+    val opponentTeamId: String = "",
+    val league: String = "",
+    val playerScore: Int = -1,
+    val opponentScore: Int = -1
+) {
+    /**
+     * Converts this backup match to a Match entity.
+     */
+    fun toMatch(): Match {
+        return Match(
+            id = id,
+            date = date,
+            playerTeamId = playerTeamId,
+            opponentTeamId = opponentTeamId,
+            league = league,
+            playerScore = playerScore,
+            opponentScore = opponentScore
+        )
+    }
+
+    companion object {
+        /**
+         * Creates a BackupMatch from a Match entity.
+         */
+        fun fromMatch(match: Match): BackupMatch {
+            return BackupMatch(
+                id = match.id,
+                date = match.date,
+                playerTeamId = match.playerTeamId,
+                opponentTeamId = match.opponentTeamId,
+                league = match.league,
+                playerScore = match.playerScore,
+                opponentScore = match.opponentScore
             )
         }
     }

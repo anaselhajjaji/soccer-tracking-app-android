@@ -542,4 +542,148 @@ class SoccerActionTest {
         assertEquals("player-123", upgraded.playerId)
         assertEquals("team-456", upgraded.teamId)
     }
+
+    // Match entity tests
+
+    @Test
+    fun `constructor without matchId creates action with empty matchId`() {
+        val action = SoccerAction(
+            id = 1,
+            dateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            actionCount = 5,
+            actionType = ActionType.GOAL.name,
+            isMatch = true,
+            opponent = "Team A"
+        )
+
+        assertEquals("", action.matchId)
+    }
+
+    @Test
+    fun `constructor with matchId creates action correctly`() {
+        val action = SoccerAction(
+            id = 1,
+            dateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            actionCount = 5,
+            actionType = ActionType.GOAL.name,
+            isMatch = true,
+            opponent = "Team A",
+            matchId = "match-123"
+        )
+
+        assertEquals("match-123", action.matchId)
+    }
+
+    @Test
+    fun `training action can have empty matchId`() {
+        val action = SoccerAction(
+            id = 1,
+            dateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            actionCount = 5,
+            actionType = ActionType.GOAL.name,
+            isMatch = false,
+            opponent = "",
+            matchId = ""
+        )
+
+        assertEquals("", action.matchId)
+        assertFalse(action.isMatch)
+    }
+
+    @Test
+    fun `training action can have matchId if manually assigned`() {
+        val action = SoccerAction(
+            id = 1,
+            dateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            actionCount = 5,
+            actionType = ActionType.GOAL.name,
+            isMatch = false,
+            opponent = "",
+            matchId = "match-123"
+        )
+
+        assertEquals("match-123", action.matchId)
+        assertFalse(action.isMatch)
+    }
+
+    @Test
+    fun `SoccerAction equals considers matchId`() {
+        val dateTime = LocalDateTime.of(2025, 12, 19, 15, 45)
+        val action1 = SoccerAction(
+            id = 1,
+            dateTime = dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            actionCount = 5,
+            actionType = "GOAL",
+            isMatch = true,
+            opponent = "Team A",
+            playerId = "player-123",
+            teamId = "team-456",
+            matchId = "match-1"
+        )
+
+        val action2 = SoccerAction(
+            id = 1,
+            dateTime = dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            actionCount = 5,
+            actionType = "GOAL",
+            isMatch = true,
+            opponent = "Team A",
+            playerId = "player-123",
+            teamId = "team-456",
+            matchId = "match-1"
+        )
+
+        val action3 = SoccerAction(
+            id = 1,
+            dateTime = dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            actionCount = 5,
+            actionType = "GOAL",
+            isMatch = true,
+            opponent = "Team A",
+            playerId = "player-123",
+            teamId = "team-456",
+            matchId = "match-2"
+        )
+
+        assertEquals(action1, action2)
+        assertNotEquals(action1, action3)
+    }
+
+    @Test
+    fun `SoccerAction copy preserves matchId`() {
+        val original = SoccerAction(
+            id = 1,
+            dateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            actionCount = 5,
+            actionType = ActionType.GOAL.name,
+            isMatch = true,
+            opponent = "Team A",
+            playerId = "player-123",
+            teamId = "team-456",
+            matchId = "match-123"
+        )
+
+        val copied = original.copy(actionCount = 10)
+
+        assertEquals("match-123", copied.matchId)
+        assertEquals(10, copied.actionCount)
+    }
+
+    @Test
+    fun `Legacy match action can be upgraded with matchId`() {
+        val legacy = SoccerAction(
+            id = 1,
+            dateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            actionCount = 5,
+            actionType = ActionType.GOAL.name,
+            isMatch = true,
+            opponent = "Team A"
+        )
+
+        assertEquals("", legacy.matchId)
+
+        val upgraded = legacy.copy(matchId = "match-123")
+
+        assertEquals("match-123", upgraded.matchId)
+    }
 }

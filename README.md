@@ -514,11 +514,52 @@ For issues or questions:
 
 ## Version
 
-**v1.1.0** - Multi-Player & Team Management + Edit Features (December 2025)
+**v1.2.0** - Match Entity with Automatic Match Creation (December 2025)
 
 ### Latest Changes
 
+**Match Entity with Automatic Match Creation:**
+
+The app now organizes actions into matches with automatic creation and management:
+
+- **Automatic Match Creation**: When recording a match action, the app automatically creates or finds the appropriate match
+- **Match Grouping**: Actions are linked to matches, making it easy to see all actions from a specific game
+- **Match Metadata**: Each match stores date, player team, opponent team, league/tournament, and final score
+- **Match Name**: Automatically generated display name (e.g., "Team Blue vs Team Red")
+- **Unified Team Entity**: Opponent teams are now full Team entities (same as player teams)
+- **Smart Matching**: Same date + same teams = same match (prevents duplicates)
+- **Score Tracking**: Optional match scores (playerScore and opponentScore) with win/loss/draw calculation
+- **Legacy Migration**: Existing opponent strings automatically converted to Team entities and linked to matches
+
+**Data Model Updates:**
+
+- Added Match entity with date, teams, league, and scores
+- SoccerAction now includes matchId field linking to matches
+- BackupData updated to version 4 with match serialization
+- Firestore schema now includes `/users/{userId}/matches/` collection
+
+**Technical Implementation:**
+
+- FirebaseService extended with Match CRUD operations
+- findOrCreateMatch() helper prevents duplicate match creation
+- findOrCreateOpponentTeam() converts opponent strings to Team entities
+- Automatic legacy migration on app startup (idempotent and seamless)
+- All 222 unit tests passing (111 tests × 2 variants including 29 new Match tests)
+- Full backward compatibility with existing data
+
+**Future Enhancements** (planned but not yet implemented):
+
+- Match Management UI to view and edit all matches
+- Match Details screen showing all actions in a match
+- Match filtering in History and Progress screens
+- Match statistics and analytics
+
+---
+
+**v1.1.0** - Multi-Player & Team Management (December 2025)
+
 **Multi-Player & Team Management:**
+
 - Track multiple players with name, birthdate, and jersey number
 - Manage teams with name, color, league, and season
 - Players can belong to multiple teams
@@ -530,29 +571,34 @@ For issues or questions:
 - Firestore schema v3 with player and team collections
 
 **Edit Functionality:**
+
 - Edit button on every history entry card
 - Comprehensive edit dialog for updating all fields
 - Changes persist to Firebase and update locally
 - Optimistic updates for instant UI feedback
 
 **Optional Date/Time:**
+
 - "Use current date & time" checkbox (enabled by default)
 - Automatic timestamp when checkbox is enabled
 - Custom date/time selection when unchecked
 - Simplified data entry for most common use case
 
 **Enhanced Filtering:**
+
 - Filter history by player (specific player or "Legacy Entries")
 - Filter history by team with color indicators
 - All filters work together (action, session, opponent, player, team)
 - Progress charts include player and team filtering
 
 **Management Access:**
+
 - Floating action menu on Account screen
 - Direct access to player and team management
 - Maintains 4-tab navigation (Add, History, Progress, Account)
 
 **Technical:**
+
 - Extended data models with player and team support
 - SoccerAction now includes playerId and teamId fields
 - BackupData v3 with player and team serialization
