@@ -202,6 +202,32 @@ class FirebaseService(private val context: Context) {
     }
 
     /**
+     * Update an existing soccer action in Firestore.
+     */
+    suspend fun updateAction(action: SoccerAction): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            // Convert to BackupAction format for storage
+            val backupAction = anaware.soccer.tracker.data.BackupAction.fromSoccerAction(action)
+
+            // Update in Firestore at users/{userId}/actions/{actionId}
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("actions")
+                .document(action.id.toString())
+                .set(backupAction)  // set() will create or update
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Get all soccer actions from Firestore for the current user.
      */
     suspend fun getAllActions(): Result<List<SoccerAction>> = withContext(Dispatchers.IO) {

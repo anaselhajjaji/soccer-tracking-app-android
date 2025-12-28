@@ -49,6 +49,7 @@ fun AddActionScreen(
     val teams by viewModel.distinctTeams.collectAsState(initial = emptyList())
 
     // Date and Time state
+    var useCurrentDateTime by remember { mutableStateOf(true) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var selectedTime by remember { mutableStateOf(LocalTime.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -163,6 +164,24 @@ fun AddActionScreen(
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
+                // Checkbox for using current date/time
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = useCurrentDateTime,
+                        onCheckedChange = { useCurrentDateTime = it }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Use current date & time",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -170,7 +189,8 @@ fun AddActionScreen(
                     // Date button
                     OutlinedButton(
                         onClick = { showDatePicker = true },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !useCurrentDateTime
                     ) {
                         Icon(
                             imageVector = Icons.Default.CalendarToday,
@@ -184,7 +204,8 @@ fun AddActionScreen(
                     // Time button
                     OutlinedButton(
                         onClick = { showTimePicker = true },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !useCurrentDateTime
                     ) {
                         Icon(
                             imageVector = Icons.Default.Schedule,
@@ -470,7 +491,11 @@ fun AddActionScreen(
         // Save Button (now enabled even with 0 actions)
         Button(
             onClick = {
-                val dateTime = LocalDateTime.of(selectedDate, selectedTime)
+                val dateTime = if (useCurrentDateTime) {
+                    LocalDateTime.now()
+                } else {
+                    LocalDateTime.of(selectedDate, selectedTime)
+                }
                 viewModel.addAction(
                     actionCount = actionCount,
                     actionType = actionType,

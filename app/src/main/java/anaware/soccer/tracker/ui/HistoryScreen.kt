@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.SportsScore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 /**
  * Screen displaying the history of all soccer action entries.
@@ -34,6 +41,7 @@ fun HistoryScreen(
     val teams by viewModel.distinctTeams.collectAsState()
     val totalCount by viewModel.totalActionCount.collectAsState()
     var actionToDelete by remember { mutableStateOf<SoccerAction?>(null) }
+    var actionToEdit by remember { mutableStateOf<SoccerAction?>(null) }
 
     // Filter states
     var selectedActionType by remember { mutableStateOf<ActionType?>(null) }
@@ -427,11 +435,27 @@ fun HistoryScreen(
                     ActionEntryCard(
                         action = action,
                         viewModel = viewModel,
+                        onEditClick = { actionToEdit = action },
                         onDeleteClick = { actionToDelete = action }
                     )
                 }
             }
         }
+    }
+
+    // Edit action dialog
+    if (actionToEdit != null) {
+        EditActionDialog(
+            action = actionToEdit!!,
+            viewModel = viewModel,
+            players = players,
+            teams = teams,
+            onDismiss = { actionToEdit = null },
+            onSave = { updatedAction ->
+                viewModel.updateAction(updatedAction, context)
+                actionToEdit = null
+            }
+        )
     }
 
     // Delete confirmation dialog
@@ -478,6 +502,7 @@ private fun ActionEntryCard(
     action: SoccerAction,
     viewModel: SoccerViewModel,
     onDeleteClick: () -> Unit,
+    onEditClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -605,13 +630,262 @@ private fun ActionEntryCard(
                 }
             }
 
-            // Delete button
-            IconButton(onClick = onDeleteClick) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete entry",
-                    tint = MaterialTheme.colorScheme.error
+            // Edit and Delete buttons
+            Row {
+                IconButton(onClick = onEditClick) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit entry",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete entry",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Dialog for editing an existing soccer action entry.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditActionDialog(
+    action: SoccerAction,
+    viewModel: SoccerViewModel,
+    players: List<anaware.soccer.tracker.data.Player>,
+    teams: List<anaware.soccer.tracker.data.Team>,
+    onDismiss: () -> Unit,
+    onSave: (SoccerAction) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val actionDateTime = LocalDateTime.parse(action.dateTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+
+    var actionCount by remember { mutableIntStateOf(action.actionCount) }
+    var actionType by remember { mutableStateOf(action.getActionTypeEnum()) }
+    var isMatch by remember { mutableStateOf(action.isMatch) }
+    var opponent by remember { mutableStateOf(action.opponent) }
+    var selectedPlayerId by remember { mutableStateOf(action.playerId) }
+    var selectedTeamId by remember { mutableStateOf(action.teamId) }
+    var selectedDate by remember { mutableStateOf(actionDateTime.toLocalDate()) }
+    var selectedTime by remember { mutableStateOf(actionDateTime.toLocalTime()) }
+
+    var showPlayerDropdown by remember { mutableStateOf(false) }
+    var showTeamDropdown by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = modifier
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = "Edit Entry",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
+
+                // Action Count
+                Text(
+                    text = "Action Count: $actionCount",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    FilledTonalIconButton(
+                        onClick = { if (actionCount > 0) actionCount-- },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(Icons.Default.Remove, "Decrease")
+                    }
+                    FilledTonalIconButton(
+                        onClick = { actionCount++ },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(Icons.Default.Add, "Increase")
+                    }
+                }
+
+                // Action Type
+                Text(
+                    text = "Action Type",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    ActionType.all().forEach { type ->
+                        FilterChip(
+                            selected = actionType == type,
+                            onClick = { actionType = type },
+                            label = { Text(type.displayName(), style = MaterialTheme.typography.labelSmall) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                // Session Type
+                Text(
+                    text = "Session Type",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    FilterChip(
+                        selected = isMatch,
+                        onClick = { isMatch = true },
+                        label = { Text("Match") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = !isMatch,
+                        onClick = { isMatch = false },
+                        label = { Text("Training") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // Opponent
+                OutlinedTextField(
+                    value = opponent,
+                    onValueChange = { opponent = it },
+                    label = { Text("Opponent (Optional)") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    singleLine = true
+                )
+
+                // Player Selection
+                if (players.isNotEmpty()) {
+                    Text(
+                        text = "Player",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Box(modifier = Modifier.padding(bottom = 16.dp)) {
+                        OutlinedButton(
+                            onClick = { showPlayerDropdown = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = if (selectedPlayerId.isNotBlank()) {
+                                    viewModel.getPlayerById(selectedPlayerId)?.getDisplayName() ?: "Select Player"
+                                } else {
+                                    "Select Player"
+                                }
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showPlayerDropdown,
+                            onDismissRequest = { showPlayerDropdown = false }
+                        ) {
+                            players.forEach { player ->
+                                DropdownMenuItem(
+                                    text = { Text(player.getDisplayName()) },
+                                    onClick = {
+                                        selectedPlayerId = player.id
+                                        selectedTeamId = "" // Reset team
+                                        showPlayerDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Team Selection
+                if (selectedPlayerId.isNotBlank() && teams.isNotEmpty()) {
+                    val selectedPlayer = viewModel.getPlayerById(selectedPlayerId)
+                    val playerTeams = selectedPlayer?.teams?.mapNotNull { teamId ->
+                        viewModel.getTeamById(teamId)
+                    } ?: emptyList()
+
+                    if (playerTeams.isNotEmpty()) {
+                        Text(
+                            text = "Team",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Box(modifier = Modifier.padding(bottom = 16.dp)) {
+                            OutlinedButton(
+                                onClick = { showTeamDropdown = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = if (selectedTeamId.isNotBlank()) {
+                                        viewModel.getTeamById(selectedTeamId)?.getDisplayName() ?: "Select Team"
+                                    } else {
+                                        "Select Team"
+                                    }
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showTeamDropdown,
+                                onDismissRequest = { showTeamDropdown = false }
+                            ) {
+                                playerTeams.forEach { team ->
+                                    DropdownMenuItem(
+                                        text = { Text(team.getDisplayName()) },
+                                        onClick = {
+                                            selectedTeamId = team.id
+                                            showTeamDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val dateTime = LocalDateTime.of(selectedDate, selectedTime)
+                            val updatedAction = action.copy(
+                                actionCount = actionCount,
+                                actionType = actionType.name,
+                                isMatch = isMatch,
+                                opponent = opponent,
+                                playerId = selectedPlayerId,
+                                teamId = selectedTeamId,
+                                dateTime = dateTime.toString()
+                            )
+                            onSave(updatedAction)
+                        }
+                    ) {
+                        Text("Save")
+                    }
+                }
             }
         }
     }

@@ -173,6 +173,30 @@ class SoccerViewModel : ViewModel() {
     }
 
     /**
+     * Updates an existing soccer action record in Firebase.
+     */
+    fun updateAction(action: SoccerAction, context: Context) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val result = service.updateAction(action)
+
+            if (result.isSuccess) {
+                // Update in local list immediately for instant UI update
+                _allActions.value = _allActions.value.map {
+                    if (it.id == action.id) action else it
+                }.sortedByDescending { it.dateTime }
+                _uiState.value = _uiState.value.copy(
+                    message = "Entry updated successfully"
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to update entry: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
      * Deletes a specific soccer action record from Firebase.
      */
     fun deleteAction(action: SoccerAction, context: Context) {
