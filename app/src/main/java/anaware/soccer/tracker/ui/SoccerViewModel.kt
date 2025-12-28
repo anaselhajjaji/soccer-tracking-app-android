@@ -231,6 +231,51 @@ class SoccerViewModel : ViewModel() {
     }
 
     /**
+     * Adds a new soccer action with a pre-selected matchId (for existing matches).
+     * This method bypasses automatic match creation and directly assigns the provided matchId.
+     */
+    fun addActionWithMatch(
+        actionCount: Int,
+        actionType: ActionType,
+        dateTime: java.time.LocalDateTime,
+        playerId: String,
+        matchId: String,
+        context: Context? = null
+    ) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context ?: return@launch)
+
+            // Create action with the provided matchId
+            val actionId = FirebaseService.generateActionId()
+            val action = SoccerAction(
+                id = actionId,
+                dateTime = dateTime.toString(),
+                actionCount = actionCount,
+                actionType = actionType.name,
+                isMatch = true,
+                opponent = "", // Opponent stored in Match entity
+                playerId = playerId,
+                teamId = "", // Team stored in Match entity
+                matchId = matchId
+            )
+
+            // Save action
+            val result = service.addAction(action)
+            if (result.isSuccess) {
+                // Add to local list immediately for instant UI update
+                _allActions.value = (_allActions.value + action).sortedByDescending { it.dateTime }
+                _uiState.value = _uiState.value.copy(
+                    message = "Action recorded successfully"
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to save action: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
      * Updates an existing soccer action record in Firebase.
      */
     fun updateAction(action: SoccerAction, context: Context) {
