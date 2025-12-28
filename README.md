@@ -225,7 +225,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
 **Test configuration:**
 
 - **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
-- **Tests:** 9 UI tests covering navigation, input controls, and screen interactions
+- **Tests:** 17 UI tests covering navigation, input controls, validation, and screen interactions
 - **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
 
 ### Running Tests Locally
@@ -285,8 +285,9 @@ See [QUALITY_REPORTS.md](QUALITY_REPORTS.md) for detailed information about each
 4. Select the action type: Goal, Assist, or Offensive Action
 5. Select whether it was a Match or Training session
 6. Optionally enter opponent name (autocomplete will suggest previously entered opponents)
-7. Optionally select a player and team
-8. Tap "Save Entry"
+7. Select a player (required)
+8. Select a team (required - only shown after player is selected)
+9. Tap "Save Entry"
 
 ### Viewing History
 

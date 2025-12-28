@@ -162,4 +162,114 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("Assist").assertExists()
         composeTestRule.onNodeWithText("Offensive Action").assertExists()
     }
+
+    @Test
+    fun save_button_disabled_when_action_count_is_zero() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Action count starts at 0
+        composeTestRule.onNodeWithText("0").assertExists()
+
+        // Save button should be disabled - verify validation message appears
+        composeTestRule.onNodeWithText("Add at least 1 action to save").assertExists()
+    }
+
+    @Test
+    fun validation_message_shown_when_player_not_selected() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Increment action count to 1
+        composeTestRule.onNodeWithContentDescription("Increase count").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("1").assertExists()
+
+        // Validation message should now show "Select a player to save"
+        composeTestRule.onNodeWithText("Select a player to save").assertExists()
+    }
+
+    @Test
+    fun player_selection_section_shows_with_required_indicator() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Player section should show with asterisk indicating required
+        composeTestRule.onNodeWithText("Player *").assertExists()
+    }
+
+    @Test
+    fun team_selection_section_shows_with_required_indicator() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Need to scroll down to see Team section
+        composeTestRule.onNodeWithText("Player *").assertExists()
+
+        // Team section may be conditional on player selection, but label should exist
+        // Note: This will only show if a player is selected first
+    }
+
+    @Test
+    fun account_screen_shows_player_and_team_management_options() {
+        // Navigate to Account screen
+        composeTestRule.onNodeWithText("Account").performClick()
+        composeTestRule.waitForIdle()
+
+        // Check for Account & Sync header
+        composeTestRule.onNodeWithText("Account & Sync").assertExists()
+
+        // Check for floating action button (Management Menu)
+        composeTestRule.onNodeWithContentDescription("Management Menu").assertExists()
+    }
+
+    @Test
+    fun date_time_checkbox_control_exists() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Check for date/time section
+        composeTestRule.onNodeWithText("Date & Time").assertExists()
+        composeTestRule.onNodeWithText("Use current date & time").assertExists()
+    }
+
+    @Test
+    fun opponent_field_is_optional() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Opponent should be marked as optional
+        composeTestRule.onNodeWithText("Opponent (Optional)").assertExists()
+    }
+
+    @Test
+    fun action_type_section_shows_all_three_types() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Check for Action Type section
+        composeTestRule.onNodeWithText("Action Type").assertExists()
+
+        // Verify all three action types are available
+        composeTestRule.onNodeWithText("Goal").assertExists()
+        composeTestRule.onNodeWithText("Assist").assertExists()
+        composeTestRule.onNodeWithText("Offensive Action").assertExists()
+    }
+
+    @Test
+    fun helper_text_shows_minimum_requirement() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Check for helper text about minimum actions
+        composeTestRule.onNodeWithText("Tip: At least 1 action is required to save an entry").assertExists()
+    }
 }

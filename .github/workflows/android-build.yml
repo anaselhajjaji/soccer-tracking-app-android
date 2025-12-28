@@ -183,7 +183,7 @@ jobs:
 
           ### Test Results
           ✅ All unit tests passed (304 tests: 152 tests × 2 variants)
-          ✅ All UI tests passed (9 tests)
+          ✅ All UI tests passed (17 tests)
           ✅ Lint checks passed
 
           ### Installation

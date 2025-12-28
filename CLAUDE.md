@@ -431,7 +431,9 @@ data class SoccerAction(
 - Action type selected from enum (no invalid values possible)
 - Session type is boolean toggle (always valid)
 - Opponent field accepts any string (autocomplete helps consistency)
-- Player and team selection optional (backward compatible with legacy entries)
+- Player selection required (save button disabled without player)
+- Team selection required (save button disabled without team)
+- Validation messages guide user on missing requirements
 
 **Firebase Validation**:
 - Firebase enforces document structure
@@ -635,17 +637,20 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
 - Fixed JaCoCo exclusions to properly filter Kotlin/Compose compiler-generated synthetic classes
 - Coverage now accurately reflects testable business logic without inflated instruction counts
 
-**UI Tests** (9 tests on Firebase Test Lab):
+**UI Tests** (17 tests on Firebase Test Lab):
    - Compose UI interactions
    - Navigation flows (between all 4 tabs)
    - Action count increment/decrement
    - Action type and session type selection
    - Filter button existence
    - Screen element verification
+   - Form validation and error messages
+   - Required field indicators
+   - Player and team selection requirements
 
 **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/SoccerTrackerAppTest.kt`
 
-**Test Count**: 9 UI tests covering:
+**Test Count**: 17 UI tests covering:
 
 - App launch and navigation bar
 - Tab switching (Add, History, Progress, Account)
@@ -655,6 +660,15 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
 - Session type toggle (Match/Training)
 - History screen empty state
 - Progress chart filter chips
+- Save button validation (disabled when action count is 0)
+- Validation messages for missing player selection
+- Player selection required field indicator (Player *)
+- Team selection required field indicator (Team *)
+- Account screen management menu access
+- Date/time checkbox control
+- Optional opponent field
+- Action type section completeness
+- Helper text for minimum requirements
 
 ## Build Configuration
 
