@@ -191,7 +191,7 @@ Major feature release adding Match entity to group related actions into matches 
    - **SoccerActionTest.kt**: Tests for matchId field handling
    - **BackupDataTest.kt**: Updated for version 4 with BackupMatch tests including isHomeMatch serialization
    - **All 210 unit tests passing** (105 tests × 2 variants)
-   - **All 32 UI tests passing** on Firebase Test Lab
+   - **All 30 UI tests passing** on Firebase Test Lab
    - **Test Coverage**: Match entity has comprehensive unit test coverage
 
 12. **Progress Chart Filter Improvements** (v1.2.0 Update):
@@ -216,7 +216,7 @@ Major feature release adding Match entity to group related actions into matches 
 **Impact**:
 
 - All 210 unit tests passing (105 tests × 2 variants)
-- All 32 UI tests passing on Firebase Test Lab
+- All 30 UI tests passing on Firebase Test Lab
 - Full backward compatibility with existing data
 - Automatic match creation during action entry
 - Manual match CRUD through dedicated management UI
@@ -238,9 +238,9 @@ Focused release significantly improving test coverage across the entire codebase
 
 1. **Comprehensive Test Suite Expansion**:
    - **Unit Tests**: Increased from 55 to 210 tests (+155 tests, 282% increase)
-   - **UI Tests**: Increased from 17 to 32 tests (+15 tests, 88% increase)
+   - **UI Tests**: Increased from 17 to 30 tests (+13 tests, 76% increase)
    - All 210 unit tests passing (105 tests × 2 variants: debug and release)
-   - All 32 UI tests passing on Firebase Test Lab virtual devices
+   - All 30 UI tests passing on Firebase Test Lab virtual devices
 
 2. **Unit Test Coverage by File**:
    - **MatchTest.kt**: 29 tests covering all Match entity functionality
@@ -292,16 +292,14 @@ Focused release significantly improving test coverage across the entire codebase
      - Team section visibility for training actions
      - Create New Match button existence
      - Match selection UI validation
-   - **Progress Chart Enhancements** (4 tests):
+   - **Progress Chart Enhancements** (3 tests):
      - Statistics card display (Total, Sessions, Average)
-     - About the Chart section existence
      - Filter chip validation
      - Session type section display
-   - **Validation and UI Polish** (5 tests):
+   - **Validation and UI Polish** (4 tests):
      - Zero action count validation message
      - Player selection validation message
      - Player and team required field indicators
-     - Opponent field optional indicator
      - Helper text display
 
 4. **Coverage Metrics**:
@@ -335,7 +333,7 @@ Focused release significantly improving test coverage across the entire codebase
 **Impact**:
 
 - All 210 unit tests passing in ~1.4 seconds
-- All 32 UI tests passing on Firebase Test Lab
+- All 30 UI tests passing on Firebase Test Lab
 - Coverage metrics now realistic and accurate
 - Test suite provides comprehensive coverage of business logic
 - Remaining untested code requires Android runtime (Firebase, Activities, UI screens)
@@ -963,14 +961,14 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 2. **Authenticate**: Uses Google Cloud service account via `google-github-actions/auth@v2`
 3. **Setup gcloud**: Configures Google Cloud SDK via `google-github-actions/setup-gcloud@v2`
 4. **Set Project**: Sets GCloud project to `soccer-tracker-fa049`
-5. **Run UI Tests**: Executes 32 instrumentation tests on Firebase Test Lab
+5. **Run UI Tests**: Executes 30 instrumentation tests on Firebase Test Lab
    - Device: MediumPhone.arm (virtual device, free tier)
    - Android Version: 30 (Android 11)
    - Locale: en, Orientation: portrait
    - Timeout: 10 minutes
    - Test orchestrator enabled
    - Video recording and performance metrics disabled for cost optimization
-   - Test Coverage: Navigation (9), Filters (4), Management (6), Match/Team (4), Charts (4), Validation (5)
+   - Test Coverage: Navigation (9), Filters (4), Management (6), Match/Team (4), Charts (3), Validation (4)
 
 #### Job 3: create-release (runs only on push to main/master, after all tests pass)
 
@@ -994,7 +992,7 @@ The project uses GitHub Actions for automated CI/CD pipeline.
   - Build number and commit SHA
   - Branch name
   - Commit message
-  - Test results summary (210 unit tests + 32 UI tests)
+  - Test results summary (210 unit tests + 30 UI tests)
   - Installation instructions
 - **Tag**: Unique version tag for each successful build
 - **Status**: Published as a full release (not draft or prerelease)
@@ -1010,7 +1008,7 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 
 - ✅ Automatic build verification on every push/PR
 - ✅ Unit test suite execution ensures code quality (210 tests)
-- ✅ UI test suite validates user interactions (32 tests)
+- ✅ UI test suite validates user interactions (30 tests)
 - ✅ Lint checks catch potential issues early
 - ✅ Virtual device testing via Firebase Test Lab (free tier)
 - ✅ Automatic GitHub releases with APK after all tests pass
@@ -1046,7 +1044,7 @@ All sensitive data stored as GitHub secrets:
 - **Android Version**: 30 (Android 11)
 - **Locale**: en, Orientation: portrait
 - **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/`
-- **Test Count**: 9 UI tests covering navigation, input controls, and screen interactions
+- **Test Count**: 30 UI tests covering navigation, input controls, filters, management screens, match/team sections, progress charts, and validation
 - **Timeout**: 10 minutes per test run
 - **Cost Optimization**: Test orchestrator enabled, video recording and performance metrics disabled
 

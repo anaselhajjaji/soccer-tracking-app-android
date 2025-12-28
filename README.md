@@ -243,7 +243,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
 **Test configuration:**
 
 - **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
-- **Tests:** 32 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
+- **Tests:** 30 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
 - **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
 - **Test Coverage:**
   - 9 navigation and basic UI tests
@@ -597,7 +597,7 @@ The app now organizes actions into matches with automatic creation and complete 
 - MatchManagementScreen with complete CRUD interface
 - ViewModel methods: addMatch(), updateMatch(), deleteMatch(), getMatchById(), getActionsForMatch()
 - All 210 unit tests passing (105 tests × 2 variants)
-- All 32 UI tests passing on Firebase Test Lab
+- All 30 UI tests passing on Firebase Test Lab
 - Full backward compatibility with existing data
 
 **UI Improvements:**
@@ -683,7 +683,7 @@ The app now organizes actions into matches with automatic creation and complete 
 **Test Suite Enhancements:**
 - Increased unit tests from 55 to 210 tests (+155 tests, 282% increase)
 - All 210 tests passing (105 tests × 2 variants: debug and release)
-- Increased UI tests from 17 to 32 tests (+15 tests, 88% increase)
+- Increased UI tests from 17 to 30 tests (+13 tests, 76% increase)
 - Added comprehensive Match entity tests (29 tests)
 - Added BackupData serialization tests with isHomeMatch field
 - Added comprehensive ViewModel filtering tests (77% coverage)
@@ -706,8 +706,8 @@ The app now organizes actions into matches with automatic creation and complete 
 - 4 filter button and interaction tests
 - 6 management menu navigation tests
 - 4 match/team section display tests
-- 4 progress chart enhancement tests
-- 5 validation and UI polish tests
+- 3 progress chart enhancement tests
+- 4 validation and UI polish tests
 
 **Bug Fixes:**
 - Fixed Firebase service test that was attempting real Firebase calls

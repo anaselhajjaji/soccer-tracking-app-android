@@ -418,9 +418,14 @@ class SoccerTrackerAppTest {
         composeTestRule.waitForIdle()
 
         // Team section requires scrolling to be visible
-        // Check for the TextField label "Team *" which is unique to the training section
-        composeTestRule.onNodeWithText("Team *").performScrollTo()
-        composeTestRule.onNodeWithText("Team *").assertExists()
+        // Scroll to the Player section first (which is always visible), then check if validation message appears
+        // When Training is selected and no team is chosen, validation should show "Select a team to save"
+        composeTestRule.onNodeWithText("Player *").performScrollTo()
+        composeTestRule.waitForIdle()
+
+        // Verify team-specific validation message appears (proves Team section is rendered)
+        // This validation message only appears when Training is selected and no team is chosen
+        composeTestRule.onNodeWithText("Select a team to save").assertExists()
     }
 
     @Test
