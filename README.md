@@ -486,25 +486,30 @@ For issues or questions:
 
 ## Version
 
-**v1.1** - Platform Updates & Quality Integration (December 2025)
+**v1.0.1** - Coverage Improvements & Bug Fixes (December 2025)
 
 ### Latest Changes
 
-**Platform Upgrades:**
-- Upgraded to Android SDK 35, Kotlin 2.1.0, AGP 8.9.1, Gradle 8.12
-- Updated to Compose BOM 2025.01.00
-- Fixed all deprecations and modernized code
-- Reduced lint warnings by 56%
+**Test Coverage Improvements:**
+- Increased unit tests from 55 to 86 tests (+31 tests, 56% increase)
+- Improved overall coverage from 22% to 41% (+19 points, 86% increase)
+- Added comprehensive ViewModel filtering tests (77% coverage)
+- Created UiStateTest with 100% coverage
+- Added edge case tests for SoccerAction data model
+- Fixed JaCoCo exclusions to properly filter Compose synthetic classes
+- Coverage now accurately reflects testable business logic
 
-**Quality & Static Analysis:**
-- Added Detekt static analysis with auto-formatting
-- Integrated JaCoCo code coverage reporting
-- Created comprehensive quality reports documentation
-- 121 code formatting issues auto-fixed (74% improvement)
-- Updated CI/CD pipeline with all quality checks
-- All quality reports available as GitHub Actions artifacts
+**Bug Fixes:**
+- Fixed Firebase service test that was attempting real Firebase calls
+- Corrected JaCoCo configuration to exclude compiler-generated synthetic classes
+- Improved test reliability and accuracy
 
-**v1.0** - Initial Release (December 2025)
+**Documentation:**
+- Updated all documentation with new test counts and coverage metrics
+- Enhanced CLAUDE.md with detailed coverage breakdown
+- Updated README.md and QUALITY_REPORTS.md
+
+**v1.0.0** - Initial Release (December 2025)
 
 ### Core Features
 

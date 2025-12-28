@@ -44,7 +44,7 @@ open app/build/reports/detekt/detekt.html
 ### 2. Test Results Report
 
 **What it shows:**
-- All unit test results (55 tests)
+- All unit test results (86 tests)
 - Pass/fail status for each test
 - Test execution time
 - Test suites breakdown
@@ -90,11 +90,12 @@ app/build/reports/jacoco/jacocoTestReport/html/index.html
 open app/build/reports/jacoco/jacocoTestReport/html/index.html
 ```
 
-**Current coverage: ~16%** overall (~54% of testable business logic)
+**Current coverage: 41%** overall (86 unit tests)
 
 **Coverage breakdown:**
 - Data models: 94% (excellent coverage of core entities)
-- ViewModel: 54% (business logic with 16 tests)
+- ViewModel: 77% (business logic with 46 tests)
+- UI State: 100% (complete coverage with 10 tests)
 - Backup/Services: 0% (Firebase operations need mocking)
 
 **Excluded from coverage:**
