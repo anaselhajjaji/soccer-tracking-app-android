@@ -18,7 +18,11 @@ data class SoccerAction(
 
     val isMatch: Boolean, // true for match, false for training
 
-    val opponent: String = "" // Name of the opponent team or empty for training
+    val opponent: String = "", // Name of the opponent team or empty for training
+
+    val playerId: String = "", // ID of the player who performed the action
+
+    val teamId: String = "" // ID of the team the player was representing
 ) {
     /**
      * Returns the action type as an ActionType enum.
@@ -52,5 +56,12 @@ data class SoccerAction(
     fun getFormattedTime(): String {
         val dateTime = getLocalDateTime()
         return dateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+    }
+
+    /**
+     * Returns true if this is a legacy action (no player assigned).
+     */
+    fun isLegacyAction(): Boolean {
+        return playerId.isBlank()
     }
 }

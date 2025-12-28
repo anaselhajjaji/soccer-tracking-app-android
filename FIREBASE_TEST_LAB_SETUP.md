@@ -150,7 +150,7 @@ The GitHub Actions workflow (`.github/workflows/android-build.yml`) includes two
 - **Depends on:** `build-and-test` job must pass first
 - Downloads APK artifacts
 - Authenticates with Google Cloud
-- Runs UI tests on Firebase Test Lab
+- Runs 17 UI tests on Firebase Test Lab
 - Results viewable in GitHub Actions logs and Firebase Console
 
 ## Test Configuration
@@ -159,7 +159,7 @@ The GitHub Actions workflow (`.github/workflows/android-build.yml`) includes two
 
 The workflow is configured to run tests on:
 
-- **Model:** Pixel 2
+- **Model:** MediumPhone.arm (virtual device)
 - **Android Version:** 30 (Android 11)
 - **Locale:** en (English)
 - **Orientation:** portrait

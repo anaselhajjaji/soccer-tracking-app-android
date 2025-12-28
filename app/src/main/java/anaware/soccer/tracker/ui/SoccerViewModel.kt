@@ -2,7 +2,9 @@ package anaware.soccer.tracker.ui
 
 import anaware.soccer.tracker.backup.FirebaseService
 import anaware.soccer.tracker.data.ActionType
+import anaware.soccer.tracker.data.Player
 import anaware.soccer.tracker.data.SoccerAction
+import anaware.soccer.tracker.data.Team
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,6 +26,14 @@ class SoccerViewModel : ViewModel() {
     private val _allActions = MutableStateFlow<List<SoccerAction>>(emptyList())
     val allActions: StateFlow<List<SoccerAction>> = _allActions.asStateFlow()
 
+    // All players from Firebase
+    private val _allPlayers = MutableStateFlow<List<Player>>(emptyList())
+    val allPlayers: StateFlow<List<Player>> = _allPlayers.asStateFlow()
+
+    // All teams from Firebase
+    private val _allTeams = MutableStateFlow<List<Team>>(emptyList())
+    val allTeams: StateFlow<List<Team>> = _allTeams.asStateFlow()
+
     // Actions for chart display
     val chartActions: StateFlow<List<SoccerAction>> = _allActions
 
@@ -37,6 +47,24 @@ class SoccerViewModel : ViewModel() {
     // Distinct opponents for autocomplete
     val distinctOpponents: StateFlow<List<String>> = _allActions.map { actions ->
         actions.mapNotNull { it.opponent.takeIf { op -> op.isNotBlank() } }.distinct().sorted()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    // Distinct players sorted by name
+    val distinctPlayers: StateFlow<List<Player>> = _allPlayers.map { players ->
+        players.sortedBy { it.name }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    // Distinct teams sorted by name
+    val distinctTeams: StateFlow<List<Team>> = _allTeams.map { teams ->
+        teams.sortedBy { it.name }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -65,6 +93,8 @@ class SoccerViewModel : ViewModel() {
         actionType: ActionType,
         isMatch: Boolean,
         opponent: String,
+        playerId: String = "",
+        teamId: String = "",
         context: Context? = null
     ) {
         viewModelScope.launch {
@@ -78,7 +108,9 @@ class SoccerViewModel : ViewModel() {
                 actionCount = actionCount,
                 actionType = actionType.name,
                 isMatch = isMatch,
-                opponent = opponent
+                opponent = opponent,
+                playerId = playerId,
+                teamId = teamId
             )
 
             val result = service.addAction(action)
@@ -105,6 +137,8 @@ class SoccerViewModel : ViewModel() {
         isMatch: Boolean,
         dateTime: java.time.LocalDateTime,
         opponent: String,
+        playerId: String = "",
+        teamId: String = "",
         context: Context? = null
     ) {
         viewModelScope.launch {
@@ -118,7 +152,9 @@ class SoccerViewModel : ViewModel() {
                 actionCount = actionCount,
                 actionType = actionType.name,
                 isMatch = isMatch,
-                opponent = opponent
+                opponent = opponent,
+                playerId = playerId,
+                teamId = teamId
             )
 
             val result = service.addAction(action)
@@ -131,6 +167,30 @@ class SoccerViewModel : ViewModel() {
             } else {
                 _uiState.value = _uiState.value.copy(
                     message = "Failed to save action: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Updates an existing soccer action record in Firebase.
+     */
+    fun updateAction(action: SoccerAction, context: Context) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val result = service.updateAction(action)
+
+            if (result.isSuccess) {
+                // Update in local list immediately for instant UI update
+                _allActions.value = _allActions.value.map {
+                    if (it.id == action.id) action else it
+                }.sortedByDescending { it.dateTime }
+                _uiState.value = _uiState.value.copy(
+                    message = "Entry updated successfully"
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to update entry: ${result.exceptionOrNull()?.message}"
                 )
             }
         }
@@ -261,6 +321,8 @@ class SoccerViewModel : ViewModel() {
         service.signOut()
         _autoSyncEnabled.value = false
         _allActions.value = emptyList()
+        _allPlayers.value = emptyList()
+        _allTeams.value = emptyList()
         _syncStatus.value = "Signed out"
     }
 
@@ -361,6 +423,25 @@ class SoccerViewModel : ViewModel() {
                     } else {
                         _syncStatus.value = "Failed to load data: ${actionsResult.exceptionOrNull()?.message}"
                     }
+
+                    // Load all players from Firebase
+                    val playersResult = service.getAllPlayers()
+                    if (playersResult.isSuccess) {
+                        val players = playersResult.getOrNull() ?: emptyList()
+                        _allPlayers.value = players.sortedBy { it.name }
+                    }
+
+                    // Load all teams from Firebase
+                    val teamsResult = service.getAllTeams()
+                    if (teamsResult.isSuccess) {
+                        val teams = teamsResult.getOrNull() ?: emptyList()
+                        _allTeams.value = teams.sortedBy { it.name }
+                    }
+
+                    // Automatically migrate legacy actions
+                    if (actionsResult.isSuccess && playersResult.isSuccess) {
+                        performAutomaticMigration(service, context)
+                    }
                 } else {
                     _autoSyncEnabled.value = false
                     _syncStatus.value = "Not signed in - please sign in to use the app"
@@ -372,10 +453,277 @@ class SoccerViewModel : ViewModel() {
     }
 
     /**
+     * Automatically migrates legacy actions to a default player.
+     * Creates a default player if needed, and assigns all legacy actions to it.
+     */
+    private suspend fun performAutomaticMigration(service: FirebaseService, context: Context) {
+        val legacyActions = _allActions.value.filter { it.isLegacyAction() }
+        if (legacyActions.isEmpty()) {
+            return // No migration needed
+        }
+
+        // Check if a default player already exists
+        var defaultPlayer = _allPlayers.value.firstOrNull { it.name == "Player" }
+
+        if (defaultPlayer == null) {
+            // Create default player
+            val playerId = FirebaseService.generatePlayerId()
+            defaultPlayer = Player(
+                id = playerId,
+                name = "Player",
+                birthdate = "2010-01-01",
+                number = 0,
+                teams = emptyList()
+            )
+
+            val addResult = service.addPlayer(defaultPlayer)
+            if (addResult.isSuccess) {
+                _allPlayers.value = (_allPlayers.value + defaultPlayer).sortedBy { it.name }
+            } else {
+                return // Failed to create default player
+            }
+        }
+
+        // Migrate all legacy actions to the default player
+        legacyActions.forEach { action ->
+            val updateResult = service.updateActionPlayerTeam(
+                actionId = action.id,
+                playerId = defaultPlayer.id,
+                teamId = "" // No team assignment
+            )
+
+            if (updateResult.isSuccess) {
+                // Update local state
+                val updatedAction = action.copy(
+                    playerId = defaultPlayer.id,
+                    teamId = ""
+                )
+                val updatedActions = _allActions.value.map {
+                    if (it.id == action.id) updatedAction else it
+                }
+                _allActions.value = updatedActions
+            }
+        }
+
+        // Show migration status
+        _syncStatus.value = "Migrated ${legacyActions.size} legacy entries to '${defaultPlayer.name}'"
+    }
+
+    /**
      * Clear sync status message.
      */
     fun clearSyncStatus() {
         _syncStatus.value = null
+    }
+
+    // ========== Player Management ==========
+
+    /**
+     * Adds a new player to Firebase and local state.
+     */
+    fun addPlayer(
+        name: String,
+        birthdate: String,
+        number: Int,
+        teams: List<String>,
+        context: Context
+    ) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val playerId = FirebaseService.generatePlayerId()
+            val player = Player(
+                id = playerId,
+                name = name,
+                birthdate = birthdate,
+                number = number,
+                teams = teams
+            )
+
+            val result = service.addPlayer(player)
+            if (result.isSuccess) {
+                _allPlayers.value = (_allPlayers.value + player).sortedBy { it.name }
+                _uiState.value = _uiState.value.copy(message = "Player added successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to add player: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Updates an existing player in Firebase and local state.
+     */
+    fun updatePlayer(player: Player, context: Context) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val result = service.updatePlayer(player)
+
+            if (result.isSuccess) {
+                _allPlayers.value = _allPlayers.value.map {
+                    if (it.id == player.id) player else it
+                }.sortedBy { it.name }
+                _uiState.value = _uiState.value.copy(message = "Player updated successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to update player: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Deletes a player from Firebase and local state.
+     */
+    fun deletePlayer(player: Player, context: Context) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val result = service.deletePlayer(player.id)
+
+            if (result.isSuccess) {
+                _allPlayers.value = _allPlayers.value.filter { it.id != player.id }
+                _uiState.value = _uiState.value.copy(message = "Player deleted")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to delete player: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Gets a player by ID.
+     */
+    fun getPlayerById(playerId: String): Player? {
+        return _allPlayers.value.find { it.id == playerId }
+    }
+
+    // ========== Team Management ==========
+
+    /**
+     * Adds a new team to Firebase and local state.
+     */
+    fun addTeam(
+        name: String,
+        color: String,
+        league: String,
+        season: String,
+        context: Context
+    ) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val teamId = FirebaseService.generateTeamId()
+            val team = Team(
+                id = teamId,
+                name = name,
+                color = color,
+                league = league,
+                season = season
+            )
+
+            val result = service.addTeam(team)
+            if (result.isSuccess) {
+                _allTeams.value = (_allTeams.value + team).sortedBy { it.name }
+                _uiState.value = _uiState.value.copy(message = "Team added successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to add team: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Updates an existing team in Firebase and local state.
+     */
+    fun updateTeam(team: Team, context: Context) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val result = service.updateTeam(team)
+
+            if (result.isSuccess) {
+                _allTeams.value = _allTeams.value.map {
+                    if (it.id == team.id) team else it
+                }.sortedBy { it.name }
+                _uiState.value = _uiState.value.copy(message = "Team updated successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to update team: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Deletes a team from Firebase and local state.
+     */
+    fun deleteTeam(team: Team, context: Context) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val result = service.deleteTeam(team.id)
+
+            if (result.isSuccess) {
+                _allTeams.value = _allTeams.value.filter { it.id != team.id }
+                _uiState.value = _uiState.value.copy(message = "Team deleted")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to delete team: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Gets a team by ID.
+     */
+    fun getTeamById(teamId: String): Team? {
+        return _allTeams.value.find { it.id == teamId }
+    }
+
+    // ========== Migration Support ==========
+
+    /**
+     * Gets all legacy actions (actions without player assignment).
+     */
+    fun getLegacyActions(): StateFlow<List<SoccerAction>> {
+        return _allActions.map { actions ->
+            actions.filter { it.isLegacyAction() }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+    }
+
+    /**
+     * Assigns a player and team to an existing action (for migration).
+     */
+    fun assignPlayerTeamToAction(
+        action: SoccerAction,
+        playerId: String,
+        teamId: String,
+        context: Context
+    ) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val result = service.updateActionPlayerTeam(action.id, playerId, teamId)
+
+            if (result.isSuccess) {
+                // Update local state
+                _allActions.value = _allActions.value.map {
+                    if (it.id == action.id) {
+                        it.copy(playerId = playerId, teamId = teamId)
+                    } else {
+                        it
+                    }
+                }
+                _uiState.value = _uiState.value.copy(message = "Action updated successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to update action: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
     }
 }
 

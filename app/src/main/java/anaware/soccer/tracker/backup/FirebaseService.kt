@@ -1,6 +1,8 @@
 package anaware.soccer.tracker.backup
 
+import anaware.soccer.tracker.data.Player
 import anaware.soccer.tracker.data.SoccerAction
+import anaware.soccer.tracker.data.Team
 import android.content.Context
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -29,6 +31,20 @@ class FirebaseService(private val context: Context) {
          */
         fun generateActionId(): Long {
             return System.currentTimeMillis()
+        }
+
+        /**
+         * Generate a unique ID for a new player using UUID.
+         */
+        fun generatePlayerId(): String {
+            return java.util.UUID.randomUUID().toString()
+        }
+
+        /**
+         * Generate a unique ID for a new team using UUID.
+         */
+        fun generateTeamId(): String {
+            return java.util.UUID.randomUUID().toString()
         }
     }
 
@@ -186,6 +202,32 @@ class FirebaseService(private val context: Context) {
     }
 
     /**
+     * Update an existing soccer action in Firestore.
+     */
+    suspend fun updateAction(action: SoccerAction): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            // Convert to BackupAction format for storage
+            val backupAction = anaware.soccer.tracker.data.BackupAction.fromSoccerAction(action)
+
+            // Update in Firestore at users/{userId}/actions/{actionId}
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("actions")
+                .document(action.id.toString())
+                .set(backupAction)  // set() will create or update
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Get all soccer actions from Firestore for the current user.
      */
     suspend fun getAllActions(): Result<List<SoccerAction>> = withContext(Dispatchers.IO) {
@@ -211,6 +253,244 @@ class FirebaseService(private val context: Context) {
             }
 
             Result.success(actions)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ========== Player Operations ==========
+
+    /**
+     * Add a new player to Firestore.
+     * Data is stored at: users/{userId}/players/{playerId}
+     */
+    suspend fun addPlayer(player: Player): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val backupPlayer = anaware.soccer.tracker.data.BackupPlayer.fromPlayer(player)
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("players")
+                .document(player.id)
+                .set(backupPlayer)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Update an existing player in Firestore.
+     */
+    suspend fun updatePlayer(player: Player): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val backupPlayer = anaware.soccer.tracker.data.BackupPlayer.fromPlayer(player)
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("players")
+                .document(player.id)
+                .set(backupPlayer)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Delete a player from Firestore.
+     */
+    suspend fun deletePlayer(playerId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("players")
+                .document(playerId)
+                .delete()
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get all players from Firestore for the current user.
+     */
+    suspend fun getAllPlayers(): Result<List<Player>> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val snapshot = firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("players")
+                .get()
+                .await()
+
+            val players = snapshot.documents.mapNotNull { doc ->
+                try {
+                    doc.toObject(anaware.soccer.tracker.data.BackupPlayer::class.java)?.toPlayer()
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            Result.success(players)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ========== Team Operations ==========
+
+    /**
+     * Add a new team to Firestore.
+     * Data is stored at: users/{userId}/teams/{teamId}
+     */
+    suspend fun addTeam(team: Team): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val backupTeam = anaware.soccer.tracker.data.BackupTeam.fromTeam(team)
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("teams")
+                .document(team.id)
+                .set(backupTeam)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Update an existing team in Firestore.
+     */
+    suspend fun updateTeam(team: Team): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val backupTeam = anaware.soccer.tracker.data.BackupTeam.fromTeam(team)
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("teams")
+                .document(team.id)
+                .set(backupTeam)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Delete a team from Firestore.
+     */
+    suspend fun deleteTeam(teamId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("teams")
+                .document(teamId)
+                .delete()
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get all teams from Firestore for the current user.
+     */
+    suspend fun getAllTeams(): Result<List<Team>> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val snapshot = firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("teams")
+                .get()
+                .await()
+
+            val teams = snapshot.documents.mapNotNull { doc ->
+                try {
+                    doc.toObject(anaware.soccer.tracker.data.BackupTeam::class.java)?.toTeam()
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            Result.success(teams)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ========== Migration Operations ==========
+
+    /**
+     * Update an action's player and team assignment.
+     * Used for migrating legacy actions to new player/team system.
+     */
+    suspend fun updateActionPlayerTeam(
+        actionId: Long,
+        playerId: String,
+        teamId: String
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("actions")
+                .document(actionId.toString())
+                .update(
+                    mapOf(
+                        "playerId" to playerId,
+                        "teamId" to teamId
+                    )
+                )
+                .await()
+
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

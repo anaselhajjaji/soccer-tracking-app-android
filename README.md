@@ -10,11 +10,21 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Goals
   - Assists
   - General Offensive Actions
+- **Multi-Player Support**: Track multiple players with detailed profiles
+  - Player name, birthdate, and jersey number
+  - Assign player to each action entry
+  - Legacy entries automatically migrated to default "Player"
+- **Team Management**: Organize players into teams
+  - Team name, color, league, and season
+  - Players can belong to multiple teams
+  - Assign team when recording actions
 - **Session Types**: Distinguish between match and training sessions
 - **Opponent Tracking**: Record opponent name with autocomplete suggestions
-- **Custom Date & Time**: Choose when the action occurred (not just current time)
-- **Zero Actions Support**: Save entries with 0 actions to track participation
-- **Increment Controls**: Easy +/- buttons for quick data entry
+- **Optional Date & Time**: Choose current time or select custom date/time
+  - "Use current date & time" checkbox (default)
+  - Custom selection available when needed
+- **Increment Controls**: Easy +/- buttons for quick data entry (minimum 1 action required)
+- **Edit Entries**: Modify any recorded action from history screen
 
 ### Data Visualization
 
@@ -23,23 +33,38 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Action count with type badges
   - Session type (Match/Training)
   - Opponent name (if specified)
+  - Player and team information
+  - Edit and delete buttons for each entry
   - **Advanced Filters**: Quickly find specific entries
     - Filter by action type: All, Goals, Assists, or Offensive Actions
     - Filter by session type: Both, Match, or Training
     - Filter by opponent: All, No Opponent, or specific opponent
-    - Combine filters for precise searches (e.g., "Goals vs Team A in Matches")
+    - Filter by player: All, Legacy Entries, or specific player
+    - Filter by team: All or specific team (with color indicators)
+    - Combine filters for precise searches (e.g., "Goals by Player #10 vs Team A in Matches")
     - Visual filter button highlights when filters are active
     - One-tap "Clear All" to reset filters
-- **Advanced Progress Chart**: Interactive chart with triple filtering
+- **Advanced Progress Chart**: Interactive chart with advanced filtering
   - Select action type: Goals, Assists, or Offensive Actions (required)
   - Filter by session type: Both, Match, or Training
   - Filter by opponent: All or specific opponent
-  - Combine filters for specific insights (e.g., "Goals vs Team A in Matches")
+  - Filter by player: All or specific player
+  - Filter by team: All or specific team
+  - Combine filters for specific insights (e.g., "Goals by Player #10 vs Team A in Matches")
   - Statistics card showing total actions, session count, and averages
 
 ### Data Management
 
+- **Edit Entries**: Update any field of recorded actions from history screen
 - **Individual Deletion**: Delete specific entries if mistakes are made
+- **Player Management**: Add, edit, and delete player profiles
+  - Access via floating menu on Account screen
+  - Track name, birthdate, jersey number
+  - Manage team assignments
+- **Team Management**: Add, edit, and delete teams
+  - Access via floating menu on Account screen
+  - Custom team colors with color picker
+  - Track league and season information
 - **Firebase Cloud Storage**: Direct cloud storage with automatic sync
   - Firebase Authentication with Google Sign-In (required)
   - All data stored directly in Firebase Firestore
@@ -47,6 +72,7 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Data automatically scoped per authenticated user
   - Each user's data is private and isolated
   - Real-time data loading on app startup
+  - Automatic migration of legacy data
 
 ### Technical Features
 
@@ -199,7 +225,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
 **Test configuration:**
 
 - **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
-- **Tests:** 9 UI tests covering navigation, input controls, and screen interactions
+- **Tests:** 17 UI tests covering navigation, input controls, validation, and screen interactions
 - **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
 
 ### Running Tests Locally
@@ -254,12 +280,14 @@ See [QUALITY_REPORTS.md](QUALITY_REPORTS.md) for detailed information about each
 ### Adding an Entry
 
 1. Open the app to the "Add" screen
-2. Use the + and - buttons to set the number of offensive actions (0 or more)
+2. Use the + and - buttons to set the number of offensive actions (at least 1 required)
 3. Select custom date and time (or use current time)
 4. Select the action type: Goal, Assist, or Offensive Action
 5. Select whether it was a Match or Training session
 6. Optionally enter opponent name (autocomplete will suggest previously entered opponents)
-7. Tap "Save Entry"
+7. Select a player (required)
+8. Select a team (required - only shown after player is selected)
+9. Tap "Save Entry"
 
 ### Viewing History
 
@@ -486,9 +514,54 @@ For issues or questions:
 
 ## Version
 
-**v1.0.1** - Coverage Improvements & Bug Fixes (December 2025)
+**v1.1.0** - Multi-Player & Team Management + Edit Features (December 2025)
 
 ### Latest Changes
+
+**Multi-Player & Team Management:**
+- Track multiple players with name, birthdate, and jersey number
+- Manage teams with name, color, league, and season
+- Players can belong to multiple teams
+- Assign player AND team when adding actions
+- Player Management screen with add/edit/delete functionality
+- Team Management screen with color picker
+- Automatic migration of legacy actions to default "Player"
+- Full backward compatibility with existing data
+- Firestore schema v3 with player and team collections
+
+**Edit Functionality:**
+- Edit button on every history entry card
+- Comprehensive edit dialog for updating all fields
+- Changes persist to Firebase and update locally
+- Optimistic updates for instant UI feedback
+
+**Optional Date/Time:**
+- "Use current date & time" checkbox (enabled by default)
+- Automatic timestamp when checkbox is enabled
+- Custom date/time selection when unchecked
+- Simplified data entry for most common use case
+
+**Enhanced Filtering:**
+- Filter history by player (specific player or "Legacy Entries")
+- Filter history by team with color indicators
+- All filters work together (action, session, opponent, player, team)
+- Progress charts include player and team filtering
+
+**Management Access:**
+- Floating action menu on Account screen
+- Direct access to player and team management
+- Maintains 4-tab navigation (Add, History, Progress, Account)
+
+**Technical:**
+- Extended data models with player and team support
+- SoccerAction now includes playerId and teamId fields
+- BackupData v3 with player and team serialization
+- All 304 unit tests passing (152 tests × 2 variants)
+- All 9 UI tests passing on Firebase Test Lab
+
+---
+
+**v1.0.1** - Coverage Improvements & Bug Fixes (December 2025)
 
 **Test Coverage Improvements:**
 - Increased unit tests from 55 to 86 tests (+31 tests, 56% increase)
@@ -509,15 +582,15 @@ For issues or questions:
 - Enhanced CLAUDE.md with detailed coverage breakdown
 - Updated README.md and QUALITY_REPORTS.md
 
+---
+
 **v1.0.0** - Initial Release (December 2025)
 
-### Core Features
-
+**Core Features:**
 - Action tracking with specific types (Goals, Assists, Offensive Actions)
 - Session type differentiation (Match/Training)
 - Opponent tracking with autocomplete
 - Custom date/time selection
-- Zero action entries for participation tracking
 - Advanced history filters (action type, session type, opponent)
 - Progress charts with triple filtering
 - Firebase Firestore cloud storage

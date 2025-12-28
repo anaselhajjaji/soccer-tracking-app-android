@@ -38,9 +38,18 @@ fun AddActionScreen(
     var showSuccessMessage by remember { mutableStateOf(false) }
     var showOpponentSuggestions by remember { mutableStateOf(false) }
 
+    // Player and Team selection
+    var selectedPlayerId by remember { mutableStateOf("") }
+    var selectedTeamId by remember { mutableStateOf("") }
+    var showPlayerDropdown by remember { mutableStateOf(false) }
+    var showTeamDropdown by remember { mutableStateOf(false) }
+
     val opponents by viewModel.distinctOpponents.collectAsState(initial = emptyList())
+    val players by viewModel.distinctPlayers.collectAsState(initial = emptyList())
+    val teams by viewModel.distinctTeams.collectAsState(initial = emptyList())
 
     // Date and Time state
+    var useCurrentDateTime by remember { mutableStateOf(true) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var selectedTime by remember { mutableStateOf(LocalTime.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -126,9 +135,9 @@ fun AddActionScreen(
                     }
                 }
 
-                // Info text about zero actions
+                // Info text about minimum actions
                 Text(
-                    text = "Tip: You can save with 0 actions to track participation",
+                    text = "Tip: At least 1 action is required to save an entry",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                     modifier = Modifier.padding(top = 12.dp)
@@ -155,6 +164,24 @@ fun AddActionScreen(
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
+                // Checkbox for using current date/time
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = useCurrentDateTime,
+                        onCheckedChange = { useCurrentDateTime = it }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Use current date & time",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -162,7 +189,8 @@ fun AddActionScreen(
                     // Date button
                     OutlinedButton(
                         onClick = { showDatePicker = true },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !useCurrentDateTime
                     ) {
                         Icon(
                             imageVector = Icons.Default.CalendarToday,
@@ -176,7 +204,8 @@ fun AddActionScreen(
                     // Time button
                     OutlinedButton(
                         onClick = { showTimePicker = true },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !useCurrentDateTime
                     ) {
                         Icon(
                             imageVector = Icons.Default.Schedule,
@@ -320,18 +349,155 @@ fun AddActionScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Save Button (now enabled even with 0 actions)
+        // Player Selection
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Player *",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                if (players.isEmpty()) {
+                    Text(
+                        text = "No players yet. Add players from the Account tab.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { showPlayerDropdown = !showPlayerDropdown },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = if (selectedPlayerId.isNotEmpty()) {
+                                    viewModel.getPlayerById(selectedPlayerId)?.getDisplayName() ?: "Select Player"
+                                } else {
+                                    "Select Player"
+                                }
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showPlayerDropdown,
+                            onDismissRequest = { showPlayerDropdown = false },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            players.forEach { player ->
+                                DropdownMenuItem(
+                                    text = { Text(player.getDisplayName()) },
+                                    onClick = {
+                                        selectedPlayerId = player.id
+                                        showPlayerDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Team Selection (only if player selected)
+        if (selectedPlayerId.isNotEmpty()) {
+            val selectedPlayer = viewModel.getPlayerById(selectedPlayerId)
+            val playerTeams = selectedPlayer?.teams?.mapNotNull { teamId ->
+                viewModel.getTeamById(teamId)
+            } ?: emptyList()
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Team *",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    if (playerTeams.isEmpty()) {
+                        Text(
+                            text = "This player has no teams. Edit player to add teams.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedButton(
+                                onClick = { showTeamDropdown = !showTeamDropdown },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = if (selectedTeamId.isNotEmpty()) {
+                                        viewModel.getTeamById(selectedTeamId)?.getDisplayName() ?: "Select Team"
+                                    } else {
+                                        "Select Team"
+                                    }
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = showTeamDropdown,
+                                onDismissRequest = { showTeamDropdown = false },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                playerTeams.forEach { team ->
+                                    DropdownMenuItem(
+                                        text = { Text(team.getDisplayName()) },
+                                        onClick = {
+                                            selectedTeamId = team.id
+                                            showTeamDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Save Button (requires at least 1 action, player, and team)
+        val canSave = actionCount > 0 && selectedPlayerId.isNotEmpty() && selectedTeamId.isNotEmpty()
+
         Button(
             onClick = {
-                val dateTime = LocalDateTime.of(selectedDate, selectedTime)
+                val dateTime = if (useCurrentDateTime) {
+                    LocalDateTime.now()
+                } else {
+                    LocalDateTime.of(selectedDate, selectedTime)
+                }
                 viewModel.addAction(
                     actionCount = actionCount,
                     actionType = actionType,
                     isMatch = isMatch,
                     dateTime = dateTime,
                     opponent = opponent,
+                    playerId = selectedPlayerId,
+                    teamId = selectedTeamId,
                     context = context
                 )
                 // Reset form
@@ -341,8 +507,11 @@ fun AddActionScreen(
                 selectedDate = LocalDate.now()
                 selectedTime = LocalTime.now()
                 opponent = ""
+                selectedPlayerId = ""
+                selectedTeamId = ""
                 showSuccessMessage = true
             },
+            enabled = canSave,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -350,6 +519,21 @@ fun AddActionScreen(
             Text(
                 text = "Save Entry",
                 style = MaterialTheme.typography.titleMedium
+            )
+        }
+
+        // Validation message
+        if (!canSave) {
+            Text(
+                text = when {
+                    actionCount == 0 -> "Add at least 1 action to save"
+                    selectedPlayerId.isEmpty() -> "Select a player to save"
+                    selectedTeamId.isEmpty() -> "Select a team to save"
+                    else -> ""
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
 

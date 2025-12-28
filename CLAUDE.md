@@ -22,25 +22,24 @@ The user requested an Android app with the following features:
    - Goals
    - Assists
    - General Offensive Actions
-2. **Action Counts**: Track number of each action type per session
+2. **Action Counts**: Track number of each action type per session (minimum 1 action required)
 3. **Session Types**: Distinguish between match and training sessions
 4. **Opponent Tracking**: Record opponent name with autocomplete for previously entered teams
 5. **Custom Date/Time**: Choose when the action occurred (not just current time)
-6. **Zero Actions Support**: Save entries with 0 actions to track participation without scoring
-7. **History View**: Display all entries with advanced filtering capabilities
+6. **History View**: Display all entries with advanced filtering capabilities
    - Filter by action type (All, Goals, Assists, Offensive Actions)
    - Filter by session type (Both, Match, Training)
    - Filter by opponent (All, No Opponent, or specific opponent)
    - Combine filters for precise searches
-8. **Progress Charts**: Visualize performance over time with triple filtering
+7. **Progress Charts**: Visualize performance over time with triple filtering
    - Select action type (required): Goals, Assists, or Offensive Actions
    - Filter by session type: Both, Match, or Training
    - Filter by opponent: All or specific opponent
-9. **Firebase Cloud Storage**: Direct cloud storage with automatic sync
+8. **Firebase Cloud Storage**: Direct cloud storage with automatic sync
    - Automatic sign-in on app startup
    - Data saved directly to Firebase Firestore
    - Cross-device synchronization
-10. **Data Management**: Delete individual entries if mistakes are made
+9. **Data Management**: Delete individual entries if mistakes are made
 
 **Technology Choices Made**:
 
@@ -54,6 +53,59 @@ The user requested an Android app with the following features:
 - **kotlinx.serialization** - JSON data format for Firebase integration
 - **Android Gradle Plugin 8.9.1** - Latest build tooling
 - **Gradle 8.12** - Build system
+
+### v1.1.0 - Multi-Player & Team Management + Edit Features (December 2025)
+
+Major feature release adding comprehensive player and team management capabilities:
+
+1. **Multi-Player & Team Management**:
+   - **Player Entity**: Track multiple players with name, birthdate, jersey number
+   - **Team Entity**: Manage teams with name, color, league, and season
+   - **Player-Team Relationships**: Players can belong to multiple teams
+   - **Action Assignment**: Assign player AND team when adding actions
+   - **Player Management Screen**: Add, edit, delete players with full details
+   - **Team Management Screen**: Add, edit, delete teams with color picker
+   - **Automatic Migration**: Legacy actions automatically assigned to default "Player"
+   - **Legacy Support**: Full backward compatibility with existing actions
+   - **Firestore Schema v3**: Extended database schema with player and team collections
+
+2. **Edit Functionality**:
+   - **Edit History Entries**: Edit button on every action entry card
+   - **Comprehensive Edit Dialog**: Update all fields including player and team
+   - **Update Firebase**: Changes persist to Firestore and update locally
+   - **Optimistic Updates**: Instant UI feedback when editing entries
+
+3. **Optional Date/Time**:
+   - **Checkbox Control**: "Use current date & time" enabled by default
+   - **Automatic Timestamp**: Save with current time when checkbox is enabled
+   - **Custom Selection**: Uncheck to select specific date and time
+   - **Improved UX**: Simplified data entry for most common use case
+
+4. **Enhanced Filtering**:
+   - **Player Filter**: Filter history by specific player or "Legacy Entries"
+   - **Team Filter**: Filter history by team with color indicators
+   - **Combined Filters**: All filters work together (action, session, opponent, player, team)
+   - **Chart Filters**: Progress charts include player and team filtering
+
+5. **Management Access**:
+   - **Floating Action Menu**: Management menu on Account screen
+   - **Player Management**: Direct access to add/edit/delete players
+   - **Team Management**: Direct access to add/edit/delete teams
+   - **No Extra Tabs**: Maintains 4-tab navigation (Add, History, Progress, Account)
+
+6. **Data Model Extensions**:
+   - **SoccerAction**: Added `playerId` and `teamId` fields (default empty for backward compatibility)
+   - **Player Model**: id, name, birthdate, number, teams (list of team IDs)
+   - **Team Model**: id, name, color, league, season
+   - **Legacy Detection**: `isLegacyAction()` method identifies actions without player
+   - **BackupData v3**: Updated serialization with player and team support
+
+**Impact**:
+- All 304 unit tests passing (152 tests × 2 variants)
+- All 9 UI tests passing on Firebase Test Lab
+- Full backward compatibility with existing data
+- Enhanced tracking capabilities for multi-player households
+- Improved data organization and filtering
 
 ### v1.0.1 - Coverage Improvements & Bug Fixes (December 2025)
 
@@ -164,6 +216,22 @@ Focused release improving test coverage and fixing test-related issues:
         - actionType: String (GOAL, ASSIST, OFFENSIVE_ACTION)
         - match: Boolean (true = match, false = training)
         - opponent: String (optional)
+        - playerId: String (optional, v1.1.0+)
+        - teamId: String (optional, v1.1.0+)
+    /players
+      /{playerId}
+        - id: String (UUID)
+        - name: String
+        - birthdate: String (ISO date)
+        - number: Int (jersey number)
+        - teams: List<String> (team IDs)
+    /teams
+      /{teamId}
+        - id: String (UUID)
+        - name: String
+        - color: String (hex color)
+        - league: String (optional)
+        - season: String (optional)
 ```
 
 #### Data Model
@@ -172,10 +240,30 @@ Focused release improving test coverage and fixing test-related issues:
 data class SoccerAction(
     val id: Long = 0,              // Timestamp-based unique ID
     val dateTime: String,          // ISO-8601 format
-    val actionCount: Int,          // Number of actions (0+)
+    val actionCount: Int,          // Number of actions (1+, minimum 1 required)
     val actionType: String,        // "GOAL", "ASSIST", "OFFENSIVE_ACTION"
     val isMatch: Boolean,          // true = match, false = training
-    val opponent: String = ""      // Opponent name (optional)
+    val opponent: String = "",     // Opponent name (optional)
+    val playerId: String = "",     // Player ID (optional, v1.1.0+)
+    val teamId: String = ""        // Team ID (optional, v1.1.0+)
+) {
+    fun isLegacyAction(): Boolean = playerId.isBlank()
+}
+
+data class Player(
+    val id: String = "",           // UUID
+    val name: String = "",         // Player name
+    val birthdate: String = "",    // ISO date (YYYY-MM-DD)
+    val number: Int = 0,           // Jersey number
+    val teams: List<String> = emptyList()  // Team IDs
+)
+
+data class Team(
+    val id: String = "",           // UUID
+    val name: String = "",         // Team name
+    val color: String = "#2196F3", // Hex color
+    val league: String = "",       // League name (optional)
+    val season: String = ""        // Season (optional)
 )
 ```
 
@@ -197,10 +285,10 @@ data class SoccerAction(
    - **Pattern**: Boolean properties stored without "is" prefix
    - **Solution**: Convert between `isMatch` (app) and `match` (Firestore) in serialization layer
 
-4. **Zero Actions Support**: Allow entries with 0 actions
-   - **Use Case**: Track participation without scoring
-   - **Implementation**: Removed `actionCount > 0` validation
-   - **Benefit**: Complete session tracking
+4. **Action Count Validation**: Require at least 1 action per entry
+   - **Rationale**: Ensure meaningful data tracking
+   - **Implementation**: Save button disabled when `actionCount == 0`
+   - **User Feedback**: Helper text indicates minimum 1 action required
 
 ### Firebase Service Design
 
@@ -339,10 +427,13 @@ data class SoccerAction(
 ### Input Validation
 
 **Action Entry Validation**:
-- Action count can be 0 or positive (zero allowed for participation tracking)
+- Action count must be 1 or greater (save button disabled at 0)
 - Action type selected from enum (no invalid values possible)
 - Session type is boolean toggle (always valid)
 - Opponent field accepts any string (autocomplete helps consistency)
+- Player selection required (save button disabled without player)
+- Team selection required (save button disabled without team)
+- Validation messages guide user on missing requirements
 
 **Firebase Validation**:
 - Firebase enforces document structure
@@ -546,17 +637,20 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
 - Fixed JaCoCo exclusions to properly filter Kotlin/Compose compiler-generated synthetic classes
 - Coverage now accurately reflects testable business logic without inflated instruction counts
 
-**UI Tests** (9 tests on Firebase Test Lab):
+**UI Tests** (17 tests on Firebase Test Lab):
    - Compose UI interactions
    - Navigation flows (between all 4 tabs)
    - Action count increment/decrement
    - Action type and session type selection
    - Filter button existence
    - Screen element verification
+   - Form validation and error messages
+   - Required field indicators
+   - Player and team selection requirements
 
 **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/SoccerTrackerAppTest.kt`
 
-**Test Count**: 9 UI tests covering:
+**Test Count**: 17 UI tests covering:
 
 - App launch and navigation bar
 - Tab switching (Add, History, Progress, Account)
@@ -566,6 +660,15 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
 - Session type toggle (Match/Training)
 - History screen empty state
 - Progress chart filter chips
+- Save button validation (disabled when action count is 0)
+- Validation messages for missing player selection
+- Player selection required field indicator (Player *)
+- Team selection required field indicator (Team *)
+- Account screen management menu access
+- Date/time checkbox control
+- Optional opponent field
+- Action type section completeness
+- Helper text for minimum requirements
 
 ## Build Configuration
 
@@ -884,7 +987,7 @@ gcloud firebase test android run \
 
 **Package Name**: `anaware.soccer.tracker`
 
-**Status**: v1.0.1 - Coverage Improvements & Bug Fixes
+**Status**: v1.1.0 - Multi-Player & Team Management + Edit Features
 
 ---
 
