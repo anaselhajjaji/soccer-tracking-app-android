@@ -44,7 +44,7 @@ open app/build/reports/detekt/detekt.html
 ### 2. Test Results Report
 
 **What it shows:**
-- All unit test results (86 tests)
+- All unit test results (304 tests: 152 tests × 2 variants)
 - Pass/fail status for each test
 - Test execution time
 - Test suites breakdown
@@ -90,17 +90,17 @@ app/build/reports/jacoco/jacocoTestReport/html/index.html
 open app/build/reports/jacoco/jacocoTestReport/html/index.html
 ```
 
-**Current coverage: 41%** overall (86 unit tests)
+**Current coverage: 41%** overall (304 unit tests: 152 tests × 2 variants)
 
 **Coverage breakdown:**
-- Data models: 94% (excellent coverage of core entities)
-- ViewModel: 77% (business logic with 46 tests)
-- UI State: 100% (complete coverage with 10 tests)
+- Data models: 94% (excellent coverage of core entities including Player, Team, SoccerAction)
+- ViewModel: 77% (business logic with comprehensive test coverage)
+- UI State: 100% (complete coverage)
 - Backup/Services: 0% (Firebase operations need mocking)
 
 **Excluded from coverage:**
-- UI screens (Compose): AddActionScreen, BackupScreen, ChartScreen, HistoryScreen, SoccerTrackerApp
-  - Tested via 9 instrumentation tests on Firebase Test Lab
+- UI screens (Compose): AddActionScreen, BackupScreen, ChartScreen, HistoryScreen, MigrationScreen, PlayerManagementScreen, TeamManagementScreen, SoccerTrackerApp
+  - Tested via 17 instrumentation tests on Firebase Test Lab
 - Theme files - configuration only, no logic to test
 - MainActivity - Android framework code
 
@@ -224,9 +224,9 @@ Every GitHub Actions run generates these artifacts:
 Based on latest build:
 
 **Tests:**
-- ✅ 55 unit tests passing
-- ✅ 9 UI tests passing
-- ⏱️ Test execution: ~5 seconds
+- ✅ 304 unit tests passing (152 tests × 2 variants)
+- ✅ 17 UI tests passing
+- ⏱️ Test execution: ~10 seconds
 
 **Coverage:**
 - Data models: ~90%+ (high coverage)
@@ -283,7 +283,7 @@ fun `getAllActions returns all actions`() {
 }
 ```
 
-3. **Add UI tests** (already have 9):
+3. **Add UI tests** (already have 17):
 - Currently in `app/src/androidTest/`
 - Run on Firebase Test Lab in CI
 
@@ -325,8 +325,8 @@ xdg-open app/build/reports/lint-results-debug.html
 
 Current requirements (all must pass):
 - ✅ Build succeeds
-- ✅ All 55 unit tests pass
-- ✅ All 9 UI tests pass (Firebase Test Lab)
+- ✅ All 304 unit tests pass (152 tests × 2 variants)
+- ✅ All 17 UI tests pass (Firebase Test Lab)
 - ✅ Lint checks pass (no errors)
 
 ### Optional Checks

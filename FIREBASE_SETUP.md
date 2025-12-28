@@ -88,19 +88,37 @@ service cloud.firestore {
 1. Sync Gradle files in Android Studio
 2. Build the app: `./gradlew assembleDebug`
 3. Run the app on your device or emulator
-4. Go to the "Backup" tab
+4. Go to the "Account" tab
 5. Sign in with Google
-6. Test backup and restore functionality
+6. All data is automatically saved to Firebase when you add entries
 
 ## Data Structure in Firestore
 
 Your data will be stored in Firestore with the following structure:
 
 ```
-/users/{userId}/backups/latest
-  - data: JSON string containing all soccer actions
-  - timestamp: When the backup was created
-  - version: Backup format version number
+/users/{userId}/actions/{actionId}
+  - dateTime: ISO-8601 timestamp string
+  - actionCount: Number of actions
+  - actionType: "GOAL", "ASSIST", or "OFFENSIVE_ACTION"
+  - match: Boolean (true = match, false = training)
+  - opponent: String (opponent team name, optional)
+  - playerId: String (player ID, required)
+  - teamId: String (team ID, required)
+
+/users/{userId}/players/{playerId}
+  - id: String (UUID)
+  - name: String (player name)
+  - birthdate: String (ISO date format)
+  - number: Int (jersey number)
+  - teams: List<String> (team IDs)
+
+/users/{userId}/teams/{teamId}
+  - id: String (UUID)
+  - name: String (team name)
+  - color: String (hex color code)
+  - league: String (optional)
+  - season: String (optional)
 ```
 
 ## Troubleshooting
