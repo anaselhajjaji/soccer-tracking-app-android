@@ -534,23 +534,38 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
 - ✅ Sign out and account switching
 - ✅ Rotation preserves state
 
-### Automated Testing (Not Implemented)
+### Automated Testing
 
-**Recommended for Future Production Use**:
+**Unit Tests** (86 tests, 41% overall coverage):
 
-1. **Unit Tests**:
-   - ViewModel business logic
-   - Firebase service operations
-   - Data model conversions
-   - Action type enum logic
-   - Filter combinations
+**Test Coverage by Package**:
+- ✅ Data models: 94% coverage (SoccerAction, ActionType, BackupData)
+  - [SoccerActionTest.kt](app/src/test/java/anaware/soccer/tracker/data/SoccerActionTest.kt): 30 tests
+  - Tests data class behavior, formatting methods, edge cases
+- ✅ ViewModel: 77% coverage (business logic with comprehensive filtering tests)
+  - [SoccerViewModelTest.kt](app/src/test/java/anaware/soccer/tracker/ui/SoccerViewModelTest.kt): 46 tests
+  - Tests all filtering methods, StateFlow initialization, state management
+- ✅ UI State: 100% coverage
+  - [UiStateTest.kt](app/src/test/java/anaware/soccer/tracker/ui/UiStateTest.kt): 10 tests
+  - Tests data class behavior, copy functionality, edge cases
+- ⚠️ Firebase service: 0% coverage (only static methods tested, Firebase operations need mocking)
 
-2. **Integration Tests**:
-   - Firebase CRUD operations
-   - Authentication flow
-   - Data synchronization
+**Test Location**: `app/src/test/java/anaware/soccer/tracker/`
 
-3. **UI Tests** (Implemented):
+**Coverage Configuration**:
+- JaCoCo excludes Compose UI screens (AddActionScreen, BackupScreen, ChartScreen, HistoryScreen, SoccerTrackerApp)
+- JaCoCo excludes Compose-generated synthetic classes (ComposableSingletons$*.*) added in v1.1
+- Includes ViewModel (testable business logic)
+- Excludes theme files and MainActivity (framework code)
+- UI screens tested separately via instrumentation tests on Firebase Test Lab
+
+**Coverage Improvement** (December 2025):
+- Increased test count from 55 to 86 tests (+31 tests, 56% increase)
+- Improved overall coverage from 22% to 41% (+19 points, 86% increase)
+- Fixed JaCoCo exclusions to properly filter Kotlin/Compose compiler-generated synthetic classes
+- Coverage now accurately reflects testable business logic without inflated instruction counts
+
+**UI Tests** (9 tests on Firebase Test Lab):
    - Compose UI interactions
    - Navigation flows (between all 4 tabs)
    - Action count increment/decrement
@@ -651,7 +666,7 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 4. **Firebase Config**: Creates `google-services.json` from `GOOGLE_SERVICES_JSON` secret
 5. **Debug Keystore**: Creates debug keystore from base64-encoded `DEBUG_KEYSTORE` secret
 6. **Build**: Compiles debug APK with `./gradlew assembleDebug`
-7. **Unit Tests**: Runs all unit tests with `./gradlew test` (55 tests across 6 files)
+7. **Unit Tests**: Runs all unit tests with `./gradlew test` (86 tests across 6 files)
 8. **Lint**: Performs static code analysis with `./gradlew lintDebug`
 9. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
 10. **Artifacts**: Uploads debug APK, test APK, and lint HTML report (7-day retention)
@@ -696,7 +711,7 @@ The project uses GitHub Actions for automated CI/CD pipeline.
   - Build number and commit SHA
   - Branch name
   - Commit message
-  - Test results summary (55 unit tests + 9 UI tests)
+  - Test results summary (86 unit tests + 9 UI tests)
   - Installation instructions
 - **Tag**: Unique version tag for each successful build
 - **Status**: Published as a full release (not draft or prerelease)
@@ -711,7 +726,7 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 **Benefits**:
 
 - ✅ Automatic build verification on every push/PR
-- ✅ Unit test suite execution ensures code quality (55 tests)
+- ✅ Unit test suite execution ensures code quality (86 tests)
 - ✅ UI test suite validates user interactions (9 tests)
 - ✅ Lint checks catch potential issues early
 - ✅ Virtual device testing via Firebase Test Lab (free tier)

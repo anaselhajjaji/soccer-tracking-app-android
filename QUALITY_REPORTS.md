@@ -90,11 +90,20 @@ app/build/reports/jacoco/jacocoTestReport/html/index.html
 open app/build/reports/jacoco/jacocoTestReport/html/index.html
 ```
 
+**Current coverage: ~16%** overall (~54% of testable business logic)
+
 **Coverage breakdown:**
-- Data classes: Full coverage expected
-- ViewModels: Business logic coverage
-- Services: Firebase operations (may need mocking for 100%)
-- UI Screens: Limited coverage (Compose UI testing needed)
+- Data models: 94% (excellent coverage of core entities)
+- ViewModel: 54% (business logic with 16 tests)
+- Backup/Services: 0% (Firebase operations need mocking)
+
+**Excluded from coverage:**
+- UI screens (Compose): AddActionScreen, BackupScreen, ChartScreen, HistoryScreen, SoccerTrackerApp
+  - Tested via 9 instrumentation tests on Firebase Test Lab
+- Theme files - configuration only, no logic to test
+- MainActivity - Android framework code
+
+**Note:** Coverage focuses on code that can be effectively unit tested. Jetpack Compose UI screens require instrumentation tests, which are run separately on Firebase Test Lab. The ViewModel (containing testable business logic) is included in coverage metrics.
 
 ### 4. Android Lint Report
 

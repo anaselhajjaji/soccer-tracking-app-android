@@ -172,7 +172,23 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "**/databinding/**",
         "**/android/databinding/**",
         "**/androidx/databinding/**",
-        "**/BR.class"
+        "**/BR.class",
+        // Exclude packages that cannot be effectively unit tested
+        "**/AddActionScreen*.*",     // Jetpack Compose UI screen
+        "**/BackupScreen*.*",        // Jetpack Compose UI screen
+        "**/ChartScreen*.*",         // Jetpack Compose UI screen
+        "**/HistoryScreen*.*",       // Jetpack Compose UI screen
+        "**/SoccerTrackerApp*.*",    // Jetpack Compose navigation root
+        // Exclude Compose-generated synthetic classes (lambdas, singletons)
+        "**/ComposableSingletons\$AddActionScreenKt*.*",
+        "**/ComposableSingletons\$BackupScreenKt*.*",
+        "**/ComposableSingletons\$ChartScreenKt*.*",
+        "**/ComposableSingletons\$HistoryScreenKt*.*",
+        "**/ComposableSingletons\$SoccerTrackerAppKt*.*",
+        "**/Screen\$*.*",            // Sealed class navigation items
+        "**/theme/**",               // Theme configuration files
+        "**/MainActivity*.*"         // Android Activity (framework code)
+        // Note: SoccerViewModel is NOT excluded - it contains testable business logic
     )
 
     val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
@@ -184,6 +200,9 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     sourceDirectories.setFrom(files(mainSrc))
     classDirectories.setFrom(files(debugTree))
     executionData.setFrom(fileTree(layout.buildDirectory) {
-        include("jacoco/*.exec")
+        include(
+            "jacoco/*.exec",
+            "outputs/unit_test_code_coverage/debugUnitTest/*.exec"
+        )
     })
 }

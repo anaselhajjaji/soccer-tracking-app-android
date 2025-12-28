@@ -152,7 +152,7 @@ The CI workflow automatically runs on:
 #### Job 1: Build and Test
 
 1. **Build**: Compiles debug APK with `./gradlew assembleDebug`
-2. **Unit Tests**: Runs all unit tests with `./gradlew test` (55 tests)
+2. **Unit Tests**: Runs all unit tests with `./gradlew test` (86 tests)
 3. **Lint**: Performs Android code quality checks with `./gradlew lintDebug`
 4. **Coverage**: Generates JaCoCo code coverage report with `./gradlew jacocoTestReport`
 5. **Detekt**: Runs Kotlin static analysis with `./gradlew detekt`
@@ -227,7 +227,7 @@ Run all quality checks locally:
 ./quality-check.sh
 
 # Or run individual checks
-./gradlew test                # Unit tests (55 tests)
+./gradlew test                # Unit tests (86 tests)
 ./gradlew jacocoTestReport   # Code coverage report
 ./gradlew lintDebug          # Android Lint analysis
 ./gradlew detekt             # Kotlin static analysis
