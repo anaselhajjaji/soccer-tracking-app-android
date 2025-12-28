@@ -12,7 +12,8 @@ This document explains all the quality reports generated for the Soccer Tracker 
 - Style violations
 - Potential bugs
 - Best practice violations
-- 164 issues found (formatting, wildcards, complexity)
+- 43 issues found (21 wildcard imports, 8 generic exceptions, 6 long/complex functions, 3 line length, 5 other)
+- 121 formatting issues auto-fixed (74% reduction)
 
 **Location (Local):**
 ```
@@ -126,7 +127,8 @@ open app/build/reports/lint-results-debug.html
 - 0 errors
 
 **Detekt:**
-- 164 issues found (formatting, wildcards, complexity)
+- 43 issues remaining (21 wildcard imports, 8 generic exceptions, 6 long/complex functions, 3 line length, 5 other)
+- 121 issues auto-fixed using `detektFormat` (74% improvement)
 - Report generated successfully
 - Does not fail build (informational only)
 

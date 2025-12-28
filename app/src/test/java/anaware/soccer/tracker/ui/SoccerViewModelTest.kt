@@ -1,12 +1,11 @@
 package anaware.soccer.tracker.ui
 
-import android.content.Context
 import anaware.soccer.tracker.data.ActionType
 import anaware.soccer.tracker.data.SoccerAction
+import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Assert.*

@@ -26,7 +26,7 @@ data class BackupAction(
     val dateTime: String = "",
     val actionCount: Int = 0,
     val actionType: String = "",
-    val match: Boolean = false,  // Firestore uses "match" not "isMatch"
+    val match: Boolean = false, // Firestore uses "match" not "isMatch"
     val opponent: String = ""
 ) {
     /**
@@ -39,7 +39,7 @@ data class BackupAction(
             dateTime = dateTime,
             actionCount = actionCount,
             actionType = actionType,
-            isMatch = match,  // Convert from Firestore "match" to "isMatch"
+            isMatch = match, // Convert from Firestore "match" to "isMatch"
             opponent = opponent
         )
     }
@@ -53,7 +53,7 @@ data class BackupAction(
                 dateTime = action.dateTime,
                 actionCount = action.actionCount,
                 actionType = action.actionType,
-                match = action.isMatch,  // Convert from "isMatch" to Firestore "match"
+                match = action.isMatch, // Convert from "isMatch" to Firestore "match"
                 opponent = action.opponent
             )
         }

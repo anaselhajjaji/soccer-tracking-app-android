@@ -16,7 +16,7 @@ class DebugBackupTest {
                     dateTime = "2025-12-19T14:30:00",
                     actionCount = 5,
                     actionType = "GOAL",
-                    match = true,  // Firestore uses "match"
+                    match = true, // Firestore uses "match"
                     opponent = "Team A"
                 )
             )

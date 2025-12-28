@@ -30,6 +30,7 @@ data class SoccerAction(
             ActionType.default()
         }
     }
+
     /**
      * Returns the datetime as a LocalDateTime object.
      */

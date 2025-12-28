@@ -140,6 +140,7 @@ detekt {
     allRules = false
     config.setFrom("$projectDir/config/detekt.yml")
     ignoreFailures = true  // Generate report but don't fail build
+    autoCorrect = true     // Enable auto-formatting
 
     reports {
         html.required.set(true)

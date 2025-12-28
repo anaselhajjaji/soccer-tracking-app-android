@@ -1,7 +1,7 @@
 package anaware.soccer.tracker.backup
 
-import android.content.Context
 import anaware.soccer.tracker.data.BackupAction
+import android.content.Context
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -97,7 +97,7 @@ class FirebaseServiceTest {
             dateTime = "2025-12-26T10:00:00",
             actionCount = 5,
             actionType = "GOAL",
-            match = true,  // Firestore uses "match" not "isMatch"
+            match = true, // Firestore uses "match" not "isMatch"
             opponent = "Team A"
         )
 
@@ -143,7 +143,7 @@ class FirebaseServiceTest {
     fun `BackupAction supports zero action count`() {
         val backupAction = BackupAction(
             dateTime = "2025-12-26T10:00:00",
-            actionCount = 0,  // Zero is valid for participation tracking
+            actionCount = 0, // Zero is valid for participation tracking
             actionType = "GOAL",
             match = true,
             opponent = "Team B"
@@ -159,7 +159,7 @@ class FirebaseServiceTest {
             actionCount = 5,
             actionType = "GOAL",
             match = true,
-            opponent = ""  // Empty opponent is valid
+            opponent = "" // Empty opponent is valid
         )
 
         assertEquals("", backupAction.opponent)
@@ -171,7 +171,7 @@ class FirebaseServiceTest {
             dateTime = "2025-12-26T10:00:00",
             actionCount = 3,
             actionType = "ASSIST",
-            match = false,  // Training session
+            match = false, // Training session
             opponent = ""
         )
 
@@ -184,7 +184,7 @@ class FirebaseServiceTest {
             dateTime = "2025-12-26T10:00:00",
             actionCount = 3,
             actionType = "ASSIST",
-            match = true,  // Match session
+            match = true, // Match session
             opponent = "Team C"
         )
 
@@ -237,7 +237,7 @@ class FirebaseServiceTest {
     fun `BackupAction supports high action counts`() {
         val backupAction = BackupAction(
             dateTime = "2025-12-26T10:00:00",
-            actionCount = 100,  // High but valid count
+            actionCount = 100, // High but valid count
             actionType = "OFFENSIVE_ACTION",
             match = true,
             opponent = "Team E"
