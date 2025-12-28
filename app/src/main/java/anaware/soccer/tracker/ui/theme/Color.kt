@@ -3,17 +3,17 @@ package anaware.soccer.tracker.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Light theme colors
-val PrimaryLight = Color(0xFF2E7D32)  // Soccer field green
+val PrimaryLight = Color(0xFF2E7D32) // Soccer field green
 val OnPrimaryLight = Color(0xFFFFFFFF)
 val PrimaryContainerLight = Color(0xFFA5D6A7)
 val OnPrimaryContainerLight = Color(0xFF1B5E20)
 
-val SecondaryLight = Color(0xFF1976D2)  // Soccer blue
+val SecondaryLight = Color(0xFF1976D2) // Soccer blue
 val OnSecondaryLight = Color(0xFFFFFFFF)
 val SecondaryContainerLight = Color(0xFFBBDEFB)
 val OnSecondaryContainerLight = Color(0xFF0D47A1)
 
-val TertiaryLight = Color(0xFFFF6F00)  // Accent orange
+val TertiaryLight = Color(0xFFFF6F00) // Accent orange
 val OnTertiaryLight = Color(0xFFFFFFFF)
 val TertiaryContainerLight = Color(0xFFFFE0B2)
 val OnTertiaryContainerLight = Color(0xFFE65100)

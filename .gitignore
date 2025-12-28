@@ -27,6 +27,9 @@ gradle/android/
 gradle/kotlin-profile/
 gradle/wrapper/dists/
 
+# Kotlin compiler files
+.kotlin/
+
 # Local configuration file (sdk path, etc)
 local.properties
 

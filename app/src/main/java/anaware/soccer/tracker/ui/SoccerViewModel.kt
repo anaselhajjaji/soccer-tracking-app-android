@@ -1,11 +1,11 @@
 package anaware.soccer.tracker.ui
 
-import android.content.Context
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import anaware.soccer.tracker.backup.FirebaseService
 import anaware.soccer.tracker.data.ActionType
 import anaware.soccer.tracker.data.SoccerAction
+import android.content.Context
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -55,12 +55,18 @@ class SoccerViewModel : ViewModel() {
     val syncStatus: StateFlow<String?> = _syncStatus.asStateFlow()
 
     private var firebaseService: FirebaseService? = null
-    private var isLoadingData = false  // Prevent concurrent loads
+    private var isLoadingData = false // Prevent concurrent loads
 
     /**
      * Adds a new soccer action record directly to Firebase.
      */
-    fun addAction(actionCount: Int, actionType: ActionType, isMatch: Boolean, opponent: String, context: Context? = null) {
+    fun addAction(
+        actionCount: Int,
+        actionType: ActionType,
+        isMatch: Boolean,
+        opponent: String,
+        context: Context? = null
+    ) {
         viewModelScope.launch {
             val service = getFirebaseService(context ?: return@launch)
 
@@ -93,7 +99,14 @@ class SoccerViewModel : ViewModel() {
     /**
      * Adds a new soccer action record with custom date/time directly to Firebase.
      */
-    fun addAction(actionCount: Int, actionType: ActionType, isMatch: Boolean, dateTime: java.time.LocalDateTime, opponent: String, context: Context? = null) {
+    fun addAction(
+        actionCount: Int,
+        actionType: ActionType,
+        isMatch: Boolean,
+        dateTime: java.time.LocalDateTime,
+        opponent: String,
+        context: Context? = null
+    ) {
         viewModelScope.launch {
             val service = getFirebaseService(context ?: return@launch)
 
@@ -280,7 +293,11 @@ class SoccerViewModel : ViewModel() {
     /**
      * Gets actions filtered by action type, session type, and opponent.
      */
-    fun getActionsByTypeSessionAndOpponent(actionType: ActionType, isMatch: Boolean, opponent: String): StateFlow<List<SoccerAction>> {
+    fun getActionsByTypeSessionAndOpponent(
+        actionType: ActionType,
+        isMatch: Boolean,
+        opponent: String
+    ): StateFlow<List<SoccerAction>> {
         return _allActions.map { actions ->
             actions.filter { it.getActionTypeEnum() == actionType && it.isMatch == isMatch && it.opponent == opponent }
         }.stateIn(
@@ -293,9 +310,15 @@ class SoccerViewModel : ViewModel() {
     /**
      * Gets total count filtered by action type, session type, and opponent.
      */
-    fun getTotalCountByTypeSessionAndOpponent(actionType: ActionType, isMatch: Boolean, opponent: String): StateFlow<Int?> {
+    fun getTotalCountByTypeSessionAndOpponent(
+        actionType: ActionType,
+        isMatch: Boolean,
+        opponent: String
+    ): StateFlow<Int?> {
         return _allActions.map { actions ->
-            actions.filter { it.getActionTypeEnum() == actionType && it.isMatch == isMatch && it.opponent == opponent }.sumOf { it.actionCount }
+            actions.filter {
+                it.getActionTypeEnum() == actionType && it.isMatch == isMatch && it.opponent == opponent
+            }.sumOf { it.actionCount }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -354,7 +377,6 @@ class SoccerViewModel : ViewModel() {
     fun clearSyncStatus() {
         _syncStatus.value = null
     }
-
 }
 
 /**
@@ -363,4 +385,3 @@ class SoccerViewModel : ViewModel() {
 data class UiState(
     val message: String? = null
 )
-

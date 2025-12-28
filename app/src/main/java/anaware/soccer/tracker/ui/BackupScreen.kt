@@ -7,9 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -154,10 +153,11 @@ fun BackupScreen(
                 .fillMaxWidth()
                 .padding(bottom = 24.dp),
             colors = CardDefaults.cardColors(
-                containerColor = if (isSignedIn)
+                containerColor = if (isSignedIn) {
                     MaterialTheme.colorScheme.primaryContainer
-                else
+                } else {
                     MaterialTheme.colorScheme.surfaceVariant
+                }
             )
         ) {
             Column(
@@ -172,10 +172,11 @@ fun BackupScreen(
                     modifier = Modifier
                         .size(64.dp)
                         .padding(bottom = 16.dp),
-                    tint = if (isSignedIn)
+                    tint = if (isSignedIn) {
                         MaterialTheme.colorScheme.primary
-                    else
+                    } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                 )
 
                 if (isSignedIn) {
@@ -301,23 +302,24 @@ fun BackupScreen(
         if (statusMessage != null) {
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = if (statusMessage?.contains("success") == true)
+                    containerColor = if (statusMessage?.contains("success") == true) {
                         MaterialTheme.colorScheme.tertiaryContainer
-                    else
+                    } else {
                         MaterialTheme.colorScheme.errorContainer
+                    }
                 )
             ) {
                 Text(
                     text = statusMessage ?: "",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (statusMessage?.contains("success") == true)
+                    color = if (statusMessage?.contains("success") == true) {
                         MaterialTheme.colorScheme.onTertiaryContainer
-                    else
-                        MaterialTheme.colorScheme.onErrorContainer,
+                    } else {
+                        MaterialTheme.colorScheme.onErrorContainer
+                    },
                     modifier = Modifier.padding(16.dp)
                 )
             }
         }
     }
-
 }

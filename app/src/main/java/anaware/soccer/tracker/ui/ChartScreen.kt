@@ -1,29 +1,26 @@
 package anaware.soccer.tracker.ui
 
+import anaware.soccer.tracker.data.ActionType
+import anaware.soccer.tracker.data.SoccerAction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
 import com.patrykandpatrick.vico.compose.chart.Chart
 import com.patrykandpatrick.vico.compose.chart.line.lineChart
-import com.patrykandpatrick.vico.compose.component.shape.shader.fromBrush
 import com.patrykandpatrick.vico.compose.style.ProvideChartStyle
 import com.patrykandpatrick.vico.core.axis.AxisPosition
 import com.patrykandpatrick.vico.core.axis.formatter.AxisValueFormatter
-import com.patrykandpatrick.vico.core.chart.line.LineChart
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
-import anaware.soccer.tracker.data.ActionType
-import anaware.soccer.tracker.data.SoccerAction
 import java.time.format.DateTimeFormatter
 
 /**
@@ -37,7 +34,11 @@ fun ChartScreen(
     modifier: Modifier = Modifier
 ) {
     var selectedActionType by remember { mutableStateOf<ActionType?>(ActionType.default()) }
-    var selectedSessionType by remember { mutableStateOf<Boolean?>(null) } // null = both, true = match, false = training
+    var selectedSessionType by remember {
+        mutableStateOf<Boolean?>(
+            null
+        )
+    } // null = both, true = match, false = training
     var selectedOpponent by remember { mutableStateOf<String?>(null) } // null = all opponents
 
     val opponents by viewModel.distinctOpponents.collectAsState(initial = emptyList())
@@ -49,7 +50,11 @@ fun ChartScreen(
                 kotlinx.coroutines.flow.flowOf(emptyList())
             }
             selectedActionType != null && selectedSessionType != null && selectedOpponent != null ->
-                viewModel.getActionsByTypeSessionAndOpponent(selectedActionType!!, selectedSessionType!!, selectedOpponent!!)
+                viewModel.getActionsByTypeSessionAndOpponent(
+                    selectedActionType!!,
+                    selectedSessionType!!,
+                    selectedOpponent!!
+                )
             selectedActionType != null && selectedOpponent != null ->
                 viewModel.getActionsByTypeAndOpponent(selectedActionType!!, selectedOpponent!!)
             selectedActionType != null && selectedSessionType != null ->
@@ -68,7 +73,11 @@ fun ChartScreen(
                 kotlinx.coroutines.flow.flowOf(null)
             }
             selectedActionType != null && selectedSessionType != null && selectedOpponent != null ->
-                viewModel.getTotalCountByTypeSessionAndOpponent(selectedActionType!!, selectedSessionType!!, selectedOpponent!!)
+                viewModel.getTotalCountByTypeSessionAndOpponent(
+                    selectedActionType!!,
+                    selectedSessionType!!,
+                    selectedOpponent!!
+                )
             selectedActionType != null && selectedOpponent != null ->
                 viewModel.getTotalCountByTypeAndOpponent(selectedActionType!!, selectedOpponent!!)
             selectedActionType != null && selectedSessionType != null ->
@@ -249,7 +258,7 @@ fun ChartScreen(
                 StatisticItem(
                     label = "Average",
                     value = if (actions.isNotEmpty()) {
-                        String.format("%.1f", (totalCount ?: 0).toFloat() / actions.size)
+                        String.format(java.util.Locale.US, "%.1f", (totalCount ?: 0).toFloat() / actions.size)
                     } else {
                         "0"
                     }
@@ -276,7 +285,7 @@ fun ChartScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ShowChart,
+                            imageVector = Icons.AutoMirrored.Filled.ShowChart,
                             contentDescription = null,
                             modifier = Modifier
                                 .size(64.dp)
@@ -332,9 +341,9 @@ fun ChartScreen(
                     )
                     Text(
                         text = "• Each point represents a training or match session\n" +
-                                "• The Y-axis shows the number of offensive actions\n" +
-                                "• The X-axis shows the date of each session\n" +
-                                "• Track improvement trends over time",
+                            "• The Y-axis shows the number of offensive actions\n" +
+                            "• The X-axis shows the date of each session\n" +
+                            "• Track improvement trends over time",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

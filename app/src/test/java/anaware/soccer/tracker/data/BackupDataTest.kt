@@ -14,7 +14,7 @@ class BackupDataTest {
 
     private val json = Json {
         prettyPrint = true
-        encodeDefaults = true  // Include fields with default values
+        encodeDefaults = true // Include fields with default values
     }
 
     @Test
@@ -34,7 +34,7 @@ class BackupDataTest {
         assertEquals(action.dateTime, backupAction.dateTime)
         assertEquals(action.actionCount, backupAction.actionCount)
         assertEquals(action.actionType, backupAction.actionType)
-        assertEquals(action.isMatch, backupAction.match)  // Firestore uses "match"
+        assertEquals(action.isMatch, backupAction.match) // Firestore uses "match"
         assertEquals(action.opponent, backupAction.opponent)
     }
 
@@ -44,7 +44,7 @@ class BackupDataTest {
             dateTime = "2025-12-19T14:30:00",
             actionCount = 3,
             actionType = "ASSIST",
-            match = false,  // Firestore uses "match"
+            match = false, // Firestore uses "match"
             opponent = "Team B"
         )
 
@@ -54,9 +54,9 @@ class BackupDataTest {
         assertEquals(backupAction.dateTime, action.dateTime)
         assertEquals(backupAction.actionCount, action.actionCount)
         assertEquals(backupAction.actionType, action.actionType)
-        assertEquals(backupAction.match, action.isMatch)  // Convert back to "isMatch"
+        assertEquals(backupAction.match, action.isMatch) // Convert back to "isMatch"
         assertEquals(backupAction.opponent, action.opponent)
-        assertEquals(actionId, action.id)  // ID comes from Firestore document ID
+        assertEquals(actionId, action.id) // ID comes from Firestore document ID
     }
 
     @Test
@@ -65,7 +65,7 @@ class BackupDataTest {
             dateTime = "2025-12-19T14:30:00",
             actionCount = 5,
             actionType = "GOAL",
-            match = true,  // Firestore uses "match"
+            match = true, // Firestore uses "match"
             opponent = "Team A"
         )
 
@@ -74,7 +74,7 @@ class BackupDataTest {
         assertTrue(jsonString.contains("\"dateTime\""))
         assertTrue(jsonString.contains("\"actionCount\""))
         assertTrue(jsonString.contains("\"actionType\""))
-        assertTrue(jsonString.contains("\"match\""))  // Firestore field name
+        assertTrue(jsonString.contains("\"match\"")) // Firestore field name
         assertTrue(jsonString.contains("\"opponent\""))
         assertTrue(jsonString.contains("Team A"))
     }
@@ -113,14 +113,14 @@ class BackupDataTest {
                 dateTime = "2025-12-19T14:30:00",
                 actionCount = 5,
                 actionType = "GOAL",
-                match = true,  // Firestore uses "match"
+                match = true, // Firestore uses "match"
                 opponent = "Team A"
             ),
             BackupAction(
                 dateTime = "2025-12-18T16:00:00",
                 actionCount = 2,
                 actionType = "ASSIST",
-                match = false,  // Firestore uses "match"
+                match = false, // Firestore uses "match"
                 opponent = ""
             )
         )
@@ -147,7 +147,7 @@ class BackupDataTest {
                     dateTime = "2025-12-19T14:30:00",
                     actionCount = 5,
                     actionType = "GOAL",
-                    match = true,  // Firestore uses "match"
+                    match = true, // Firestore uses "match"
                     opponent = "Team A"
                 )
             )

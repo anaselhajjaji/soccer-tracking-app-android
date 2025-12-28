@@ -1,5 +1,7 @@
 package anaware.soccer.tracker.ui
 
+import anaware.soccer.tracker.data.ActionType
+import anaware.soccer.tracker.data.SoccerAction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,8 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import anaware.soccer.tracker.data.ActionType
-import anaware.soccer.tracker.data.SoccerAction
 
 /**
  * Screen displaying the history of all soccer action entries.
@@ -35,7 +35,11 @@ fun HistoryScreen(
 
     // Filter states
     var selectedActionType by remember { mutableStateOf<ActionType?>(null) }
-    var selectedSessionType by remember { mutableStateOf<Boolean?>(null) }  // null = Both, true = Match, false = Training
+    var selectedSessionType by remember {
+        mutableStateOf<Boolean?>(
+            null
+        )
+    } // null = Both, true = Match, false = Training
     var selectedOpponent by remember { mutableStateOf<String?>(null) }
     var showFilters by remember { mutableStateOf(false) }
 
@@ -92,19 +96,21 @@ fun HistoryScreen(
                     FilledTonalIconButton(
                         onClick = { showFilters = !showFilters },
                         colors = IconButtonDefaults.filledTonalIconButtonColors(
-                            containerColor = if (hasActiveFilters)
+                            containerColor = if (hasActiveFilters) {
                                 MaterialTheme.colorScheme.tertiary
-                            else
+                            } else {
                                 MaterialTheme.colorScheme.surface
+                            }
                         )
                     ) {
                         Icon(
                             imageVector = Icons.Default.FilterList,
                             contentDescription = "Filter",
-                            tint = if (hasActiveFilters)
+                            tint = if (hasActiveFilters) {
                                 MaterialTheme.colorScheme.onTertiary
-                            else
+                            } else {
                                 MaterialTheme.colorScheme.onSurface
+                            }
                         )
                     }
                     Text(
@@ -180,7 +186,7 @@ fun HistoryScreen(
                         }
                     }
 
-                    Divider(modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                     // Session Type Filter
                     Text(
@@ -215,7 +221,7 @@ fun HistoryScreen(
 
                     // Opponent Filter (only show if there are opponents)
                     if (opponents.isNotEmpty()) {
-                        Divider(modifier = Modifier.padding(vertical = 4.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                         Text(
                             text = "Opponent",
