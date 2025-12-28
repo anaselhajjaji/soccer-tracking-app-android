@@ -69,8 +69,6 @@ jobs:
   firebase-test-lab:
     needs: build-and-test
     runs-on: ubuntu-latest
-    # Only run UI tests on push to main/master, not on PRs
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
 
     steps:
     - name: Checkout code

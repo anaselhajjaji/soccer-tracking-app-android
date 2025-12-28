@@ -249,7 +249,7 @@ fun ChartScreen(
                 StatisticItem(
                     label = "Average",
                     value = if (actions.isNotEmpty()) {
-                        String.format("%.1f", (totalCount ?: 0).toFloat() / actions.size)
+                        String.format(java.util.Locale.US, "%.1f", (totalCount ?: 0).toFloat() / actions.size)
                     } else {
                         "0"
                     }
