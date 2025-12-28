@@ -418,9 +418,9 @@ class SoccerTrackerAppTest {
         composeTestRule.waitForIdle()
 
         // Team section requires scrolling to be visible
-        // Scroll to the Team section header (not the TextField label)
-        composeTestRule.onNodeWithText("Team").performScrollTo()
-        composeTestRule.onNodeWithText("Team").assertExists()
+        // Check for the TextField label "Team *" which is unique to the training section
+        composeTestRule.onNodeWithText("Team *").performScrollTo()
+        composeTestRule.onNodeWithText("Team *").assertExists()
     }
 
     @Test
