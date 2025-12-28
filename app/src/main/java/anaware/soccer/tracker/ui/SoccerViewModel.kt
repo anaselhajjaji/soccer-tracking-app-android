@@ -439,14 +439,14 @@ class SoccerViewModel : ViewModel() {
         }
 
         // Check if a default player already exists
-        var defaultPlayer = _allPlayers.value.firstOrNull { it.name == "Legacy Player" }
+        var defaultPlayer = _allPlayers.value.firstOrNull { it.name == "Player" }
 
         if (defaultPlayer == null) {
             // Create default player
             val playerId = FirebaseService.generatePlayerId()
             defaultPlayer = Player(
                 id = playerId,
-                name = "Legacy Player",
+                name = "Player",
                 birthdate = "2010-01-01",
                 number = 0,
                 teams = emptyList()

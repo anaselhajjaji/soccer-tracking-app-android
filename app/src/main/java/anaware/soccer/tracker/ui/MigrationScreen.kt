@@ -156,7 +156,7 @@ fun MigrationScreen(
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                             Text(
-                                text = "These will be automatically assigned to 'Legacy Player' on next app start. You can manually reassign them to specific players here.",
+                                text = "These will be automatically assigned to 'Player' on next app start. You can manually reassign them to specific players here.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
                                 modifier = Modifier.padding(top = 4.dp)

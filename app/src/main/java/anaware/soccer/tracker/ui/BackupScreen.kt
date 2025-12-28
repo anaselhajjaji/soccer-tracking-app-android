@@ -382,24 +382,6 @@ fun BackupScreen(
                     navController.navigate(Screen.Teams.route)
                 }
             )
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.Assignment,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 12.dp)
-                        )
-                        Text("Migrate Legacy Data")
-                    }
-                },
-                onClick = {
-                    showManagementMenu = false
-                    navController.navigate(Screen.Migration.route)
-                }
-            )
         }
     }
 }
