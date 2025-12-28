@@ -43,14 +43,61 @@ The user requested an Android app with the following features:
 10. **Data Management**: Delete individual entries if mistakes are made
 
 **Technology Choices Made**:
-- **Kotlin** - Modern Android development language
-- **Jetpack Compose** - Declarative UI framework
+
+- **Kotlin 2.1.0** - Modern Android development language
+- **Jetpack Compose** - Declarative UI framework with Compose BOM 2025.01.00
 - **Firebase Firestore** - Cloud NoSQL database for primary data storage
 - **Firebase Authentication** - Google Sign-In for user authentication
 - **MVVM Architecture** - Separation of concerns, testability
 - **Material Design 3** - Modern design system with soccer-themed colors
 - **Vico Charts** - Interactive chart library for data visualization
 - **kotlinx.serialization** - JSON data format for Firebase integration
+- **Android Gradle Plugin 8.9.1** - Latest build tooling
+- **Gradle 8.12** - Build system
+
+### v1.1 - Platform and Dependency Updates (December 2025)
+
+Major platform upgrade to latest Android and Kotlin tooling:
+
+1. **Platform Updates**:
+   - Upgraded Android Gradle Plugin from 8.3.0 to 8.9.1
+   - Upgraded Kotlin from 1.9.22 to 2.1.0
+   - Added Compose Compiler Plugin 2.1.0 (required for Kotlin 2.0+)
+   - Upgraded Gradle wrapper from 8.5 to 8.12
+   - Updated compileSdk and targetSdk from 34 to 35 (Android 15)
+
+2. **Dependency Updates**:
+   - Compose BOM: 2023.10.01 → 2025.01.00
+   - Core KTX: 1.12.0 → 1.15.0
+   - Lifecycle: 2.6.2 → 2.9.0
+   - Activity Compose: 1.8.1 → 1.10.0
+   - Navigation: 2.8.0 → 2.9.0
+   - Firebase BOM: 33.6.0 → 33.8.0
+   - Desugaring: 2.0.4 → 2.1.5
+   - Play Services Auth: 20.7.0 → 21.4.0
+
+3. **Code Modernization**:
+   - Fixed all Compose deprecations from BOM update:
+     - `Icons.Filled.ShowChart` → `Icons.AutoMirrored.Filled.ShowChart`
+     - `Divider()` → `HorizontalDivider()`
+     - Updated `LocalLifecycleOwner` import to `androidx.lifecycle.compose` package
+     - Removed deprecated `window.statusBarColor` usage
+   - Added monochrome launcher icons for Android 13+ themed icons
+   - Added `.kotlin/` to .gitignore for compiler artifacts
+
+4. **Quality Improvements**:
+   - Reduced lint warnings from 18 to 8 (56% reduction)
+   - Remaining warnings are for dependencies requiring Android SDK 36 (not yet released)
+   - All 55 unit tests pass
+   - All 9 UI tests pass on Firebase Test Lab
+   - Build succeeds with no errors
+
+**Rationale for Updates**:
+- Stay current with latest Android platform features
+- Leverage Kotlin 2.1.0 performance improvements
+- Use latest Compose BOM with bug fixes and new components
+- Prepare for future Android SDK releases
+- Maintain compatibility with modern development tools
 
 ## Architecture Decisions
 
@@ -500,40 +547,49 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
 
 ### Gradle Versions
 
-**Configuration**:
+**Configuration** (Updated December 2025):
 ```kotlin
 // Root build.gradle.kts
-AGP: 8.3.0
-Kotlin: 1.9.22
-Gradle Wrapper: 8.5
+AGP: 8.9.1
+Kotlin: 2.1.0
+Gradle Wrapper: 8.12
+Compose Compiler Plugin: 2.1.0 (required for Kotlin 2.0+)
 
 // app/build.gradle.kts
-Compose BOM: 2023.10.01
-Compose Compiler: 1.5.8
-kotlinx-serialization: 1.6.2
-Firebase BOM: Latest
+compileSdk / targetSdk: 35 (Android 15)
+Compose BOM: 2025.01.00
+kotlinx-serialization: 1.7.3
+Firebase BOM: 33.8.0
 ```
 
 ### Key Dependencies
 
 ```kotlin
 // Core
-implementation("androidx.core:core-ktx:1.12.0")
-implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-implementation("androidx.activity:activity-compose:1.8.1")
+implementation("androidx.core:core-ktx:1.15.0")
+implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.0")
+implementation("androidx.activity:activity-compose:1.10.0")
 
 // Compose
-implementation(platform("androidx.compose:compose-bom:2023.10.01"))
+implementation(platform("androidx.compose:compose-bom:2025.01.00"))
 implementation("androidx.compose.material3:material3")
+implementation("androidx.compose.material:material-icons-extended")
+
+// Navigation
+implementation("androidx.navigation:navigation-compose:2.9.0")
+
+// ViewModel
+implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
+implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.0")
 
 // Firebase
-implementation(platform("com.google.firebase:firebase-bom:latest"))
+implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
 implementation("com.google.firebase:firebase-auth-ktx")
 implementation("com.google.firebase:firebase-firestore-ktx")
-implementation("com.google.android.gms:play-services-auth:20.7.0")
+implementation("com.google.android.gms:play-services-auth:21.4.0")
 
 // Serialization
-implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
 // Charts
 implementation("com.patrykandpatrick.vico:compose:1.13.1")
@@ -541,7 +597,7 @@ implementation("com.patrykandpatrick.vico:compose-m3:1.13.1")
 implementation("com.patrykandpatrick.vico:core:1.13.1")
 
 // Desugaring (for LocalDateTime on API 24+)
-coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 ```
 
 ## Continuous Integration

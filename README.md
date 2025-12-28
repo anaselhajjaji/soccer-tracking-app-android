@@ -67,7 +67,7 @@ An Android app for tracking your son's offensive actions during soccer matches a
 - **Authentication**: Firebase Authentication with Google Sign-In
 - **Serialization**: Kotlinx Serialization
 - **Minimum SDK**: 24 (Android 7.0)
-- **Target SDK**: 34 (Android 14)
+- **Target SDK**: 35 (Android 15)
 
 ## Project Structure
 
@@ -95,9 +95,10 @@ app/src/main/java/anaware/soccer/tracker/
 
 ### Prerequisites
 
-- Android Studio Hedgehog (2023.1.1) or later
+- Android Studio Ladybug (2024.2.1) or later
 - JDK 17 or later
-- Android SDK with API level 34
+- Android SDK with API level 35
+- Gradle 8.12
 - Firebase project with `google-services.json` file (see [FIREBASE_SETUP.md](FIREBASE_SETUP.md))
 
 ### Steps to Build
