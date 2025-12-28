@@ -58,14 +58,16 @@ An Android app for tracking your son's offensive actions during soccer matches a
 
 ## Tech Stack
 
-- **Language**: Kotlin
-- **UI Framework**: Jetpack Compose
+- **Language**: Kotlin 2.1.0
+- **UI Framework**: Jetpack Compose (BOM 2025.01.00)
 - **Architecture**: MVVM (Model-View-ViewModel)
 - **Database**: Firebase Firestore (Cloud NoSQL)
 - **Charts**: Vico Chart Library
 - **Navigation**: Jetpack Navigation Compose
 - **Authentication**: Firebase Authentication with Google Sign-In
 - **Serialization**: Kotlinx Serialization
+- **Build Tools**: AGP 8.9.1, Gradle 8.12
+- **Quality Tools**: Detekt (static analysis), JaCoCo (coverage), Android Lint
 - **Minimum SDK**: 24 (Android 7.0)
 - **Target SDK**: 35 (Android 15)
 
@@ -151,9 +153,16 @@ The CI workflow automatically runs on:
 
 1. **Build**: Compiles debug APK with `./gradlew assembleDebug`
 2. **Unit Tests**: Runs all unit tests with `./gradlew test` (55 tests)
-3. **Lint**: Performs code quality checks with `./gradlew lintDebug`
-4. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
-5. **Artifacts**: Uploads debug APK, test APK, and lint reports (7-day retention)
+3. **Lint**: Performs Android code quality checks with `./gradlew lintDebug`
+4. **Coverage**: Generates JaCoCo code coverage report with `./gradlew jacocoTestReport`
+5. **Detekt**: Runs Kotlin static analysis with `./gradlew detekt`
+6. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
+7. **Artifacts**: Uploads APKs and quality reports as artifacts (7-day retention):
+   - Debug APK and test APK
+   - Lint report (HTML)
+   - Coverage report (HTML + XML)
+   - Test results (HTML)
+   - Detekt report (HTML)
 
 #### Job 2: Firebase Test Lab (Push to main/master only)
 
@@ -209,10 +218,34 @@ gcloud firebase test android run \
   --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 ```
 
+### Quality Checks
+
+Run all quality checks locally:
+
+```bash
+# Quick script to run all quality checks and open reports
+./quality-check.sh
+
+# Or run individual checks
+./gradlew test                # Unit tests (55 tests)
+./gradlew jacocoTestReport   # Code coverage report
+./gradlew lintDebug          # Android Lint analysis
+./gradlew detekt             # Kotlin static analysis
+```
+
+**Quality reports generated:**
+
+- **Test Results**: `app/build/reports/tests/testDebugUnitTest/index.html`
+- **Coverage Report**: `app/build/reports/jacoco/jacocoTestReport/html/index.html`
+- **Lint Report**: `app/build/reports/lint-results-debug.html`
+- **Detekt Report**: `app/build/reports/detekt/detekt.html`
+
+See [QUALITY_REPORTS.md](QUALITY_REPORTS.md) for detailed information about each report.
+
 ### Viewing Results
 
 - Check the "Actions" tab in GitHub to see workflow runs
-- Download artifacts (APKs, test results, lint reports) from completed workflow runs
+- Download artifacts (APKs, test results, quality reports) from completed workflow runs
 - View detailed test reports in Firebase Console → Test Lab
 - Build status badge: Add to README if desired
 
@@ -453,9 +486,27 @@ For issues or questions:
 
 ## Version
 
+**v1.1** - Platform Updates & Quality Integration (December 2025)
+
+### Latest Changes
+
+**Platform Upgrades:**
+- Upgraded to Android SDK 35, Kotlin 2.1.0, AGP 8.9.1, Gradle 8.12
+- Updated to Compose BOM 2025.01.00
+- Fixed all deprecations and modernized code
+- Reduced lint warnings by 56%
+
+**Quality & Static Analysis:**
+- Added Detekt static analysis with auto-formatting
+- Integrated JaCoCo code coverage reporting
+- Created comprehensive quality reports documentation
+- 121 code formatting issues auto-fixed (74% improvement)
+- Updated CI/CD pipeline with all quality checks
+- All quality reports available as GitHub Actions artifacts
+
 **v1.0** - Initial Release (December 2025)
 
-### Features
+### Core Features
 
 - Action tracking with specific types (Goals, Assists, Offensive Actions)
 - Session type differentiation (Match/Training)

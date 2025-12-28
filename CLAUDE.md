@@ -55,9 +55,9 @@ The user requested an Android app with the following features:
 - **Android Gradle Plugin 8.9.1** - Latest build tooling
 - **Gradle 8.12** - Build system
 
-### v1.1 - Platform and Dependency Updates (December 2025)
+### v1.1 - Platform Updates & Quality Integration (December 2025)
 
-Major platform upgrade to latest Android and Kotlin tooling:
+Major platform upgrade to latest Android and Kotlin tooling, plus comprehensive static analysis integration:
 
 1. **Platform Updates**:
    - Upgraded Android Gradle Plugin from 8.3.0 to 8.9.1
@@ -85,19 +85,47 @@ Major platform upgrade to latest Android and Kotlin tooling:
    - Added monochrome launcher icons for Android 13+ themed icons
    - Added `.kotlin/` to .gitignore for compiler artifacts
 
-4. **Quality Improvements**:
+4. **Detekt Integration**:
+   - Added Detekt 1.23.4 for Kotlin-specific static analysis
+   - Created comprehensive `detekt.yml` configuration with Android-specific rules
+   - Enabled auto-correction for formatting issues
+   - Configured to generate HTML reports without failing builds
+   - Integrated into CI/CD pipeline (GitHub Actions)
+
+5. **Quality Reports**:
+   - Created [QUALITY_REPORTS.md](QUALITY_REPORTS.md) documentation
+   - Four report types: Detekt, JaCoCo coverage, Android Lint, Test results
+   - All reports available locally and as GitHub Actions artifacts
+   - Updated `quality-check.sh` script to include Detekt
+
+6. **Auto-Fix Results**:
+   - **121 issues automatically corrected** (74% reduction from 164 to 43)
+   - Fixed formatting: imports, whitespace, blank lines, indentation
+   - Remaining 43 issues are architectural (informational only):
+     - 21 wildcard imports (common in Compose projects)
+     - 8 generic exception catches in FirebaseService
+     - 6 long/complex Compose UI functions
+     - 3 line length violations
+     - 5 other minor issues
+
+7. **Quality Improvements**:
    - Reduced lint warnings from 18 to 8 (56% reduction)
    - Remaining warnings are for dependencies requiring Android SDK 36 (not yet released)
    - All 55 unit tests pass
    - All 9 UI tests pass on Firebase Test Lab
-   - Build succeeds with no errors
+   - Debug build compiles successfully
+   - No breaking changes from formatting corrections
 
 **Rationale for Updates**:
 - Stay current with latest Android platform features
 - Leverage Kotlin 2.1.0 performance improvements
 - Use latest Compose BOM with bug fixes and new components
-- Prepare for future Android SDK releases
-- Maintain compatibility with modern development tools
+- User wanted local static analysis reports without cloud services
+- SonarQube requires server infrastructure (rejected)
+- Detekt generates standalone HTML reports
+- Kotlin-specific rules better suited for Android development
+- Auto-correction saves manual formatting effort
+- Integrates seamlessly with Gradle and GitHub Actions
 
 ## Architecture Decisions
 
