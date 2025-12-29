@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter
 fun PlayerManagementScreen(
     viewModel: SoccerViewModel,
     onNavigateBack: () -> Unit,
+    onSetFabAction: ((()-> Unit) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -37,16 +38,18 @@ fun PlayerManagementScreen(
     var editingPlayer by remember { mutableStateOf<Player?>(null) }
     var deletingPlayer by remember { mutableStateOf<Player?>(null) }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Player")
-            }
+    // Register FAB action with parent
+    LaunchedEffect(Unit) {
+        onSetFabAction?.invoke {
+            showAddDialog = true
         }
-    ) { padding ->
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+    ) {
+        val padding = PaddingValues(0.dp)
         if (players.isEmpty()) {
             // Empty state
             Box(

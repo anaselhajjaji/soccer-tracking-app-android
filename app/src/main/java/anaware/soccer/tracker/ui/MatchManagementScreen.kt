@@ -31,6 +31,7 @@ import java.time.format.DateTimeFormatter
 fun MatchManagementScreen(
     viewModel: SoccerViewModel,
     onNavigateBack: () -> Unit,
+    onSetFabAction: ((()-> Unit) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -41,16 +42,18 @@ fun MatchManagementScreen(
     var editingMatch by remember { mutableStateOf<Match?>(null) }
     var deletingMatch by remember { mutableStateOf<Match?>(null) }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Match")
-            }
+    // Register FAB action with parent
+    LaunchedEffect(Unit) {
+        onSetFabAction?.invoke {
+            showAddDialog = true
         }
-    ) { padding ->
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+    ) {
+        val padding = PaddingValues(0.dp)
         if (matches.isEmpty()) {
             // Empty state
             Box(

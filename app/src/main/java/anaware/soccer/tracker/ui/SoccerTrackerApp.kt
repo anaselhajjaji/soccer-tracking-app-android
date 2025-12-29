@@ -48,6 +48,9 @@ fun SoccerTrackerApp(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    // State to hold FAB action for management screens
+    var fabAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
     // Attempt automatic sign-in on app startup
     LaunchedEffect(Unit) {
         viewModel.attemptAutoSignIn(context)
@@ -148,23 +151,81 @@ fun SoccerTrackerApp(
                 )
             },
             floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        navController.navigate(Screen.Add.route) {
-                            launchSingleTop = true
-                        }
-                    },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null
+                when (currentRoute) {
+                    Screen.History.route -> {
+                        ExtendedFloatingActionButton(
+                            onClick = {
+                                navController.navigate(Screen.Add.route) {
+                                    launchSingleTop = true
+                                }
+                            },
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null
+                                )
+                            },
+                            text = {
+                                Text("New Action")
+                            }
                         )
-                    },
-                    text = {
-                        Text("New Action")
                     }
-                )
+                    Screen.Players.route -> {
+                        fabAction?.let { action ->
+                            ExtendedFloatingActionButton(
+                                onClick = action,
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null
+                                    )
+                                },
+                                text = {
+                                    Text("New Player")
+                                }
+                            )
+                        }
+                    }
+                    Screen.Teams.route -> {
+                        fabAction?.let { action ->
+                            ExtendedFloatingActionButton(
+                                onClick = action,
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null
+                                    )
+                                },
+                                text = {
+                                    Text("New Team")
+                                }
+                            )
+                        }
+                    }
+                    Screen.Matches.route -> {
+                        fabAction?.let { action ->
+                            ExtendedFloatingActionButton(
+                                onClick = action,
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null
+                                    )
+                                },
+                                text = {
+                                    Text("New Match")
+                                }
+                            )
+                        }
+                    }
+                    else -> {
+                        // No FAB for other screens (Chart, Backup, Add)
+                    }
+                }
             },
             modifier = modifier
         ) { innerPadding ->
@@ -191,19 +252,22 @@ fun SoccerTrackerApp(
                 composable(Screen.Players.route) {
                     PlayerManagementScreen(
                         viewModel = viewModel,
-                        onNavigateBack = { navController.navigateUp() }
+                        onNavigateBack = { navController.navigateUp() },
+                        onSetFabAction = { action -> fabAction = action }
                     )
                 }
                 composable(Screen.Teams.route) {
                     TeamManagementScreen(
                         viewModel = viewModel,
-                        onNavigateBack = { navController.navigateUp() }
+                        onNavigateBack = { navController.navigateUp() },
+                        onSetFabAction = { action -> fabAction = action }
                     )
                 }
                 composable(Screen.Matches.route) {
                     MatchManagementScreen(
                         viewModel = viewModel,
-                        onNavigateBack = { navController.navigateUp() }
+                        onNavigateBack = { navController.navigateUp() },
+                        onSetFabAction = { action -> fabAction = action }
                     )
                 }
                 composable(Screen.Migration.route) {
