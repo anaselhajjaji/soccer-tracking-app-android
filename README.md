@@ -94,6 +94,23 @@ An Android app for tracking your son's offensive actions during soccer matches a
 - **Automatic Sync**: Seamless data synchronization across devices
 - **Instant Updates**: Immediate UI feedback with optimistic updates
 
+### UI & Navigation
+
+**Navigation Structure:**
+
+- **Hamburger Menu (Drawer)**: Main navigation with organized sections
+  - Main: Progress Chart, History, Account
+  - Management: Manage Players, Manage Teams, Manage Matches
+- **Floating Action Button**: Quick access to Add Entry from any screen
+- **Top Bar**: Hamburger icon and dynamic screen titles
+
+**Screen Flow:**
+
+- **Starting Screen**: Progress Chart (default)
+- **Add Entry**: Accessed via FAB, full-screen form with all input fields
+- **Navigation**: Swipe or click hamburger icon to access drawer menu
+- **Management**: Organized section in drawer for data management
+
 ## Tech Stack
 
 - **Language**: Kotlin 2.1.0
@@ -559,9 +576,46 @@ For issues or questions:
 
 ## Version
 
-**v1.2.0** - Match Entity with Automatic Match Creation (December 2025)
+**v1.3.0** - Navigation Improvements with Hamburger Menu (December 2025)
 
 ### Latest Changes
+
+**Navigation Restructure:**
+
+The app now features an improved navigation structure with hamburger menu and floating action button:
+
+- **Hamburger Menu (Drawer)**: Replace bottom navigation with side drawer menu
+  - **Main Navigation**: Progress Chart, History, Account
+  - **Management Section**: Manage Players, Manage Teams, Manage Matches
+  - **Organized Layout**: Logical grouping of screens with clear sections
+- **Floating Action Button (FAB)**: Always-visible FAB for quick Add Entry access
+  - **Primary Action**: Most frequent use case accessible from any screen
+  - **Single Tap**: Navigate directly to Add Entry screen
+- **Top Bar with Menu Icon**: Hamburger icon to open/close navigation drawer
+- **Starting Screen Changed**: Progress Chart is now the default starting screen (instead of Add)
+- **Clean Interface**: More screen space for content, less UI clutter
+
+**Benefits:**
+
+- **Better UX**: Primary action (Add Entry) always accessible via FAB
+- **More Space**: Drawer navigation frees up bottom of screen for content
+- **Organized**: Management functions grouped together in dedicated section
+- **Consistent**: Standard Material Design 3 navigation pattern
+- **Scalable**: Easy to add more screens/features in the future
+
+**Technical Implementation:**
+
+- **ModalNavigationDrawer**: Material 3 drawer component with custom content
+- **DrawerContent**: Composable with header, main menu items, and management section
+- **NavigationDrawerItem**: Standard drawer items with icons and selection state
+- **FAB Navigation**: FloatingActionButton with launchSingleTop navigation
+- **TopAppBar**: Dynamic titles based on current route
+- **All 210 unit tests passing** (no changes needed)
+- **All 30 UI tests updated and passing** for new navigation structure
+
+---
+
+**v1.2.0** - Match Entity with Automatic Match Creation (December 2025)
 
 **Match Entity with Automatic Match Creation:**
 
@@ -668,7 +722,7 @@ The app now organizes actions into matches with automatic creation and complete 
 
 - Floating action menu on Account screen
 - Direct access to player and team management
-- Maintains 4-tab navigation (Add, History, Progress, Account)
+- Hamburger menu navigation with drawer + FAB for Add Entry
 
 **Technical:**
 

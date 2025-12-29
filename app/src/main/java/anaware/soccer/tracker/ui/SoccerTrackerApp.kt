@@ -1,11 +1,16 @@
 package anaware.soccer.tracker.ui
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SportsScore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -13,15 +18,19 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
 
 /**
- * Main app composable that sets up navigation and displays the bottom navigation bar.
+ * Main app composable with hamburger menu navigation and floating action button.
+ *
+ * Navigation structure:
+ * - Hamburger menu (drawer): Chart, History, Account, Management section
+ * - Floating action button: Navigate to Add Entry screen
+ * - Management submenu: Manage Players, Manage Teams, Manage Matches
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,9 +41,12 @@ fun SoccerTrackerApp(
     val context = LocalContext.current
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+    val currentRoute = navBackStackEntry?.destination?.route
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     // Attempt automatic sign-in on app startup
     LaunchedEffect(Unit) {
@@ -70,86 +82,231 @@ fun SoccerTrackerApp(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            NavigationBar {
-                bottomNavItems.forEach { item ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.label
-                            )
-                        },
-                        label = { Text(item.label) },
-                        selected = currentDestination?.hierarchy?.any {
-                            it.route == item.route
-                        } == true,
-                        onClick = {
-                            navController.navigate(item.route) {
-                                // Pop up to the start destination to avoid building up a large stack
-                                popUpTo(navController.graph.findStartDestination().id) {
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                DrawerContent(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        scope.launch {
+                            drawerState.close()
+                            navController.navigate(route) {
+                                // Avoid building up a large stack
+                                popUpTo(Screen.Chart.route) {
                                     saveState = true
                                 }
-                                // Avoid multiple copies of the same destination
                                 launchSingleTop = true
-                                // Restore state when reselecting a previously selected item
                                 restoreState = true
                             }
                         }
-                    )
-                }
-            }
-        },
-        modifier = modifier
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Add.route,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(Screen.Add.route) {
-                AddActionScreen(viewModel = viewModel)
-            }
-            composable(Screen.History.route) {
-                HistoryScreen(viewModel = viewModel)
-            }
-            composable(Screen.Chart.route) {
-                ChartScreen(viewModel = viewModel)
-            }
-            composable(Screen.Backup.route) {
-                BackupScreen(
-                    viewModel = viewModel,
-                    navController = navController
-                )
-            }
-            composable(Screen.Players.route) {
-                PlayerManagementScreen(
-                    viewModel = viewModel,
-                    onNavigateBack = { navController.navigateUp() }
-                )
-            }
-            composable(Screen.Teams.route) {
-                TeamManagementScreen(
-                    viewModel = viewModel,
-                    onNavigateBack = { navController.navigateUp() }
-                )
-            }
-            composable(Screen.Matches.route) {
-                MatchManagementScreen(
-                    viewModel = viewModel,
-                    onNavigateBack = { navController.navigateUp() }
-                )
-            }
-            composable(Screen.Migration.route) {
-                MigrationScreen(
-                    viewModel = viewModel,
-                    onNavigateBack = { navController.navigateUp() }
+                    }
                 )
             }
         }
+    ) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = when (currentRoute) {
+                                Screen.Add.route -> "Add Entry"
+                                Screen.Chart.route -> "Progress Chart"
+                                Screen.History.route -> "History"
+                                Screen.Backup.route -> "Account"
+                                Screen.Players.route -> "Manage Players"
+                                Screen.Teams.route -> "Manage Teams"
+                                Screen.Matches.route -> "Manage Matches"
+                                else -> "Soccer Tracker"
+                            }
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    if (drawerState.isClosed) {
+                                        drawerState.open()
+                                    } else {
+                                        drawerState.close()
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Open menu"
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate(Screen.Add.route) {
+                            launchSingleTop = true
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Entry"
+                    )
+                }
+            },
+            modifier = modifier
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Chart.route,
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                composable(Screen.Add.route) {
+                    AddActionScreen(viewModel = viewModel)
+                }
+                composable(Screen.Chart.route) {
+                    ChartScreen(viewModel = viewModel)
+                }
+                composable(Screen.History.route) {
+                    HistoryScreen(viewModel = viewModel)
+                }
+                composable(Screen.Backup.route) {
+                    BackupScreen(
+                        viewModel = viewModel,
+                        navController = navController
+                    )
+                }
+                composable(Screen.Players.route) {
+                    PlayerManagementScreen(
+                        viewModel = viewModel,
+                        onNavigateBack = { navController.navigateUp() }
+                    )
+                }
+                composable(Screen.Teams.route) {
+                    TeamManagementScreen(
+                        viewModel = viewModel,
+                        onNavigateBack = { navController.navigateUp() }
+                    )
+                }
+                composable(Screen.Matches.route) {
+                    MatchManagementScreen(
+                        viewModel = viewModel,
+                        onNavigateBack = { navController.navigateUp() }
+                    )
+                }
+                composable(Screen.Migration.route) {
+                    MigrationScreen(
+                        viewModel = viewModel,
+                        onNavigateBack = { navController.navigateUp() }
+                    )
+                }
+            }
+        }
     }
+}
+
+/**
+ * Drawer content with menu items and management section.
+ */
+@Composable
+private fun DrawerContent(
+    currentRoute: String?,
+    onNavigate: (String) -> Unit
+) {
+    // Header
+    Surface(
+        modifier = Modifier.padding(vertical = 16.dp),
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Text(
+            text = "Soccer Tracker",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+
+    Divider()
+
+    // Main menu items
+    DrawerItem(
+        icon = Icons.AutoMirrored.Filled.ShowChart,
+        label = "Progress Chart",
+        selected = currentRoute == Screen.Chart.route,
+        onClick = { onNavigate(Screen.Chart.route) }
+    )
+
+    DrawerItem(
+        icon = Icons.Default.History,
+        label = "History",
+        selected = currentRoute == Screen.History.route,
+        onClick = { onNavigate(Screen.History.route) }
+    )
+
+    DrawerItem(
+        icon = Icons.Default.CloudSync,
+        label = "Account",
+        selected = currentRoute == Screen.Backup.route,
+        onClick = { onNavigate(Screen.Backup.route) }
+    )
+
+    Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+    // Management section
+    Text(
+        text = "Management",
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    )
+
+    DrawerItem(
+        icon = Icons.Default.Person,
+        label = "Manage Players",
+        selected = currentRoute == Screen.Players.route,
+        onClick = { onNavigate(Screen.Players.route) }
+    )
+
+    DrawerItem(
+        icon = Icons.Default.Groups,
+        label = "Manage Teams",
+        selected = currentRoute == Screen.Teams.route,
+        onClick = { onNavigate(Screen.Teams.route) }
+    )
+
+    DrawerItem(
+        icon = Icons.Default.SportsScore,
+        label = "Manage Matches",
+        selected = currentRoute == Screen.Matches.route,
+        onClick = { onNavigate(Screen.Matches.route) }
+    )
+}
+
+/**
+ * Individual drawer item.
+ */
+@Composable
+private fun DrawerItem(
+    icon: ImageVector,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    NavigationDrawerItem(
+        icon = { Icon(imageVector = icon, contentDescription = null) },
+        label = { Text(label) },
+        selected = selected,
+        onClick = onClick,
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+    )
 }
 
 /**
@@ -157,46 +314,11 @@ fun SoccerTrackerApp(
  */
 sealed class Screen(val route: String) {
     data object Add : Screen("add")
-    data object History : Screen("history")
     data object Chart : Screen("chart")
+    data object History : Screen("history")
     data object Backup : Screen("backup")
     data object Players : Screen("players")
     data object Teams : Screen("teams")
     data object Matches : Screen("matches")
     data object Migration : Screen("migration")
 }
-
-/**
- * Bottom navigation item data.
- */
-private data class BottomNavItem(
-    val route: String,
-    val icon: ImageVector,
-    val label: String
-)
-
-/**
- * List of bottom navigation items.
- */
-private val bottomNavItems = listOf(
-    BottomNavItem(
-        route = Screen.Add.route,
-        icon = Icons.Default.Add,
-        label = "Add"
-    ),
-    BottomNavItem(
-        route = Screen.History.route,
-        icon = Icons.Default.History,
-        label = "History"
-    ),
-    BottomNavItem(
-        route = Screen.Chart.route,
-        icon = Icons.AutoMirrored.Filled.ShowChart,
-        label = "Progress"
-    ),
-    BottomNavItem(
-        route = Screen.Backup.route,
-        icon = Icons.Default.CloudSync,
-        label = "Account"
-    )
-)
