@@ -39,35 +39,35 @@ class SoccerTrackerAppTest {
         // Verify the app launches and shows hamburger menu icon
         composeTestRule.onNodeWithContentDescription("Open menu").assertExists()
 
-        // Verify FAB for adding entries exists
-        composeTestRule.onNodeWithContentDescription("Add Entry").assertExists()
+        // Verify FAB for adding entries exists (shows "New Action" text)
+        composeTestRule.onNodeWithText("New Action").assertExists()
 
-        // Verify starting screen is Progress Chart
-        composeTestRule.onNodeWithText("Progress Chart").assertExists()
+        // Verify starting screen is History
+        composeTestRule.onNodeWithText("Total Actions").assertExists()
     }
 
     @Test
     fun navigation_switches_between_tabs() {
-        // Start on Progress Chart screen (default starting screen)
-        composeTestRule.onNodeWithText("Progress Chart").assertExists()
-
-        // Navigate to History via drawer
-        navigateToScreenViaDrawer("History")
-        // History screen should show "Total Actions" header
+        // Start on History screen (default starting screen)
         composeTestRule.onNodeWithText("Total Actions").assertExists()
+
+        // Navigate to Progress Chart via drawer
+        navigateToScreenViaDrawer("Progress Chart")
+        // Progress screen should show chart title
+        composeTestRule.onNodeWithText("Progress Chart").assertExists()
 
         // Navigate to Account via drawer
         navigateToScreenViaDrawer("Account")
         // Account screen should show backup/sync info
         composeTestRule.onNodeWithText("Account & Sync").assertExists()
 
-        // Navigate back to Progress Chart via drawer
-        navigateToScreenViaDrawer("Progress Chart")
-        // Progress screen should show chart title
-        composeTestRule.onNodeWithText("Progress Chart").assertExists()
+        // Navigate back to History via drawer
+        navigateToScreenViaDrawer("History")
+        // History screen should show "Total Actions" header
+        composeTestRule.onNodeWithText("Total Actions").assertExists()
 
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Record Offensive Actions").assertExists()
     }
@@ -75,7 +75,7 @@ class SoccerTrackerAppTest {
     @Test
     fun add_screen_shows_all_required_fields() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Verify Add screen has all input fields
@@ -102,7 +102,7 @@ class SoccerTrackerAppTest {
     @Test
     fun action_count_increment_decrement_works() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Find the action count text (starts at 0)
@@ -132,7 +132,7 @@ class SoccerTrackerAppTest {
     @Test
     fun action_type_selection_works() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Initially Goal should be selected (default)
@@ -152,7 +152,7 @@ class SoccerTrackerAppTest {
     @Test
     fun session_type_toggle_works() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Initially Match should be selected (default)
@@ -168,8 +168,7 @@ class SoccerTrackerAppTest {
 
     @Test
     fun history_screen_shows_empty_state_or_entries() {
-        // Navigate to History via drawer
-        navigateToScreenViaDrawer("History")
+        // Already on History screen (default starting screen)
 
         // Should show header with Total Actions
         composeTestRule.onNodeWithText("Total Actions").assertExists()
@@ -180,7 +179,8 @@ class SoccerTrackerAppTest {
 
     @Test
     fun progress_screen_requires_action_type_selection() {
-        // Already on Progress Chart screen (default starting screen), no navigation needed
+        // Navigate to Progress Chart screen via drawer
+        navigateToScreenViaDrawer("Progress Chart")
 
         // Should show title
         composeTestRule.onNodeWithText("Progress Chart").assertExists()
@@ -198,7 +198,7 @@ class SoccerTrackerAppTest {
     @Test
     fun save_button_disabled_when_action_count_is_zero() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Action count starts at 0
@@ -211,7 +211,7 @@ class SoccerTrackerAppTest {
     @Test
     fun validation_message_shown_when_player_not_selected() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Increment action count to 1
@@ -226,7 +226,7 @@ class SoccerTrackerAppTest {
     @Test
     fun player_selection_section_shows_with_required_indicator() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Player section should show with asterisk indicating required
@@ -236,7 +236,7 @@ class SoccerTrackerAppTest {
     @Test
     fun team_selection_section_shows_with_required_indicator() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Need to scroll down to see Team section
@@ -261,7 +261,7 @@ class SoccerTrackerAppTest {
     @Test
     fun date_time_checkbox_control_exists() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Check for date/time section
@@ -275,7 +275,7 @@ class SoccerTrackerAppTest {
     @Test
     fun action_type_section_shows_all_three_types() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Check for Action Type section
@@ -290,7 +290,7 @@ class SoccerTrackerAppTest {
     @Test
     fun helper_text_shows_minimum_requirement() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Check for helper text about minimum actions
@@ -308,7 +308,8 @@ class SoccerTrackerAppTest {
 
     @Test
     fun progress_screen_has_filter_button() {
-        // Already on Progress Chart screen (default starting screen), no navigation needed
+        // Navigate to Progress Chart screen via drawer
+        navigateToScreenViaDrawer("Progress Chart")
 
         // Filter button should exist (Toggle Filters)
         composeTestRule.onNodeWithContentDescription("Toggle Filters").assertExists()
@@ -316,7 +317,8 @@ class SoccerTrackerAppTest {
 
     @Test
     fun progress_screen_filter_button_is_clickable() {
-        // Already on Progress Chart screen (default starting screen), no navigation needed
+        // Navigate to Progress Chart screen via drawer
+        navigateToScreenViaDrawer("Progress Chart")
 
         // Click filter button to toggle filters
         composeTestRule.onNodeWithContentDescription("Toggle Filters").performClick()
@@ -328,8 +330,7 @@ class SoccerTrackerAppTest {
 
     @Test
     fun history_screen_filter_button_is_clickable() {
-        // Navigate to History via drawer
-        navigateToScreenViaDrawer("History")
+        // Already on History screen (default starting screen)
 
         // Click filter button
         composeTestRule.onNodeWithContentDescription("Filter").performClick()
@@ -409,7 +410,7 @@ class SoccerTrackerAppTest {
     @Test
     fun match_section_shows_when_session_type_is_match() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Ensure Match is selected (default) - use the first "Match" node (the toggle chip)
@@ -425,7 +426,7 @@ class SoccerTrackerAppTest {
     @Test
     fun create_new_match_button_exists_in_add_screen() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Ensure Match is selected - use the first "Match" node (the toggle chip)
@@ -439,7 +440,8 @@ class SoccerTrackerAppTest {
 
     @Test
     fun progress_chart_shows_statistics_card() {
-        // Already on Progress Chart screen (default starting screen), no navigation needed
+        // Navigate to Progress Chart screen via drawer
+        navigateToScreenViaDrawer("Progress Chart")
 
         // Statistics card should show labels
         composeTestRule.onNodeWithText("Total Actions").assertExists()
@@ -454,7 +456,7 @@ class SoccerTrackerAppTest {
     @Test
     fun session_type_section_has_both_and_training_options() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // Check for Session Type section header
@@ -471,7 +473,7 @@ class SoccerTrackerAppTest {
     @Test
     fun validation_message_updates_based_on_missing_fields() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithContentDescription("Add Entry").performClick()
+        composeTestRule.onNodeWithText("New Action").performClick()
         composeTestRule.waitForIdle()
 
         // With action count 0

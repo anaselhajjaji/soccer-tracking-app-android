@@ -42,20 +42,6 @@ fun MatchManagementScreen(
     var deletingMatch by remember { mutableStateOf<Match?>(null) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Manage Matches") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },

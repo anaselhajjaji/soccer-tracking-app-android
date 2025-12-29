@@ -93,7 +93,7 @@ fun SoccerTrackerApp(
                             drawerState.close()
                             navController.navigate(route) {
                                 // Avoid building up a large stack
-                                popUpTo(Screen.Chart.route) {
+                                popUpTo(Screen.History.route) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
@@ -148,25 +148,29 @@ fun SoccerTrackerApp(
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(
+                ExtendedFloatingActionButton(
                     onClick = {
                         navController.navigate(Screen.Add.route) {
                             launchSingleTop = true
                         }
                     },
-                    containerColor = MaterialTheme.colorScheme.primary
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Entry"
-                    )
-                }
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null
+                        )
+                    },
+                    text = {
+                        Text("New Action")
+                    }
+                )
             },
             modifier = modifier
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = Screen.Chart.route,
+                startDestination = Screen.History.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(Screen.Add.route) {

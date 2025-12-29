@@ -40,20 +40,6 @@ fun TeamManagementScreen(
     var deletingTeam by remember { mutableStateOf<Team?>(null) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Manage Teams") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
