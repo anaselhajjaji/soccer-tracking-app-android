@@ -116,9 +116,9 @@ fun SoccerTrackerApp(
                     title = {
                         Text(
                             text = when (currentRoute) {
-                                Screen.Add.route -> "Add Entry"
+                                Screen.Add.route -> "Add New Action"
                                 Screen.Chart.route -> "Progress Chart"
-                                Screen.History.route -> "History"
+                                Screen.History.route -> "Actions History"
                                 Screen.Backup.route -> "Account"
                                 Screen.Players.route -> "Manage Players"
                                 Screen.Teams.route -> "Manage Teams"
