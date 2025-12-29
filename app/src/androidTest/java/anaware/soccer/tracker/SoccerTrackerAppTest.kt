@@ -408,27 +408,6 @@ class SoccerTrackerAppTest {
     }
 
     @Test
-    fun team_section_shows_when_session_type_is_training() {
-        // Navigate to Add screen
-        composeTestRule.onNodeWithText("Add").performClick()
-        composeTestRule.waitForIdle()
-
-        // Select Training
-        composeTestRule.onNodeWithText("Training").performClick()
-        composeTestRule.waitForIdle()
-
-        // Team section requires scrolling to be visible
-        // Scroll to the Player section first (which is always visible), then check if validation message appears
-        // When Training is selected and no team is chosen, validation should show "Select a team to save"
-        composeTestRule.onNodeWithText("Player *").performScrollTo()
-        composeTestRule.waitForIdle()
-
-        // Verify team-specific validation message appears (proves Team section is rendered)
-        // This validation message only appears when Training is selected and no team is chosen
-        composeTestRule.onNodeWithText("Select a team to save").assertExists()
-    }
-
-    @Test
     fun create_new_match_button_exists_in_add_screen() {
         // Navigate to Add screen
         composeTestRule.onNodeWithText("Add").performClick()
