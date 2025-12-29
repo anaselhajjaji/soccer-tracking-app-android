@@ -3,6 +3,7 @@ package anaware.soccer.tracker.ui
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloudSync
@@ -127,21 +128,30 @@ fun SoccerTrackerApp(
                         )
                     },
                     navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    if (drawerState.isClosed) {
-                                        drawerState.open()
-                                    } else {
-                                        drawerState.close()
+                        if (currentRoute == Screen.Add.route) {
+                            IconButton(onClick = { navController.navigateUp() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
+                        } else {
+                            IconButton(
+                                onClick = {
+                                    scope.launch {
+                                        if (drawerState.isClosed) {
+                                            drawerState.open()
+                                        } else {
+                                            drawerState.close()
+                                        }
                                     }
                                 }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Menu,
+                                    contentDescription = "Open menu"
+                                )
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Menu,
-                                contentDescription = "Open menu"
-                            )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
