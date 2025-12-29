@@ -40,7 +40,8 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithContentDescription("Open menu").assertExists()
 
         // Verify FAB for adding entries exists (shows "New Action" text)
-        composeTestRule.onNodeWithText("New Action").assertExists()
+        // Note: ExtendedFloatingActionButton merges semantics, need useUnmergedTree
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).assertExists()
 
         // Verify starting screen is History
         composeTestRule.onNodeWithText("Total Actions").assertExists()
@@ -67,7 +68,7 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("Total Actions").assertExists()
 
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Record Offensive Actions").assertExists()
     }
@@ -75,7 +76,7 @@ class SoccerTrackerAppTest {
     @Test
     fun add_screen_shows_all_required_fields() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Verify Add screen has all input fields
@@ -102,7 +103,7 @@ class SoccerTrackerAppTest {
     @Test
     fun action_count_increment_decrement_works() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Find the action count text (starts at 0)
@@ -132,7 +133,7 @@ class SoccerTrackerAppTest {
     @Test
     fun action_type_selection_works() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Initially Goal should be selected (default)
@@ -152,7 +153,7 @@ class SoccerTrackerAppTest {
     @Test
     fun session_type_toggle_works() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Initially Match should be selected (default)
@@ -198,7 +199,7 @@ class SoccerTrackerAppTest {
     @Test
     fun save_button_disabled_when_action_count_is_zero() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Action count starts at 0
@@ -211,7 +212,7 @@ class SoccerTrackerAppTest {
     @Test
     fun validation_message_shown_when_player_not_selected() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Increment action count to 1
@@ -226,7 +227,7 @@ class SoccerTrackerAppTest {
     @Test
     fun player_selection_section_shows_with_required_indicator() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Player section should show with asterisk indicating required
@@ -236,7 +237,7 @@ class SoccerTrackerAppTest {
     @Test
     fun team_selection_section_shows_with_required_indicator() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Need to scroll down to see Team section
@@ -258,7 +259,7 @@ class SoccerTrackerAppTest {
     @Test
     fun date_time_checkbox_control_exists() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Check for date/time section
@@ -272,7 +273,7 @@ class SoccerTrackerAppTest {
     @Test
     fun action_type_section_shows_all_three_types() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Check for Action Type section
@@ -287,7 +288,7 @@ class SoccerTrackerAppTest {
     @Test
     fun helper_text_shows_minimum_requirement() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Check for helper text about minimum actions
@@ -368,7 +369,7 @@ class SoccerTrackerAppTest {
     @Test
     fun match_section_shows_when_session_type_is_match() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Ensure Match is selected (default) - use the first "Match" node (the toggle chip)
@@ -384,7 +385,7 @@ class SoccerTrackerAppTest {
     @Test
     fun create_new_match_button_exists_in_add_screen() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Ensure Match is selected - use the first "Match" node (the toggle chip)
@@ -414,7 +415,7 @@ class SoccerTrackerAppTest {
     @Test
     fun session_type_section_has_both_and_training_options() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Check for Session Type section header
@@ -431,7 +432,7 @@ class SoccerTrackerAppTest {
     @Test
     fun validation_message_updates_based_on_missing_fields() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // With action count 0
@@ -448,7 +449,7 @@ class SoccerTrackerAppTest {
     @Test
     fun add_screen_shows_back_button_instead_of_hamburger() {
         // Navigate to Add screen via FAB
-        composeTestRule.onNodeWithText("New Action").performClick()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
         // Verify back button exists (not hamburger menu)
@@ -471,25 +472,25 @@ class SoccerTrackerAppTest {
         navigateToScreenViaDrawer("Manage Players")
 
         // FAB should show "New Player"
-        composeTestRule.onNodeWithText("New Player").assertExists()
+        composeTestRule.onNodeWithText("New Player", useUnmergedTree = true).assertExists()
 
         // Navigate to Manage Teams via drawer
         navigateToScreenViaDrawer("Manage Teams")
 
         // FAB should show "New Team"
-        composeTestRule.onNodeWithText("New Team").assertExists()
+        composeTestRule.onNodeWithText("New Team", useUnmergedTree = true).assertExists()
 
         // Navigate to Manage Matches via drawer
         navigateToScreenViaDrawer("Manage Matches")
 
         // FAB should show "New Match"
-        composeTestRule.onNodeWithText("New Match").assertExists()
+        composeTestRule.onNodeWithText("New Match", useUnmergedTree = true).assertExists()
 
         // Navigate back to History
         navigateToScreenViaDrawer("Actions History")
 
         // FAB should show "New Action"
-        composeTestRule.onNodeWithText("New Action").assertExists()
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).assertExists()
     }
 
     @Test
@@ -514,14 +515,18 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithContentDescription("Open menu").performClick()
         composeTestRule.waitForIdle()
 
-        // Verify "Actions History" menu item exists
-        composeTestRule.onNodeWithText("Actions History").assertExists()
+        // Verify drawer header exists (confirms drawer is open)
+        composeTestRule.onAllNodesWithText("Soccer Tracker").assertCountEquals(1)
 
-        // Verify "Progress Chart" menu item exists
-        composeTestRule.onNodeWithText("Progress Chart").assertExists()
+        // Verify "Actions History" menu item exists in drawer
+        // Note: There are 2 instances - one in TopAppBar (current screen), one in drawer menu
+        composeTestRule.onAllNodesWithText("Actions History").assertCountEquals(2)
+
+        // Verify "Progress Chart" menu item exists in drawer (only 1 instance since we're not on that screen)
+        composeTestRule.onAllNodesWithText("Progress Chart").assertCountEquals(1)
 
         // Close drawer by clicking outside or pressing back
-        composeTestRule.onNodeWithText("Soccer Tracker").performClick()
+        composeTestRule.onAllNodesWithText("Soccer Tracker")[0].performClick()
         composeTestRule.waitForIdle()
     }
 }
