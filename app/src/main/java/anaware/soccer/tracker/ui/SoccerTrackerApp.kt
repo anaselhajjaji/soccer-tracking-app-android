@@ -242,17 +242,17 @@ private fun DrawerContent(
 
     // Main menu items
     DrawerItem(
+        icon = Icons.Default.History,
+        label = "Actions History",
+        selected = currentRoute == Screen.History.route,
+        onClick = { onNavigate(Screen.History.route) }
+    )
+
+    DrawerItem(
         icon = Icons.AutoMirrored.Filled.ShowChart,
         label = "Progress Chart",
         selected = currentRoute == Screen.Chart.route,
         onClick = { onNavigate(Screen.Chart.route) }
-    )
-
-    DrawerItem(
-        icon = Icons.Default.History,
-        label = "History",
-        selected = currentRoute == Screen.History.route,
-        onClick = { onNavigate(Screen.History.route) }
     )
 
     DrawerItem(

@@ -62,7 +62,7 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("Account & Sync").assertExists()
 
         // Navigate back to History via drawer
-        navigateToScreenViaDrawer("History")
+        navigateToScreenViaDrawer("Actions History")
         // History screen should show "Total Actions" header
         composeTestRule.onNodeWithText("Total Actions").assertExists()
 
@@ -247,15 +247,12 @@ class SoccerTrackerAppTest {
     }
 
     @Test
-    fun account_screen_shows_player_and_team_management_options() {
+    fun account_screen_shows_sync_information() {
         // Navigate to Account screen via drawer
         navigateToScreenViaDrawer("Account")
 
         // Check for Account & Sync header
         composeTestRule.onNodeWithText("Account & Sync").assertExists()
-
-        // Check for floating action button (Management Menu)
-        composeTestRule.onNodeWithContentDescription("Management Menu").assertExists()
     }
 
     @Test
@@ -300,7 +297,7 @@ class SoccerTrackerAppTest {
     @Test
     fun history_screen_has_filter_button() {
         // Navigate to History via drawer
-        navigateToScreenViaDrawer("History")
+        navigateToScreenViaDrawer("Actions History")
 
         // Filter button should exist
         composeTestRule.onNodeWithContentDescription("Filter").assertExists()
@@ -342,66 +339,27 @@ class SoccerTrackerAppTest {
     }
 
     @Test
-    fun account_screen_management_menu_is_clickable() {
-        // Navigate to Account via drawer
-        navigateToScreenViaDrawer("Account")
-
-        // Click management menu button
-        composeTestRule.onNodeWithContentDescription("Management Menu").performClick()
-        composeTestRule.waitForIdle()
-
-        // Menu items should appear
-        composeTestRule.onNodeWithText("Manage Players").assertExists()
-        composeTestRule.onNodeWithText("Manage Teams").assertExists()
-        composeTestRule.onNodeWithText("Manage Matches").assertExists()
-    }
-
-    @Test
-    fun match_management_menu_option_navigates_to_screen() {
-        // Navigate to Account via drawer
-        navigateToScreenViaDrawer("Account")
-
-        // Open management menu
-        composeTestRule.onNodeWithContentDescription("Management Menu").performClick()
-        composeTestRule.waitForIdle()
-
-        // Click Manage Matches
-        composeTestRule.onNodeWithText("Manage Matches").performClick()
-        composeTestRule.waitForIdle()
+    fun drawer_navigates_to_match_management_screen() {
+        // Navigate to Manage Matches via drawer
+        navigateToScreenViaDrawer("Manage Matches")
 
         // Should navigate to Match Management screen
         composeTestRule.onNodeWithText("Manage Matches").assertExists()
     }
 
     @Test
-    fun player_management_menu_option_navigates_to_screen() {
-        // Navigate to Account via drawer
-        navigateToScreenViaDrawer("Account")
-
-        // Open management menu
-        composeTestRule.onNodeWithContentDescription("Management Menu").performClick()
-        composeTestRule.waitForIdle()
-
-        // Click Manage Players
-        composeTestRule.onNodeWithText("Manage Players").performClick()
-        composeTestRule.waitForIdle()
+    fun drawer_navigates_to_player_management_screen() {
+        // Navigate to Manage Players via drawer
+        navigateToScreenViaDrawer("Manage Players")
 
         // Should navigate to Player Management screen
         composeTestRule.onNodeWithText("Manage Players").assertExists()
     }
 
     @Test
-    fun team_management_menu_option_navigates_to_screen() {
-        // Navigate to Account via drawer
-        navigateToScreenViaDrawer("Account")
-
-        // Open management menu
-        composeTestRule.onNodeWithContentDescription("Management Menu").performClick()
-        composeTestRule.waitForIdle()
-
-        // Click Manage Teams
-        composeTestRule.onNodeWithText("Manage Teams").performClick()
-        composeTestRule.waitForIdle()
+    fun drawer_navigates_to_team_management_screen() {
+        // Navigate to Manage Teams via drawer
+        navigateToScreenViaDrawer("Manage Teams")
 
         // Should navigate to Team Management screen
         composeTestRule.onNodeWithText("Manage Teams").assertExists()

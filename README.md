@@ -106,9 +106,9 @@ An Android app for tracking your son's offensive actions during soccer matches a
 
 **Screen Flow:**
 
-- **Starting Screen**: Progress Chart (default)
-- **Add Entry**: Accessed via FAB, full-screen form with all input fields
-- **Navigation**: Swipe or click hamburger icon to access drawer menu
+- **Starting Screen**: History (default)
+- **Add Entry**: Accessed via "New Action" FAB, full-screen form with all input fields
+- **Navigation**: Click hamburger icon to access drawer menu
 - **Management**: Organized section in drawer for data management
 
 ## Tech Stack
@@ -588,12 +588,13 @@ The app now features an improved navigation structure with hamburger menu and fl
   - **Main Navigation**: Progress Chart, History, Account
   - **Management Section**: Manage Players, Manage Teams, Manage Matches
   - **Organized Layout**: Logical grouping of screens with clear sections
-- **Floating Action Button (FAB)**: Always-visible FAB for quick Add Entry access
+- **Floating Action Button (FAB)**: Always-visible "New Action" FAB for quick Add Entry access
   - **Primary Action**: Most frequent use case accessible from any screen
   - **Single Tap**: Navigate directly to Add Entry screen
+  - **Clear Label**: Shows "New Action" text for better clarity
 - **Top Bar with Menu Icon**: Hamburger icon to open/close navigation drawer
-- **Starting Screen Changed**: Progress Chart is now the default starting screen (instead of Add)
-- **Clean Interface**: More screen space for content, less UI clutter
+- **Starting Screen Changed**: History is now the default starting screen (instead of Add)
+- **Clean Interface**: More screen space for content, no duplicate action bars
 
 **Benefits:**
 
@@ -608,8 +609,10 @@ The app now features an improved navigation structure with hamburger menu and fl
 - **ModalNavigationDrawer**: Material 3 drawer component with custom content
 - **DrawerContent**: Composable with header, main menu items, and management section
 - **NavigationDrawerItem**: Standard drawer items with icons and selection state
-- **FAB Navigation**: FloatingActionButton with launchSingleTop navigation
-- **TopAppBar**: Dynamic titles based on current route
+- **ExtendedFloatingActionButton**: FAB with icon and "New Action" text label
+- **TopAppBar**: Dynamic titles based on current route, single action bar throughout
+- **No Duplicate Action Bars**: Management screens use only the main TopAppBar
+- **Starting Destination**: NavHost starts at History screen
 - **All 210 unit tests passing** (no changes needed)
 - **All 30 UI tests updated and passing** for new navigation structure
 

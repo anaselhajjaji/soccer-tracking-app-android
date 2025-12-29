@@ -29,18 +29,20 @@ Navigation restructure replacing bottom navigation bar with hamburger menu and f
    - **Swipe or Click**: Open drawer by swiping from left edge or clicking hamburger icon
 
 2. **Floating Action Button (FAB)**:
+   - **ExtendedFloatingActionButton**: Shows icon + "New Action" text label
    - **Always Visible**: FAB present on all screens for quick Add Entry access
    - **Primary Action**: Most frequent use case accessible with single tap
    - **LaunchSingleTop**: Prevents navigation stack buildup
 
 3. **Top Bar Updates**:
+   - **Single Action Bar**: Removed duplicate TopAppBars from management screens
    - **Hamburger Icon**: Menu icon to open/close navigation drawer
    - **Dynamic Titles**: Screen-specific titles (Add Entry, Progress Chart, History, etc.)
    - **Material 3 TopAppBar**: Primary container color with on-container text
 
 4. **Starting Screen Change**:
-   - **Default Route**: Changed from Screen.Add.route to Screen.Chart.route
-   - **Progress Chart First**: Users see data visualization on app launch
+   - **Default Route**: Changed from Screen.Add.route to Screen.History.route
+   - **History First**: Users see their action history on app launch
    - **Add Entry via FAB**: Accessible from starting screen and all other screens
 
 **Benefits**:
@@ -53,24 +55,29 @@ Navigation restructure replacing bottom navigation bar with hamburger menu and f
 
 **Technical Implementation**:
 
-- **File Modified**: [SoccerTrackerApp.kt](app/src/main/java/anaware/soccer/tracker/ui/SoccerTrackerApp.kt:1-325)
+- **File Modified**: [SoccerTrackerApp.kt](app/src/main/java/anaware/soccer/tracker/ui/SoccerTrackerApp.kt:1-328)
   - Replaced Scaffold bottomBar with ModalNavigationDrawer
   - Added DrawerContent() composable with DrawerItem() helper
   - Updated navigationIcon in TopAppBar to toggle drawer
-  - Added FloatingActionButton for Add Entry navigation
-  - Changed startDestination to Screen.Chart.route
+  - Added ExtendedFloatingActionButton with "New Action" text for Add Entry navigation
+  - Changed startDestination from Screen.Add.route to Screen.History.route
+  - Updated popUpTo reference from Screen.Chart.route to Screen.History.route
+  - Removed duplicate TopAppBars from PlayerManagementScreen, TeamManagementScreen, MatchManagementScreen
 - **Navigation Logic**: rememberDrawerState, coroutineScope.launch for drawer animations
 - **State Management**: DrawerValue.Closed as initial state, toggle on icon click
 - **All 210 unit tests passing** - No changes needed to business logic
-- **All 30 UI tests updated and passing** - Helper function navigateToScreenViaDrawer() added
+- **All 30 UI tests updated and passing** - Helper function navigateToScreenViaDrawer() added, FAB references updated
 - **Documentation Updated**: README.md and CLAUDE.md reflect new navigation structure
 
 **Design Decisions**:
 
+- **History as Starting Screen**: Users most commonly want to review their data first
 - **Keep Add Entry as Full Screen**: Complex form with many fields unsuitable for dialog/bottom sheet
 - **Maintain Existing Screens**: Only navigation mechanism changed, all screen content unchanged
 - **Single Top Launch**: Prevents multiple instances of same screen in back stack
 - **Save State on Navigate**: Preserves screen state when switching between destinations
+- **Extended FAB with Text**: Makes primary action clearer with "New Action" label
+- **No Duplicate Action Bars**: Single TopAppBar throughout app for cleaner interface
 
 ### v1.0 - Initial Release (December 2025)
 
