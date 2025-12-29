@@ -31,11 +31,10 @@ class SoccerTrackerAppTest {
 
         // Click the menu item
         composeTestRule.onNodeWithText(menuItemText).performClick()
-        composeTestRule.waitForIdle()
 
         // Wait for drawer to close (drawer closes automatically after navigation)
-        // We verify this by waiting a bit more for the animation to complete
-        Thread.sleep(300)
+        // Drawer closing animation takes time, so we wait longer
+        Thread.sleep(2000)
         composeTestRule.waitForIdle()
     }
 
