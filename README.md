@@ -615,7 +615,7 @@ The app now features an improved navigation structure with hamburger menu and fl
 - **No Duplicate Action Bars**: Management screens use only the main TopAppBar
 - **Starting Destination**: NavHost starts at History screen
 - **All 210 unit tests passing** (no changes needed)
-- **All 30 UI tests updated and passing** for new navigation structure
+- **All 34 UI tests updated and passing** for new navigation structure
 
 ---
 
@@ -655,7 +655,7 @@ The app now organizes actions into matches with automatic creation and complete 
 - MatchManagementScreen with complete CRUD interface
 - ViewModel methods: addMatch(), updateMatch(), deleteMatch(), getMatchById(), getActionsForMatch()
 - All 210 unit tests passing (105 tests × 2 variants)
-- All 30 UI tests passing on Firebase Test Lab
+- All 34 UI tests passing on Firebase Test Lab
 - Full backward compatibility with existing data
 
 **UI Improvements:**
@@ -741,7 +741,7 @@ The app now organizes actions into matches with automatic creation and complete 
 **Test Suite Enhancements:**
 - Increased unit tests from 55 to 210 tests (+155 tests, 282% increase)
 - All 210 tests passing (105 tests × 2 variants: debug and release)
-- Increased UI tests from 17 to 30 tests (+13 tests, 76% increase)
+- Increased UI tests from 17 to 34 tests (+17 tests, 100% increase)
 - Added comprehensive Match entity tests (29 tests)
 - Added BackupData serialization tests with isHomeMatch field
 - Added comprehensive ViewModel filtering tests (77% coverage)

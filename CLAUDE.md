@@ -66,7 +66,7 @@ Navigation restructure replacing bottom navigation bar with hamburger menu and f
 - **Navigation Logic**: rememberDrawerState, coroutineScope.launch for drawer animations
 - **State Management**: DrawerValue.Closed as initial state, toggle on icon click
 - **All 210 unit tests passing** - No changes needed to business logic
-- **All 30 UI tests updated and passing** - Helper function navigateToScreenViaDrawer() added, FAB references updated
+- **All 34 UI tests updated and passing** - Helper function navigateToScreenViaDrawer() added, FAB references updated, added v1.3.0 navigation tests
 - **Documentation Updated**: README.md and CLAUDE.md reflect new navigation structure
 
 **Design Decisions**:
@@ -256,7 +256,7 @@ Major feature release adding Match entity to group related actions into matches 
    - **SoccerActionTest.kt**: Tests for matchId field handling
    - **BackupDataTest.kt**: Updated for version 4 with BackupMatch tests including isHomeMatch serialization
    - **All 210 unit tests passing** (105 tests × 2 variants)
-   - **All 30 UI tests passing** on Firebase Test Lab
+   - **All 34 UI tests passing** on Firebase Test Lab
    - **Test Coverage**: Match entity has comprehensive unit test coverage
 
 12. **Progress Chart Filter Improvements** (v1.2.0 Update):
@@ -281,7 +281,7 @@ Major feature release adding Match entity to group related actions into matches 
 **Impact**:
 
 - All 210 unit tests passing (105 tests × 2 variants)
-- All 30 UI tests passing on Firebase Test Lab
+- All 34 UI tests passing on Firebase Test Lab
 - Full backward compatibility with existing data
 - Automatic match creation during action entry
 - Manual match CRUD through dedicated management UI
@@ -303,9 +303,9 @@ Focused release significantly improving test coverage across the entire codebase
 
 1. **Comprehensive Test Suite Expansion**:
    - **Unit Tests**: Increased from 55 to 210 tests (+155 tests, 282% increase)
-   - **UI Tests**: Increased from 17 to 30 tests (+13 tests, 76% increase)
+   - **UI Tests**: Increased from 17 to 34 tests (+17 tests, 100% increase)
    - All 210 unit tests passing (105 tests × 2 variants: debug and release)
-   - All 30 UI tests passing on Firebase Test Lab virtual devices
+   - All 34 UI tests passing on Firebase Test Lab virtual devices
 
 2. **Unit Test Coverage by File**:
    - **MatchTest.kt**: 29 tests covering all Match entity functionality
@@ -398,7 +398,7 @@ Focused release significantly improving test coverage across the entire codebase
 **Impact**:
 
 - All 210 unit tests passing in ~1.4 seconds
-- All 30 UI tests passing on Firebase Test Lab
+- All 34 UI tests passing on Firebase Test Lab
 - Coverage metrics now realistic and accurate
 - Test suite provides comprehensive coverage of business logic
 - Remaining untested code requires Android runtime (Firebase, Activities, UI screens)
@@ -910,7 +910,7 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
 - Fixed JaCoCo exclusions to properly filter Kotlin/Compose compiler-generated synthetic classes
 - Coverage now accurately reflects testable business logic without inflated instruction counts
 
-**UI Tests** (32 tests on Firebase Test Lab):
+**UI Tests** (34 tests on Firebase Test Lab):
 
 **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/SoccerTrackerAppTest.kt`
 
