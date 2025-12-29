@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SportsScore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -380,6 +381,24 @@ fun BackupScreen(
                 onClick = {
                     showManagementMenu = false
                     navController.navigate(Screen.Teams.route)
+                }
+            )
+            DropdownMenuItem(
+                text = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.SportsScore,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 12.dp)
+                        )
+                        Text("Manage Matches")
+                    }
+                },
+                onClick = {
+                    showManagementMenu = false
+                    navController.navigate(Screen.Matches.route)
                 }
             )
         }

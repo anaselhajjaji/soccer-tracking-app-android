@@ -18,6 +18,12 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Team name, color, league, and season
   - Players can belong to multiple teams
   - Assign team when recording actions
+- **Match Management**: Organize actions into matches
+  - Automatic match creation when recording match actions
+  - Manual match management via dedicated UI
+  - View, add, edit, and delete matches
+  - Track match metadata: date, teams, league, scores
+  - Match result calculation (Win/Loss/Draw)
 - **Session Types**: Distinguish between match and training sessions
 - **Opponent Tracking**: Record opponent name with autocomplete suggestions
 - **Optional Date & Time**: Choose current time or select custom date/time
@@ -65,6 +71,12 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Access via floating menu on Account screen
   - Custom team colors with color picker
   - Track league and season information
+- **Match Management**: Add, edit, and delete matches
+  - Access via floating menu on Account screen
+  - Automatic match creation when adding match actions
+  - Track match date, teams, league/tournament, scores
+  - View all actions linked to each match
+  - Color-coded result badges (Win/Loss/Draw)
 - **Firebase Cloud Storage**: Direct cloud storage with automatic sync
   - Firebase Authentication with Google Sign-In (required)
   - All data stored directly in Firebase Firestore
@@ -102,21 +114,27 @@ An Android app for tracking your son's offensive actions during soccer matches a
 ```
 app/src/main/java/anaware/soccer/tracker/
 ├── backup/
-│   └── FirebaseService.kt      # Firebase Firestore CRUD operations
+│   └── FirebaseService.kt              # Firebase Firestore CRUD operations
 ├── data/
-│   ├── ActionType.kt           # Enum for action types
-│   ├── BackupData.kt           # Firestore data models
-│   └── SoccerAction.kt         # Data model for soccer actions
+│   ├── ActionType.kt                   # Enum for action types
+│   ├── BackupData.kt                   # Firestore data models
+│   ├── Match.kt                        # Match entity with scores and result
+│   ├── Player.kt                       # Player entity with multi-team support
+│   ├── SoccerAction.kt                 # Data model for soccer actions
+│   └── Team.kt                         # Team entity with color and league
 ├── ui/
-│   ├── AddActionScreen.kt      # Screen for adding new entries
-│   ├── BackupScreen.kt         # Account and sync status UI
-│   ├── ChartScreen.kt          # Progress chart with filtering
-│   ├── HistoryScreen.kt        # Screen showing all entries
-│   ├── SoccerTrackerApp.kt     # Main app navigation
-│   ├── SoccerViewModel.kt      # ViewModel with Firebase integration
-│   └── theme/                  # Material 3 theme files
-├── MainActivity.kt             # Main activity
-└── SoccerTrackerApp.kt         # Application class
+│   ├── AddActionScreen.kt              # Screen for adding new entries
+│   ├── BackupScreen.kt                 # Account and sync status UI
+│   ├── ChartScreen.kt                  # Progress chart with filtering
+│   ├── HistoryScreen.kt                # Screen showing all entries
+│   ├── MatchManagementScreen.kt        # Match CRUD interface
+│   ├── PlayerManagementScreen.kt       # Player CRUD interface
+│   ├── SoccerTrackerApp.kt             # Main app navigation
+│   ├── SoccerViewModel.kt              # ViewModel with Firebase integration
+│   ├── TeamManagementScreen.kt         # Team CRUD interface
+│   └── theme/                          # Material 3 theme files
+├── MainActivity.kt                     # Main activity
+└── SoccerTrackerApp.kt                 # Application class
 ```
 
 ## Building and Running
@@ -178,7 +196,7 @@ The CI workflow automatically runs on:
 #### Job 1: Build and Test
 
 1. **Build**: Compiles debug APK with `./gradlew assembleDebug`
-2. **Unit Tests**: Runs all unit tests with `./gradlew test` (86 tests)
+2. **Unit Tests**: Runs all unit tests with `./gradlew test` (210 tests across 6 test files)
 3. **Lint**: Performs Android code quality checks with `./gradlew lintDebug`
 4. **Coverage**: Generates JaCoCo code coverage report with `./gradlew jacocoTestReport`
 5. **Detekt**: Runs Kotlin static analysis with `./gradlew detekt`
@@ -225,8 +243,15 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
 **Test configuration:**
 
 - **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
-- **Tests:** 17 UI tests covering navigation, input controls, validation, and screen interactions
+- **Tests:** 30 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
 - **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
+- **Test Coverage:**
+  - 9 navigation and basic UI tests
+  - 4 filter button and interaction tests
+  - 6 management menu navigation tests
+  - 4 match/team section display tests
+  - 4 progress chart enhancement tests
+  - 5 validation and UI polish tests
 
 ### Running Tests Locally
 
@@ -253,7 +278,7 @@ Run all quality checks locally:
 ./quality-check.sh
 
 # Or run individual checks
-./gradlew test                # Unit tests (86 tests)
+./gradlew test                # Unit tests (210 tests = 105 × 2 variants)
 ./gradlew jacocoTestReport   # Code coverage report
 ./gradlew lintDebug          # Android Lint analysis
 ./gradlew detekt             # Kotlin static analysis
@@ -366,7 +391,9 @@ Data is stored in Firebase Firestore with the following structure:
         - opponent: ""
 ```
 
-### SoccerAction Data Model
+### Data Models
+
+**SoccerAction:**
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
@@ -376,6 +403,22 @@ Data is stored in Firebase Firestore with the following structure:
 | actionType | String | GOAL, ASSIST, or OFFENSIVE_ACTION |
 | isMatch | Boolean | true = match, false = training |
 | opponent | String | Name of opponent team (optional) |
+| playerId | String | ID of player who performed action |
+| teamId | String | ID of team player was representing |
+| matchId | String | ID of match this action belongs to |
+
+**Match:**
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| id | String | UUID-based unique ID |
+| date | String | ISO date format (yyyy-MM-dd) |
+| playerTeamId | String | ID of player's team |
+| opponentTeamId | String | ID of opponent team |
+| league | String | League/tournament name (optional) |
+| playerScore | Int | Player team's score (-1 = not recorded) |
+| opponentScore | Int | Opponent team's score (-1 = not recorded) |
+| isHomeMatch | Boolean | True if home match, false if away (default: true) |
 
 ## Customization
 
@@ -488,9 +531,11 @@ Per organizational coding standards:
 
 Potential future features:
 
+- Match Details screen with all associated actions
+- Match filtering in History and Progress screens
+- Match statistics and analytics
 - Offline mode with local caching
 - Export data to CSV/Excel
-- Multiple players support
 - Real-time sync with Firestore listeners
 - Statistical insights and trend analysis
 - Share progress charts as images
@@ -514,11 +559,80 @@ For issues or questions:
 
 ## Version
 
-**v1.1.0** - Multi-Player & Team Management + Edit Features (December 2025)
+**v1.2.0** - Match Entity with Automatic Match Creation (December 2025)
 
 ### Latest Changes
 
+**Match Entity with Automatic Match Creation:**
+
+The app now organizes actions into matches with automatic creation and complete management UI:
+
+- **Automatic Match Creation**: When recording a match action, the app automatically creates or finds the appropriate match
+- **Match Management UI**: Dedicated screen to view, add, edit, and delete matches
+- **Match Cards**: Display team names, date, scores, result chips (Win/Loss/Draw), league, and action count
+- **Match Grouping**: Actions are linked to matches, making it easy to see all actions from a specific game
+- **Match Metadata**: Each match stores date, player team, opponent team, league/tournament, final score, and home/away status
+- **Match Name**: Automatically generated display name (e.g., "Team Blue vs Team Red")
+- **Home/Away Field**: Specify whether each match is home or away with FilterChip toggle
+- **Unified Team Entity**: Opponent teams are now full Team entities (same as player teams)
+- **Smart Matching**: Same date + same teams = same match (prevents duplicates)
+- **Score Tracking**: Optional match scores (playerScore and opponentScore) with win/loss/draw calculation
+- **Legacy Migration**: Existing opponent strings automatically converted to Team entities and linked to matches
+- **Easy Access**: "Manage Matches" option in Account screen's floating action menu
+
+**Data Model Updates:**
+
+- Added Match entity with date, teams, league, scores, and home/away status (8 fields)
+- SoccerAction now includes matchId field linking to matches
+- BackupData updated to version 4 with match serialization
+- Firestore schema now includes `/users/{userId}/matches/` collection
+- Match.isHomeMatch field (Boolean, default: true) for home/away tracking
+
+**Technical Implementation:**
+
+- FirebaseService extended with Match CRUD operations
+- findOrCreateMatch() helper prevents duplicate match creation
+- findOrCreateOpponentTeam() converts opponent strings to Team entities
+- Automatic legacy migration on app startup (idempotent and seamless)
+- MatchManagementScreen with complete CRUD interface
+- ViewModel methods: addMatch(), updateMatch(), deleteMatch(), getMatchById(), getActionsForMatch()
+- All 210 unit tests passing (105 tests × 2 variants)
+- All 30 UI tests passing on Firebase Test Lab
+- Full backward compatibility with existing data
+
+**UI Improvements:**
+
+- **AddActionScreen**: Default player selection, match selection UI, inline match creation, home/away toggle
+- **HistoryScreen**: Match names displayed instead of separate team/opponent fields
+- **MatchManagementScreen**: Home/away toggle in add/edit match dialog
+- **ChartScreen**: Improved filtering with collapsible panel and team-based opponent selection
+- **Cleaner Display**: More concise action cards with match grouping information
+
+**Progress Chart Filter Improvements:**
+
+- **Collapsible Filter Panel**: All filters hidden behind toggle button (matches History screen pattern)
+- **Filter Button Highlight**: Button changes color when filters are active
+- **Opponent Team Dropdown**: Replaced opponent string chips with proper Team entity dropdown
+- **Opponent Teams from Matches**: Sources opponent teams from matches collection (consistent data model)
+- **Player Filter Cleanup**: Removed "Legacy" option from player filter chips
+- **Team Dropdown Selector**: Replaced team filter chips with dropdown for cleaner, more scalable UI
+- **"All" Chip Plus Dropdown**: Each filter section has "All" chip + dropdown selector pattern
+- **Clear All Filters**: Single button to reset all filters at once
+- **Consistent UX**: Matches the collapsible filter pattern used in History screen
+
+**Future Enhancements** (planned but not yet implemented):
+
+- Match Details screen showing all actions in a match
+- Match filtering in History and Progress screens
+- Match statistics and analytics
+- Home/Away badge display in match cards
+
+---
+
+**v1.1.0** - Multi-Player & Team Management (December 2025)
+
 **Multi-Player & Team Management:**
+
 - Track multiple players with name, birthdate, and jersey number
 - Manage teams with name, color, league, and season
 - Players can belong to multiple teams
@@ -530,47 +644,70 @@ For issues or questions:
 - Firestore schema v3 with player and team collections
 
 **Edit Functionality:**
+
 - Edit button on every history entry card
 - Comprehensive edit dialog for updating all fields
 - Changes persist to Firebase and update locally
 - Optimistic updates for instant UI feedback
 
 **Optional Date/Time:**
+
 - "Use current date & time" checkbox (enabled by default)
 - Automatic timestamp when checkbox is enabled
 - Custom date/time selection when unchecked
 - Simplified data entry for most common use case
 
 **Enhanced Filtering:**
+
 - Filter history by player (specific player or "Legacy Entries")
 - Filter history by team with color indicators
 - All filters work together (action, session, opponent, player, team)
 - Progress charts include player and team filtering
 
 **Management Access:**
+
 - Floating action menu on Account screen
 - Direct access to player and team management
 - Maintains 4-tab navigation (Add, History, Progress, Account)
 
 **Technical:**
+
 - Extended data models with player and team support
 - SoccerAction now includes playerId and teamId fields
 - BackupData v3 with player and team serialization
-- All 304 unit tests passing (152 tests × 2 variants)
-- All 9 UI tests passing on Firebase Test Lab
 
 ---
 
-**v1.0.1** - Coverage Improvements & Bug Fixes (December 2025)
+**v1.0.1** - Test Suite Enhancements & Bug Fixes (December 2025)
 
-**Test Coverage Improvements:**
-- Increased unit tests from 55 to 86 tests (+31 tests, 56% increase)
-- Improved overall coverage from 22% to 41% (+19 points, 86% increase)
+**Test Suite Enhancements:**
+- Increased unit tests from 55 to 210 tests (+155 tests, 282% increase)
+- All 210 tests passing (105 tests × 2 variants: debug and release)
+- Increased UI tests from 17 to 30 tests (+13 tests, 76% increase)
+- Added comprehensive Match entity tests (29 tests)
+- Added BackupData serialization tests with isHomeMatch field
 - Added comprehensive ViewModel filtering tests (77% coverage)
 - Created UiStateTest with 100% coverage
 - Added edge case tests for SoccerAction data model
+- Added UI tests for filters, management screens, and v1.2.0 features
 - Fixed JaCoCo exclusions to properly filter Compose synthetic classes
 - Coverage now accurately reflects testable business logic
+
+**Unit Test Coverage:**
+- MatchTest.kt: 29 tests covering all Match entity functionality
+- SoccerViewModelTest.kt: Comprehensive filtering and CRUD tests
+- BackupDataTest.kt: Serialization tests with isHomeMatch support
+- ActionTypeTest.kt: Enum validation tests
+- SoccerActionTest.kt: Data model edge case tests
+- UiStateTest.kt: 100% coverage of UI state class
+
+**UI Test Coverage (Firebase Test Lab):**
+- 9 navigation and basic UI tests
+- 4 filter button and interaction tests
+- 6 management menu navigation tests
+- 4 match/team section display tests
+- 3 progress chart enhancement tests
+- 4 validation and UI polish tests
 
 **Bug Fixes:**
 - Fixed Firebase service test that was attempting real Firebase calls
@@ -578,9 +715,10 @@ For issues or questions:
 - Improved test reliability and accuracy
 
 **Documentation:**
-- Updated all documentation with new test counts and coverage metrics
-- Enhanced CLAUDE.md with detailed coverage breakdown
-- Updated README.md and QUALITY_REPORTS.md
+- Updated all documentation with new test counts (210 unit, 32 UI)
+- Enhanced CLAUDE.md with detailed test suite breakdown
+- Updated README.md with test coverage details
+- Updated QUALITY_REPORTS.md with latest metrics
 
 ---
 

@@ -2,6 +2,7 @@ package anaware.soccer.tracker.ui
 
 import anaware.soccer.tracker.backup.FirebaseService
 import anaware.soccer.tracker.data.ActionType
+import anaware.soccer.tracker.data.Match
 import anaware.soccer.tracker.data.Player
 import anaware.soccer.tracker.data.SoccerAction
 import anaware.soccer.tracker.data.Team
@@ -33,6 +34,10 @@ class SoccerViewModel : ViewModel() {
     // All teams from Firebase
     private val _allTeams = MutableStateFlow<List<Team>>(emptyList())
     val allTeams: StateFlow<List<Team>> = _allTeams.asStateFlow()
+
+    // All matches from Firebase
+    private val _allMatches = MutableStateFlow<List<Match>>(emptyList())
+    val allMatches: StateFlow<List<Match>> = _allMatches.asStateFlow()
 
     // Actions for chart display
     val chartActions: StateFlow<List<SoccerAction>> = _allActions
@@ -144,7 +149,58 @@ class SoccerViewModel : ViewModel() {
         viewModelScope.launch {
             val service = getFirebaseService(context ?: return@launch)
 
-            // Generate unique ID
+            // 1. If match action, find/create match
+            var matchId = ""
+            if (isMatch) {
+                // Extract date from dateTime
+                val matchDate = dateTime.toLocalDate().toString()
+
+                // Find or create opponent team
+                val opponentTeamResult = if (opponent.isNotBlank()) {
+                    service.findOrCreateOpponentTeam(opponent)
+                } else {
+                    Result.failure(Exception("Opponent required for match actions"))
+                }
+
+                if (opponentTeamResult.isFailure) {
+                    _uiState.value = _uiState.value.copy(
+                        message = "Error creating opponent team: ${opponentTeamResult.exceptionOrNull()?.message}"
+                    )
+                    return@launch
+                }
+
+                val opponentTeamId = opponentTeamResult.getOrNull()!!
+
+                // Find or create match
+                val matchResult = service.findOrCreateMatch(
+                    date = matchDate,
+                    playerTeamId = teamId,
+                    opponentTeamId = opponentTeamId
+                )
+
+                if (matchResult.isFailure) {
+                    _uiState.value = _uiState.value.copy(
+                        message = "Error creating match: ${matchResult.exceptionOrNull()?.message}"
+                    )
+                    return@launch
+                }
+
+                matchId = matchResult.getOrNull()!!
+
+                // Refresh matches list
+                val matchesResult = service.getAllMatches()
+                if (matchesResult.isSuccess) {
+                    _allMatches.value = matchesResult.getOrNull()!!
+                }
+
+                // Refresh teams list (opponent team may have been created)
+                val teamsResult = service.getAllTeams()
+                if (teamsResult.isSuccess) {
+                    _allTeams.value = teamsResult.getOrNull() ?: emptyList()
+                }
+            }
+
+            // 2. Create action with matchId
             val actionId = FirebaseService.generateActionId()
             val action = SoccerAction(
                 id = actionId,
@@ -154,9 +210,56 @@ class SoccerViewModel : ViewModel() {
                 isMatch = isMatch,
                 opponent = opponent,
                 playerId = playerId,
-                teamId = teamId
+                teamId = teamId,
+                matchId = matchId
             )
 
+            // 3. Save action
+            val result = service.addAction(action)
+            if (result.isSuccess) {
+                // Add to local list immediately for instant UI update
+                _allActions.value = (_allActions.value + action).sortedByDescending { it.dateTime }
+                _uiState.value = _uiState.value.copy(
+                    message = "Action recorded successfully"
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to save action: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Adds a new soccer action with a pre-selected matchId (for existing matches).
+     * This method bypasses automatic match creation and directly assigns the provided matchId.
+     */
+    fun addActionWithMatch(
+        actionCount: Int,
+        actionType: ActionType,
+        dateTime: java.time.LocalDateTime,
+        playerId: String,
+        matchId: String,
+        context: Context? = null
+    ) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context ?: return@launch)
+
+            // Create action with the provided matchId
+            val actionId = FirebaseService.generateActionId()
+            val action = SoccerAction(
+                id = actionId,
+                dateTime = dateTime.toString(),
+                actionCount = actionCount,
+                actionType = actionType.name,
+                isMatch = true,
+                opponent = "", // Opponent stored in Match entity
+                playerId = playerId,
+                teamId = "", // Team stored in Match entity
+                matchId = matchId
+            )
+
+            // Save action
             val result = service.addAction(action)
             if (result.isSuccess) {
                 // Add to local list immediately for instant UI update
@@ -438,9 +541,21 @@ class SoccerViewModel : ViewModel() {
                         _allTeams.value = teams.sortedBy { it.name }
                     }
 
+                    // Load all matches from Firebase
+                    val matchesResult = service.getAllMatches()
+                    if (matchesResult.isSuccess) {
+                        val matches = matchesResult.getOrNull() ?: emptyList()
+                        _allMatches.value = matches.sortedByDescending { it.date }
+                    }
+
                     // Automatically migrate legacy actions
                     if (actionsResult.isSuccess && playersResult.isSuccess) {
                         performAutomaticMigration(service, context)
+                    }
+
+                    // Automatically migrate legacy match actions to matches
+                    if (actionsResult.isSuccess) {
+                        migrateLegacyActionsToMatches(service)
                     }
                 } else {
                     _autoSyncEnabled.value = false
@@ -723,6 +838,166 @@ class SoccerViewModel : ViewModel() {
                     message = "Failed to update action: ${result.exceptionOrNull()?.message}"
                 )
             }
+        }
+    }
+
+    /**
+     * Adds a new match manually.
+     */
+    fun addMatch(
+        date: String,
+        playerTeamId: String,
+        opponentTeamId: String,
+        league: String,
+        playerScore: Int,
+        opponentScore: Int,
+        isHomeMatch: Boolean,
+        context: Context
+    ) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val matchId = FirebaseService.generateMatchId()
+            val match = Match(
+                id = matchId,
+                date = date,
+                playerTeamId = playerTeamId,
+                opponentTeamId = opponentTeamId,
+                league = league,
+                playerScore = playerScore,
+                opponentScore = opponentScore,
+                isHomeMatch = isHomeMatch
+            )
+
+            val result = service.addMatch(match)
+            if (result.isSuccess) {
+                _allMatches.value = (_allMatches.value + match).sortedByDescending { it.date }
+                _uiState.value = _uiState.value.copy(message = "Match added successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to add match: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Updates an existing match.
+     */
+    fun updateMatch(match: Match, context: Context) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+            val result = service.updateMatch(match)
+            if (result.isSuccess) {
+                _allMatches.value = _allMatches.value.map {
+                    if (it.id == match.id) match else it
+                }.sortedByDescending { it.date }
+                _uiState.value = _uiState.value.copy(message = "Match updated successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to update match: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Deletes a match and clears matchId from all associated actions.
+     */
+    fun deleteMatch(match: Match, context: Context) {
+        viewModelScope.launch {
+            val service = getFirebaseService(context)
+
+            // Clear matchId from all associated actions
+            val associatedActions = _allActions.value.filter { it.matchId == match.id }
+            associatedActions.forEach { action ->
+                val updatedAction = action.copy(matchId = "")
+                service.addAction(updatedAction) // Overwrites with empty matchId
+                _allActions.value = _allActions.value.map {
+                    if (it.id == action.id) updatedAction else it
+                }
+            }
+
+            // Delete match
+            val result = service.deleteMatch(match.id)
+            if (result.isSuccess) {
+                _allMatches.value = _allMatches.value.filter { it.id != match.id }
+                _uiState.value = _uiState.value.copy(message = "Match deleted successfully")
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to delete match: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Retrieves a match by its ID.
+     */
+    fun getMatchById(matchId: String): Match? {
+        return _allMatches.value.find { it.id == matchId }
+    }
+
+    /**
+     * Retrieves all actions for a specific match.
+     */
+    fun getActionsForMatch(matchId: String): List<SoccerAction> {
+        return _allActions.value.filter { it.matchId == matchId }
+    }
+
+    /**
+     * Automatically migrates legacy match actions to matches.
+     * Creates matches from existing opponent strings and links actions to them.
+     * This is idempotent and can be run multiple times safely.
+     */
+    private suspend fun migrateLegacyActionsToMatches(service: FirebaseService) {
+        val legacyMatchActions = _allActions.value.filter {
+            it.isMatch && it.matchId.isBlank()
+        }
+
+        if (legacyMatchActions.isEmpty()) {
+            return // No migration needed
+        }
+
+        legacyMatchActions.forEach { action ->
+            try {
+                // Create opponent team from opponent string
+                val opponentTeamId = if (action.opponent.isNotBlank()) {
+                    service.findOrCreateOpponentTeam(action.opponent).getOrNull() ?: return@forEach
+                } else {
+                    return@forEach
+                }
+
+                // Create/find match
+                val matchDate = action.getLocalDateTime().toLocalDate().toString()
+                val matchId = service.findOrCreateMatch(
+                    date = matchDate,
+                    playerTeamId = action.teamId,
+                    opponentTeamId = opponentTeamId
+                ).getOrNull() ?: return@forEach
+
+                // Update action with matchId
+                val updatedAction = action.copy(matchId = matchId)
+                service.addAction(updatedAction) // Overwrites existing
+
+                // Update local state
+                _allActions.value = _allActions.value.map {
+                    if (it.id == action.id) updatedAction else it
+                }
+            } catch (e: Exception) {
+                // Log error but continue migration
+            }
+        }
+
+        // Reload matches after migration
+        val matchesResult = service.getAllMatches()
+        if (matchesResult.isSuccess) {
+            _allMatches.value = matchesResult.getOrNull() ?: emptyList()
+        }
+
+        // Reload teams (opponent teams may have been created)
+        val teamsResult = service.getAllTeams()
+        if (teamsResult.isSuccess) {
+            _allTeams.value = teamsResult.getOrNull() ?: emptyList()
         }
     }
 }

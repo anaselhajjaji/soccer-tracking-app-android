@@ -1,5 +1,7 @@
 package anaware.soccer.tracker.backup
 
+import anaware.soccer.tracker.data.BackupMatch
+import anaware.soccer.tracker.data.Match
 import anaware.soccer.tracker.data.Player
 import anaware.soccer.tracker.data.SoccerAction
 import anaware.soccer.tracker.data.Team
@@ -44,6 +46,13 @@ class FirebaseService(private val context: Context) {
          * Generate a unique ID for a new team using UUID.
          */
         fun generateTeamId(): String {
+            return java.util.UUID.randomUUID().toString()
+        }
+
+        /**
+         * Generate a unique ID for a new match using UUID.
+         */
+        fun generateMatchId(): String {
             return java.util.UUID.randomUUID().toString()
         }
     }
@@ -491,6 +500,221 @@ class FirebaseService(private val context: Context) {
                 .await()
 
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ==================== Match CRUD Operations ====================
+
+    /**
+     * Add a new match to Firestore.
+     */
+    suspend fun addMatch(match: Match): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val backupMatch = BackupMatch.fromMatch(match)
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("matches")
+                .document(match.id)
+                .set(backupMatch)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Update an existing match in Firestore.
+     */
+    suspend fun updateMatch(match: Match): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val backupMatch = BackupMatch.fromMatch(match)
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("matches")
+                .document(match.id)
+                .set(backupMatch)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Delete a match from Firestore.
+     */
+    suspend fun deleteMatch(matchId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("matches")
+                .document(matchId)
+                .delete()
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get all matches from Firestore.
+     */
+    suspend fun getAllMatches(): Result<List<Match>> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val snapshot = firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("matches")
+                .get()
+                .await()
+
+            val matches = snapshot.documents.mapNotNull { doc ->
+                try {
+                    doc.toObject(BackupMatch::class.java)?.toMatch()
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            Result.success(matches)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get a match by ID from Firestore.
+     */
+    suspend fun getMatchById(matchId: String): Result<Match?> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            val doc = firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("matches")
+                .document(matchId)
+                .get()
+                .await()
+
+            val match = doc.toObject(BackupMatch::class.java)?.toMatch()
+            Result.success(match)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Find or create a match based on date and teams.
+     * Returns the match ID.
+     */
+    suspend fun findOrCreateMatch(
+        date: String,
+        playerTeamId: String,
+        opponentTeamId: String,
+        league: String = ""
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            // Query for existing match with same date + teams
+            val snapshot = firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("matches")
+                .whereEqualTo("date", date)
+                .whereEqualTo("playerTeamId", playerTeamId)
+                .whereEqualTo("opponentTeamId", opponentTeamId)
+                .get()
+                .await()
+
+            if (!snapshot.isEmpty) {
+                // Match exists, return its ID
+                val matchId = snapshot.documents.first().id
+                Result.success(matchId)
+            } else {
+                // Create new match
+                val matchId = generateMatchId()
+                val match = Match(
+                    id = matchId,
+                    date = date,
+                    playerTeamId = playerTeamId,
+                    opponentTeamId = opponentTeamId,
+                    league = league,
+                    playerScore = -1,
+                    opponentScore = -1
+                )
+
+                addMatch(match).getOrThrow()
+                Result.success(matchId)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Find or create an opponent team from a team name.
+     * Returns the team ID.
+     */
+    suspend fun findOrCreateOpponentTeam(opponentName: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUser?.uid ?: return@withContext Result.failure(
+                Exception("User not signed in")
+            )
+
+            // Query for existing team with same name
+            val snapshot = firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection("teams")
+                .whereEqualTo("name", opponentName)
+                .get()
+                .await()
+
+            if (!snapshot.isEmpty) {
+                // Team exists, return its ID
+                val teamId = snapshot.documents.first().id
+                Result.success(teamId)
+            } else {
+                // Create new team
+                val teamId = generateTeamId()
+                val team = Team(
+                    id = teamId,
+                    name = opponentName,
+                    color = "#FF5722", // Default color for opponent teams (deep orange)
+                    league = "",
+                    season = ""
+                )
+
+                addTeam(team).getOrThrow()
+                Result.success(teamId)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

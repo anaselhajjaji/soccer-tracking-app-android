@@ -39,6 +39,7 @@ fun HistoryScreen(
     val opponents by viewModel.distinctOpponents.collectAsState()
     val players by viewModel.distinctPlayers.collectAsState()
     val teams by viewModel.distinctTeams.collectAsState()
+    val matches by viewModel.allMatches.collectAsState()
     val totalCount by viewModel.totalActionCount.collectAsState()
     var actionToDelete by remember { mutableStateOf<SoccerAction?>(null) }
     var actionToEdit by remember { mutableStateOf<SoccerAction?>(null) }
@@ -50,29 +51,42 @@ fun HistoryScreen(
             null
         )
     } // null = Both, true = Match, false = Training
-    var selectedOpponent by remember { mutableStateOf<String?>(null) }
+    var selectedOpponentTeamId by remember { mutableStateOf<String?>(null) }
     var selectedPlayerId by remember { mutableStateOf<String?>(null) }
     var selectedTeamId by remember { mutableStateOf<String?>(null) }
     var showFilters by remember { mutableStateOf(false) }
+    var opponentTeamDropdownExpanded by remember { mutableStateOf(false) }
+    var teamDropdownExpanded by remember { mutableStateOf(false) }
+
+    // Get opponent teams from matches
+    val opponentTeams = remember(matches, teams) {
+        matches.mapNotNull { match ->
+            teams.find { it.id == match.opponentTeamId }
+        }.distinctBy { it.id }
+    }
 
     // Apply filters
-    val filteredActions = remember(allActions, selectedActionType, selectedSessionType, selectedOpponent, selectedPlayerId, selectedTeamId) {
+    val filteredActions = remember(allActions, selectedActionType, selectedSessionType, selectedOpponentTeamId, selectedPlayerId, selectedTeamId) {
         allActions.filter { action ->
             val matchesActionType = selectedActionType == null || action.getActionTypeEnum() == selectedActionType
             val matchesSessionType = selectedSessionType == null || action.isMatch == selectedSessionType
-            val matchesOpponent = selectedOpponent == null ||
-                (selectedOpponent == "No Opponent" && action.opponent.isBlank()) ||
-                action.opponent == selectedOpponent
-            val matchesPlayer = selectedPlayerId == null ||
-                (selectedPlayerId == "Legacy" && action.isLegacyAction()) ||
-                action.playerId == selectedPlayerId
+
+            // Match by opponent team via match
+            val matchesOpponentTeam = if (selectedOpponentTeamId == null) {
+                true
+            } else {
+                val actionMatch = matches.find { it.id == action.matchId }
+                actionMatch?.opponentTeamId == selectedOpponentTeamId
+            }
+
+            val matchesPlayer = selectedPlayerId == null || action.playerId == selectedPlayerId
             val matchesTeam = selectedTeamId == null || action.teamId == selectedTeamId
-            matchesActionType && matchesSessionType && matchesOpponent && matchesPlayer && matchesTeam
+            matchesActionType && matchesSessionType && matchesOpponentTeam && matchesPlayer && matchesTeam
         }
     }
 
     // Check if any filters are active
-    val hasActiveFilters = selectedActionType != null || selectedSessionType != null || selectedOpponent != null || selectedPlayerId != null || selectedTeamId != null
+    val hasActiveFilters = selectedActionType != null || selectedSessionType != null || selectedOpponentTeamId != null || selectedPlayerId != null || selectedTeamId != null
 
     Column(
         modifier = modifier
@@ -168,7 +182,7 @@ fun HistoryScreen(
                                 onClick = {
                                     selectedActionType = null
                                     selectedSessionType = null
-                                    selectedOpponent = null
+                                    selectedOpponentTeamId = null
                                     selectedPlayerId = null
                                     selectedTeamId = null
                                 }
@@ -237,52 +251,59 @@ fun HistoryScreen(
                         )
                     }
 
-                    // Opponent Filter (only show if there are opponents)
-                    if (opponents.isNotEmpty()) {
+                    // Opponent Filter (only show if there are opponent teams)
+                    if (opponentTeams.isNotEmpty()) {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                         Text(
-                            text = "Opponent",
+                            text = "Filter by Opponent",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        // Show "All" and "No Opponent" options
                         Row(
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // "All" opponents chip
                             FilterChip(
-                                selected = selectedOpponent == null,
-                                onClick = { selectedOpponent = null },
+                                selected = selectedOpponentTeamId == null,
+                                onClick = { selectedOpponentTeamId = null },
                                 label = { Text("All") }
                             )
-                            FilterChip(
-                                selected = selectedOpponent == "No Opponent",
-                                onClick = {
-                                    selectedOpponent = if (selectedOpponent == "No Opponent") null else "No Opponent"
-                                },
-                                label = { Text("No Opponent") }
-                            )
-                        }
 
-                        // Show opponent chips - wrap using Column + Row for flow effect
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            opponents.chunked(3).forEach { chunk ->
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.fillMaxWidth()
+                            // Opponent team dropdown
+                            ExposedDropdownMenuBox(
+                                expanded = opponentTeamDropdownExpanded,
+                                onExpandedChange = { opponentTeamDropdownExpanded = it },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                OutlinedTextField(
+                                    value = if (selectedOpponentTeamId != null) {
+                                        opponentTeams.find { it.id == selectedOpponentTeamId }?.name ?: "Select Team"
+                                    } else {
+                                        "Select Team"
+                                    },
+                                    onValueChange = { },
+                                    readOnly = true,
+                                    label = { Text("Opponent") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = opponentTeamDropdownExpanded) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = opponentTeamDropdownExpanded,
+                                    onDismissRequest = { opponentTeamDropdownExpanded = false }
                                 ) {
-                                    chunk.forEach { opponent ->
-                                        FilterChip(
-                                            selected = selectedOpponent == opponent,
+                                    opponentTeams.forEach { team ->
+                                        DropdownMenuItem(
+                                            text = { Text(team.name) },
                                             onClick = {
-                                                selectedOpponent = if (selectedOpponent == opponent) null else opponent
-                                            },
-                                            label = { Text(opponent) }
+                                                selectedOpponentTeamId = team.id
+                                                opponentTeamDropdownExpanded = false
+                                            }
                                         )
                                     }
                                 }
@@ -295,12 +316,11 @@ fun HistoryScreen(
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                         Text(
-                            text = "Player",
+                            text = "Filter by Player",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        // Show "All" and "Legacy Entries" options
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -310,33 +330,38 @@ fun HistoryScreen(
                                 onClick = { selectedPlayerId = null },
                                 label = { Text("All") }
                             )
-                            FilterChip(
-                                selected = selectedPlayerId == "Legacy",
-                                onClick = {
-                                    selectedPlayerId = if (selectedPlayerId == "Legacy") null else "Legacy"
-                                },
-                                label = { Text("Legacy Entries") }
-                            )
+
+                            players.take(2).forEach { player ->
+                                FilterChip(
+                                    selected = selectedPlayerId == player.id,
+                                    onClick = {
+                                        selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
+                                    },
+                                    label = { Text(player.getDisplayName()) }
+                                )
+                            }
                         }
 
-                        // Show player chips
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            players.chunked(2).forEach { chunk ->
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    chunk.forEach { player ->
-                                        FilterChip(
-                                            selected = selectedPlayerId == player.id,
-                                            onClick = {
-                                                selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
-                                            },
-                                            label = { Text(player.getDisplayName()) }
-                                        )
+                        // Show remaining players if more than 2
+                        if (players.size > 2) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                players.drop(2).chunked(2).forEach { chunk ->
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        chunk.forEach { player ->
+                                            FilterChip(
+                                                selected = selectedPlayerId == player.id,
+                                                onClick = {
+                                                    selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
+                                                },
+                                                label = { Text(player.getDisplayName()) }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -348,40 +373,53 @@ fun HistoryScreen(
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                         Text(
-                            text = "Team",
+                            text = "Filter by Team",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        // Show "All" option
                         Row(
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             FilterChip(
                                 selected = selectedTeamId == null,
                                 onClick = { selectedTeamId = null },
                                 label = { Text("All") }
                             )
-                        }
 
-                        // Show team chips
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            teams.chunked(2).forEach { chunk ->
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.fillMaxWidth()
+                            // Team dropdown
+                            ExposedDropdownMenuBox(
+                                expanded = teamDropdownExpanded,
+                                onExpandedChange = { teamDropdownExpanded = it },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                OutlinedTextField(
+                                    value = if (selectedTeamId != null) {
+                                        teams.find { it.id == selectedTeamId }?.getDisplayName() ?: "Select Team"
+                                    } else {
+                                        "Select Team"
+                                    },
+                                    onValueChange = { },
+                                    readOnly = true,
+                                    label = { Text("Team") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamDropdownExpanded) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = teamDropdownExpanded,
+                                    onDismissRequest = { teamDropdownExpanded = false }
                                 ) {
-                                    chunk.forEach { team ->
-                                        FilterChip(
-                                            selected = selectedTeamId == team.id,
+                                    teams.forEach { team ->
+                                        DropdownMenuItem(
+                                            text = { Text(team.getDisplayName()) },
                                             onClick = {
-                                                selectedTeamId = if (selectedTeamId == team.id) null else team.id
-                                            },
-                                            label = { Text(team.getDisplayName()) }
+                                                selectedTeamId = team.id
+                                                teamDropdownExpanded = false
+                                            }
                                         )
                                     }
                                 }
@@ -435,6 +473,8 @@ fun HistoryScreen(
                     ActionEntryCard(
                         action = action,
                         viewModel = viewModel,
+                        teams = teams,
+                        matches = matches,
                         onEditClick = { actionToEdit = action },
                         onDeleteClick = { actionToDelete = action }
                     )
@@ -501,6 +541,8 @@ fun HistoryScreen(
 private fun ActionEntryCard(
     action: SoccerAction,
     viewModel: SoccerViewModel,
+    teams: List<anaware.soccer.tracker.data.Team>,
+    matches: List<anaware.soccer.tracker.data.Match>,
     onDeleteClick: () -> Unit,
     onEditClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -575,19 +617,21 @@ private fun ActionEntryCard(
                     )
                 }
 
-                // Opponent if present
-                if (action.opponent.isNotBlank()) {
-                    Text(
-                        text = "vs ${action.opponent}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-
-                // Player and Team info
-                if (action.isLegacyAction()) {
+                // Match name if present (replaces opponent and team display)
+                if (action.matchId.isNotBlank()) {
+                    val match = matches.find { it.id == action.matchId }
+                    if (match != null) {
+                        val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
+                        val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
+                        Text(
+                            text = "$playerTeam vs $opponentTeam",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                } else if (action.isLegacyAction()) {
                     // Show "Legacy Entry" badge for actions without player
                     AssistChip(
                         onClick = { },
@@ -604,10 +648,9 @@ private fun ActionEntryCard(
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 } else {
-                    // Show player and team information
+                    // Show player information only (no team or opponent)
                     Column(modifier = Modifier.padding(top = 8.dp)) {
                         val player = viewModel.getPlayerById(action.playerId)
-                        val team = viewModel.getTeamById(action.teamId)
 
                         if (player != null) {
                             Text(
@@ -615,15 +658,6 @@ private fun ActionEntryCard(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium
-                            )
-                        }
-
-                        if (team != null) {
-                            Text(
-                                text = "Team: ${team.getDisplayName()}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 2.dp)
                             )
                         }
                     }

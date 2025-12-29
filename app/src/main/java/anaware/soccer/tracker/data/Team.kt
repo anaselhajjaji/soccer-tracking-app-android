@@ -1,5 +1,7 @@
 package anaware.soccer.tracker.data
 
+import androidx.compose.ui.graphics.Color
+
 /**
  * Represents a soccer team that a player belongs to.
  *
@@ -24,6 +26,19 @@ data class Team(
             "$name ($season)"
         } else {
             name
+        }
+    }
+
+    /**
+     * Converts hex color string to Compose Color.
+     */
+    fun getColorInt(): Color {
+        return try {
+            val colorString = color.removePrefix("#")
+            val colorLong = colorString.toLong(16)
+            Color(colorLong or 0xFF000000)
+        } catch (e: Exception) {
+            Color(0xFF2196F3) // Default blue if parsing fails
         }
     }
 }

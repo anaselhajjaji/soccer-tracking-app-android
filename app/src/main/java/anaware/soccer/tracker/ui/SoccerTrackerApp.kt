@@ -136,6 +136,12 @@ fun SoccerTrackerApp(
                     onNavigateBack = { navController.navigateUp() }
                 )
             }
+            composable(Screen.Matches.route) {
+                MatchManagementScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.navigateUp() }
+                )
+            }
             composable(Screen.Migration.route) {
                 MigrationScreen(
                     viewModel = viewModel,
@@ -156,6 +162,7 @@ sealed class Screen(val route: String) {
     data object Backup : Screen("backup")
     data object Players : Screen("players")
     data object Teams : Screen("teams")
+    data object Matches : Screen("matches")
     data object Migration : Screen("migration")
 }
 

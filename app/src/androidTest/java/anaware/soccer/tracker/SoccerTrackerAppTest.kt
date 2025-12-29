@@ -74,7 +74,8 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("Offensive Action").assertExists()
 
         // Check for session type toggle
-        composeTestRule.onNodeWithText("Match").assertExists()
+        // Note: "Match" appears twice (toggle + section header), so we verify count
+        composeTestRule.onAllNodesWithText("Match").assertCountEquals(2)
         composeTestRule.onNodeWithText("Training").assertExists()
 
         // Check for save button
@@ -130,8 +131,9 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("Training").performClick()
         composeTestRule.waitForIdle()
 
-        // Toggle back to Match
-        composeTestRule.onNodeWithText("Match").performClick()
+        // Toggle back to Match - use the first "Match" node (the toggle chip)
+        // Note: "Match" appears twice (toggle + section header), so we use [0] to get the first one
+        composeTestRule.onAllNodesWithText("Match")[0].performClick()
         composeTestRule.waitForIdle()
     }
 
@@ -154,10 +156,14 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("Progress").performClick()
         composeTestRule.waitForIdle()
 
-        // Should show title and filter chips
+        // Should show title
         composeTestRule.onNodeWithText("Progress Chart").assertExists()
 
-        // Check for action type filter chips (singular forms)
+        // Click filter button to reveal filters
+        composeTestRule.onNodeWithContentDescription("Toggle Filters").performClick()
+        composeTestRule.waitForIdle()
+
+        // Check for action type filter chips (singular forms) inside the filter panel
         composeTestRule.onNodeWithText("Goal").assertExists()
         composeTestRule.onNodeWithText("Assist").assertExists()
         composeTestRule.onNodeWithText("Offensive Action").assertExists()
@@ -238,15 +244,8 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("Use current date & time").assertExists()
     }
 
-    @Test
-    fun opponent_field_is_optional() {
-        // Navigate to Add screen
-        composeTestRule.onNodeWithText("Add").performClick()
-        composeTestRule.waitForIdle()
-
-        // Opponent should be marked as optional
-        composeTestRule.onNodeWithText("Opponent (Optional)").assertExists()
-    }
+    // Note: opponent_field_is_optional test removed in v1.2.0
+    // Opponent field replaced by match selection UI with "Opponent Team *" in Create New Match dialog
 
     @Test
     fun action_type_section_shows_all_three_types() {
@@ -271,5 +270,205 @@ class SoccerTrackerAppTest {
 
         // Check for helper text about minimum actions
         composeTestRule.onNodeWithText("Tip: At least 1 action is required to save an entry").assertExists()
+    }
+
+    @Test
+    fun history_screen_has_filter_button() {
+        // Navigate to History
+        composeTestRule.onNodeWithText("History").performClick()
+        composeTestRule.waitForIdle()
+
+        // Filter button should exist
+        composeTestRule.onNodeWithContentDescription("Filter").assertExists()
+    }
+
+    @Test
+    fun progress_screen_has_filter_button() {
+        // Navigate to Progress
+        composeTestRule.onNodeWithText("Progress").performClick()
+        composeTestRule.waitForIdle()
+
+        // Filter button should exist (Toggle Filters)
+        composeTestRule.onNodeWithContentDescription("Toggle Filters").assertExists()
+    }
+
+    @Test
+    fun progress_screen_filter_button_is_clickable() {
+        // Navigate to Progress
+        composeTestRule.onNodeWithText("Progress").performClick()
+        composeTestRule.waitForIdle()
+
+        // Click filter button to toggle filters
+        composeTestRule.onNodeWithContentDescription("Toggle Filters").performClick()
+        composeTestRule.waitForIdle()
+
+        // Filter panel should now be visible with "Select Action Type" label
+        composeTestRule.onNodeWithText("Select Action Type").assertExists()
+    }
+
+    @Test
+    fun history_screen_filter_button_is_clickable() {
+        // Navigate to History
+        composeTestRule.onNodeWithText("History").performClick()
+        composeTestRule.waitForIdle()
+
+        // Click filter button
+        composeTestRule.onNodeWithContentDescription("Filter").performClick()
+        composeTestRule.waitForIdle()
+
+        // Filter sections should be visible
+        composeTestRule.onNodeWithText("Action Type").assertExists()
+        composeTestRule.onNodeWithText("Session Type").assertExists()
+    }
+
+    @Test
+    fun account_screen_management_menu_is_clickable() {
+        // Navigate to Account
+        composeTestRule.onNodeWithText("Account").performClick()
+        composeTestRule.waitForIdle()
+
+        // Click management menu button
+        composeTestRule.onNodeWithContentDescription("Management Menu").performClick()
+        composeTestRule.waitForIdle()
+
+        // Menu items should appear
+        composeTestRule.onNodeWithText("Manage Players").assertExists()
+        composeTestRule.onNodeWithText("Manage Teams").assertExists()
+        composeTestRule.onNodeWithText("Manage Matches").assertExists()
+    }
+
+    @Test
+    fun match_management_menu_option_navigates_to_screen() {
+        // Navigate to Account
+        composeTestRule.onNodeWithText("Account").performClick()
+        composeTestRule.waitForIdle()
+
+        // Open management menu
+        composeTestRule.onNodeWithContentDescription("Management Menu").performClick()
+        composeTestRule.waitForIdle()
+
+        // Click Manage Matches
+        composeTestRule.onNodeWithText("Manage Matches").performClick()
+        composeTestRule.waitForIdle()
+
+        // Should navigate to Match Management screen
+        composeTestRule.onNodeWithText("Manage Matches").assertExists()
+    }
+
+    @Test
+    fun player_management_menu_option_navigates_to_screen() {
+        // Navigate to Account
+        composeTestRule.onNodeWithText("Account").performClick()
+        composeTestRule.waitForIdle()
+
+        // Open management menu
+        composeTestRule.onNodeWithContentDescription("Management Menu").performClick()
+        composeTestRule.waitForIdle()
+
+        // Click Manage Players
+        composeTestRule.onNodeWithText("Manage Players").performClick()
+        composeTestRule.waitForIdle()
+
+        // Should navigate to Player Management screen
+        composeTestRule.onNodeWithText("Manage Players").assertExists()
+    }
+
+    @Test
+    fun team_management_menu_option_navigates_to_screen() {
+        // Navigate to Account
+        composeTestRule.onNodeWithText("Account").performClick()
+        composeTestRule.waitForIdle()
+
+        // Open management menu
+        composeTestRule.onNodeWithContentDescription("Management Menu").performClick()
+        composeTestRule.waitForIdle()
+
+        // Click Manage Teams
+        composeTestRule.onNodeWithText("Manage Teams").performClick()
+        composeTestRule.waitForIdle()
+
+        // Should navigate to Team Management screen
+        composeTestRule.onNodeWithText("Manage Teams").assertExists()
+    }
+
+    @Test
+    fun match_section_shows_when_session_type_is_match() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Ensure Match is selected (default) - use the first "Match" node (the toggle chip)
+        // Note: "Match" appears twice (toggle + section header), so we use [0] to get the first one
+        composeTestRule.onAllNodesWithText("Match")[0].performClick()
+        composeTestRule.waitForIdle()
+
+        // Match section should be visible - check for unique element in the section
+        // "Create New Match" button is unique to the Match section
+        composeTestRule.onNodeWithText("Create New Match").assertExists()
+    }
+
+    @Test
+    fun create_new_match_button_exists_in_add_screen() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Ensure Match is selected - use the first "Match" node (the toggle chip)
+        // Note: "Match" appears twice (toggle + section header), so we use [0] to get the first one
+        composeTestRule.onAllNodesWithText("Match")[0].performClick()
+        composeTestRule.waitForIdle()
+
+        // Create New Match button should exist
+        composeTestRule.onNodeWithText("Create New Match").assertExists()
+    }
+
+    @Test
+    fun progress_chart_shows_statistics_card() {
+        // Navigate to Progress
+        composeTestRule.onNodeWithText("Progress").performClick()
+        composeTestRule.waitForIdle()
+
+        // Statistics card should show labels
+        composeTestRule.onNodeWithText("Total Actions").assertExists()
+        composeTestRule.onNodeWithText("Sessions").assertExists()
+        composeTestRule.onNodeWithText("Average").assertExists()
+    }
+
+    // Note: progress_chart_shows_about_section test removed in v1.2.0
+    // "About the Chart" section only appears when there is data to display
+    // UI tests run on empty database, so this section is not visible
+
+    @Test
+    fun session_type_section_has_both_and_training_options() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // Check for Session Type section header
+        composeTestRule.onNodeWithText("Session Type").assertExists()
+
+        // Verify Training option exists (unique on the page)
+        composeTestRule.onNodeWithText("Training").assertExists()
+
+        // Note: "Match" appears twice on the page (once as a toggle option, once as a section header)
+        // Both are expected, so we verify at least one exists
+        composeTestRule.onAllNodesWithText("Match").assertCountEquals(2)
+    }
+
+    @Test
+    fun validation_message_updates_based_on_missing_fields() {
+        // Navigate to Add screen
+        composeTestRule.onNodeWithText("Add").performClick()
+        composeTestRule.waitForIdle()
+
+        // With action count 0
+        composeTestRule.onNodeWithText("Add at least 1 action to save").assertExists()
+
+        // Increment to 1
+        composeTestRule.onNodeWithContentDescription("Increase count").performClick()
+        composeTestRule.waitForIdle()
+
+        // Now validation should show player required
+        composeTestRule.onNodeWithText("Select a player to save").assertExists()
     }
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,29 +40,46 @@ fun ChartScreen(
             null
         )
     } // null = both, true = match, false = training
-    var selectedOpponent by remember { mutableStateOf<String?>(null) } // null = all opponents
+    var selectedOpponentTeamId by remember { mutableStateOf<String?>(null) } // null = all opponent teams
     var selectedPlayerId by remember { mutableStateOf<String?>(null) } // null = all players
     var selectedTeamId by remember { mutableStateOf<String?>(null) } // null = all teams
+    var showFilters by remember { mutableStateOf(false) }
+    var opponentTeamDropdownExpanded by remember { mutableStateOf(false) }
+    var playerTeamDropdownExpanded by remember { mutableStateOf(false) }
 
-    val opponents by viewModel.distinctOpponents.collectAsState(initial = emptyList())
+    val matches by viewModel.allMatches.collectAsState()
     val players by viewModel.distinctPlayers.collectAsState(initial = emptyList())
     val teams by viewModel.distinctTeams.collectAsState(initial = emptyList())
 
     val allActions by viewModel.allActions.collectAsState()
 
-    val actions = remember(allActions, selectedActionType, selectedSessionType, selectedOpponent, selectedPlayerId, selectedTeamId) {
+    // Get opponent teams from matches
+    val opponentTeams = remember(matches, teams) {
+        matches.mapNotNull { match ->
+            teams.find { it.id == match.opponentTeamId }
+        }.distinctBy { it.id }
+    }
+
+    val actions = remember(allActions, selectedActionType, selectedSessionType, selectedOpponentTeamId, selectedPlayerId, selectedTeamId) {
         if (selectedActionType == null) {
             emptyList()
         } else {
             allActions.filter { action ->
                 val matchesActionType = action.getActionTypeEnum() == selectedActionType
                 val matchesSessionType = selectedSessionType == null || action.isMatch == selectedSessionType
-                val matchesOpponent = selectedOpponent == null || action.opponent == selectedOpponent
-                val matchesPlayer = selectedPlayerId == null ||
-                    (selectedPlayerId == "Legacy" && action.isLegacyAction()) ||
-                    action.playerId == selectedPlayerId
+
+                // Match by opponent team via match
+                val matchesOpponentTeam = if (selectedOpponentTeamId == null) {
+                    true
+                } else {
+                    val actionMatch = matches.find { it.id == action.matchId }
+                    actionMatch?.opponentTeamId == selectedOpponentTeamId
+                }
+
+                val matchesPlayer = selectedPlayerId == null || action.playerId == selectedPlayerId
                 val matchesTeam = selectedTeamId == null || action.teamId == selectedTeamId
-                matchesActionType && matchesSessionType && matchesOpponent && matchesPlayer && matchesTeam
+
+                matchesActionType && matchesSessionType && matchesOpponentTeam && matchesPlayer && matchesTeam
             }
         }
     }
@@ -70,31 +88,66 @@ fun ChartScreen(
         actions.sumOf { it.actionCount }
     }
 
+    // Check if any filters are active
+    val hasActiveFilters = selectedSessionType != null ||
+                          selectedOpponentTeamId != null ||
+                          selectedPlayerId != null ||
+                          selectedTeamId != null
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        // Header
-        Text(
-            text = "Progress Chart",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        // Filters Card
-        Card(
+        // Header with filter button
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
+            Text(
+                text = "Progress Chart",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            FilledTonalIconButton(
+                onClick = { showFilters = !showFilters },
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = if (hasActiveFilters) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    }
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FilterList,
+                    contentDescription = "Toggle Filters",
+                    tint = if (hasActiveFilters) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+        }
+
+        // Collapsible Filters Card
+        if (showFilters) {
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(bottom = 16.dp)
             ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
                 // Action Type Filter
                 Text(
                     text = "Select Action Type",
@@ -152,7 +205,7 @@ fun ChartScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Opponent Filter
+                // Opponent Team Filter
                 Text(
                     text = "Filter by Opponent",
                     style = MaterialTheme.typography.titleMedium,
@@ -166,47 +219,46 @@ fun ChartScreen(
                 ) {
                     // "All" opponents chip
                     FilterChip(
-                        selected = selectedOpponent == null,
-                        onClick = { selectedOpponent = null },
+                        selected = selectedOpponentTeamId == null,
+                        onClick = { selectedOpponentTeamId = null },
                         label = { Text("All") }
                     )
 
-                    // Show opponent chips if there are any
-                    opponents.take(3).forEach { opponent ->
-                        FilterChip(
-                            selected = selectedOpponent == opponent,
-                            onClick = { selectedOpponent = opponent },
-                            label = { Text(opponent) }
-                        )
-                    }
-                }
-
-                // Show more opponents if there are more than 3
-                if (opponents.size > 3) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    var showAllOpponents by remember { mutableStateOf(false) }
-
-                    if (showAllOpponents) {
-                        // Show all remaining opponents
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    // Opponent team dropdown
+                    if (opponentTeams.isNotEmpty()) {
+                        ExposedDropdownMenuBox(
+                            expanded = opponentTeamDropdownExpanded,
+                            onExpandedChange = { opponentTeamDropdownExpanded = it },
+                            modifier = Modifier.weight(1f)
                         ) {
-                            opponents.drop(3).forEach { opponent ->
-                                FilterChip(
-                                    selected = selectedOpponent == opponent,
-                                    onClick = { selectedOpponent = opponent },
-                                    label = { Text(opponent) }
-                                )
+                            OutlinedTextField(
+                                value = if (selectedOpponentTeamId != null) {
+                                    opponentTeams.find { it.id == selectedOpponentTeamId }?.name ?: "Select Team"
+                                } else {
+                                    "Select Team"
+                                },
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Opponent") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = opponentTeamDropdownExpanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = opponentTeamDropdownExpanded,
+                                onDismissRequest = { opponentTeamDropdownExpanded = false }
+                            ) {
+                                opponentTeams.forEach { team ->
+                                    DropdownMenuItem(
+                                        text = { Text(team.name) },
+                                        onClick = {
+                                            selectedOpponentTeamId = team.id
+                                            opponentTeamDropdownExpanded = false
+                                        }
+                                    )
+                                }
                             }
-                        }
-                        TextButton(onClick = { showAllOpponents = false }) {
-                            Text("Show Less")
-                        }
-                    } else {
-                        TextButton(onClick = { showAllOpponents = true }) {
-                            Text("Show More (${opponents.size - 3} more)")
                         }
                     }
                 }
@@ -232,15 +284,7 @@ fun ChartScreen(
                             label = { Text("All") }
                         )
 
-                        FilterChip(
-                            selected = selectedPlayerId == "Legacy",
-                            onClick = {
-                                selectedPlayerId = if (selectedPlayerId == "Legacy") null else "Legacy"
-                            },
-                            label = { Text("Legacy") }
-                        )
-
-                        players.take(2).forEach { player ->
+                        players.take(3).forEach { player ->
                             FilterChip(
                                 selected = selectedPlayerId == player.id,
                                 onClick = {
@@ -251,7 +295,7 @@ fun ChartScreen(
                         }
                     }
 
-                    if (players.size > 2) {
+                    if (players.size > 3) {
                         Spacer(modifier = Modifier.height(8.dp))
                         var showAllPlayers by remember { mutableStateOf(false) }
 
@@ -261,7 +305,7 @@ fun ChartScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                players.drop(2).forEach { player ->
+                                players.drop(3).forEach { player ->
                                     FilterChip(
                                         selected = selectedPlayerId == player.id,
                                         onClick = {
@@ -276,7 +320,7 @@ fun ChartScreen(
                             }
                         } else {
                             TextButton(onClick = { showAllPlayers = true }) {
-                                Text("Show More (${players.size - 2} more)")
+                                Text("Show More (${players.size - 3} more)")
                             }
                         }
                     }
@@ -303,44 +347,57 @@ fun ChartScreen(
                             label = { Text("All") }
                         )
 
-                        teams.take(3).forEach { team ->
-                            FilterChip(
-                                selected = selectedTeamId == team.id,
-                                onClick = {
-                                    selectedTeamId = if (selectedTeamId == team.id) null else team.id
+                        // Team dropdown
+                        ExposedDropdownMenuBox(
+                            expanded = playerTeamDropdownExpanded,
+                            onExpandedChange = { playerTeamDropdownExpanded = it },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            OutlinedTextField(
+                                value = if (selectedTeamId != null) {
+                                    teams.find { it.id == selectedTeamId }?.getDisplayName() ?: "Select Team"
+                                } else {
+                                    "Select Team"
                                 },
-                                label = { Text(team.getDisplayName()) }
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Team") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = playerTeamDropdownExpanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
                             )
-                        }
-                    }
-
-                    if (teams.size > 3) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        var showAllTeams by remember { mutableStateOf(false) }
-
-                        if (showAllTeams) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            ExposedDropdownMenu(
+                                expanded = playerTeamDropdownExpanded,
+                                onDismissRequest = { playerTeamDropdownExpanded = false }
                             ) {
-                                teams.drop(3).forEach { team ->
-                                    FilterChip(
-                                        selected = selectedTeamId == team.id,
+                                teams.forEach { team ->
+                                    DropdownMenuItem(
+                                        text = { Text(team.getDisplayName()) },
                                         onClick = {
-                                            selectedTeamId = if (selectedTeamId == team.id) null else team.id
-                                        },
-                                        label = { Text(team.getDisplayName()) }
+                                            selectedTeamId = team.id
+                                            playerTeamDropdownExpanded = false
+                                        }
                                     )
                                 }
                             }
-                            TextButton(onClick = { showAllTeams = false }) {
-                                Text("Show Less")
-                            }
-                        } else {
-                            TextButton(onClick = { showAllTeams = true }) {
-                                Text("Show More (${teams.size - 3} more)")
-                            }
+                        }
+                    }
+                }
+
+                    // Clear All Filters Button
+                    if (hasActiveFilters) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedButton(
+                            onClick = {
+                                selectedSessionType = null
+                                selectedOpponentTeamId = null
+                                selectedPlayerId = null
+                                selectedTeamId = null
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Clear All Filters")
                         }
                     }
                 }
