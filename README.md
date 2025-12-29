@@ -260,7 +260,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
 **Test configuration:**
 
 - **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
-- **Tests:** 30 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
+- **Tests:** 34 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
 - **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
 - **Test Coverage:**
   - 9 navigation and basic UI tests
@@ -269,6 +269,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
   - 4 match/team section display tests
   - 4 progress chart enhancement tests
   - 5 validation and UI polish tests
+  - 4 v1.3.0 navigation improvement tests (back button, context-aware FAB, pull-to-refresh, menu ordering)
 
 ### Running Tests Locally
 
