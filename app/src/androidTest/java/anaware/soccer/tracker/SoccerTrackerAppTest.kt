@@ -31,10 +31,14 @@ class SoccerTrackerAppTest {
 
         // Click the menu item
         composeTestRule.onNodeWithText(menuItemText).performClick()
+        composeTestRule.waitForIdle()
 
-        // Wait for drawer to close (drawer closes automatically after navigation)
-        // Drawer closing animation takes time, so we wait longer
-        Thread.sleep(2000)
+        // Wait for drawer to close completely by verifying the drawer header is gone
+        // The drawer header "Soccer Tracker" is only visible when drawer is open
+        composeTestRule.waitUntil(timeoutMillis = 3000) {
+            composeTestRule.onAllNodesWithText("Soccer Tracker")
+                .fetchSemanticsNodes().size == 0
+        }
         composeTestRule.waitForIdle()
     }
 
