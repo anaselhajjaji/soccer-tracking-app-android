@@ -31,13 +31,11 @@ class SoccerTrackerAppTest {
 
         // Click the menu item
         composeTestRule.onNodeWithText(menuItemText).performClick()
-        composeTestRule.waitForIdle()
 
-        // Wait for drawer to close by checking if "Management" section header (unique to drawer) disappears
-        composeTestRule.waitUntil(timeoutMillis = 3000) {
-            composeTestRule.onAllNodesWithText("Management")
-                .fetchSemanticsNodes().isEmpty()
-        }
+        // Wait for drawer to close and navigation to complete
+        // Drawer closes in a coroutine launched by onNavigate callback
+        // We need to wait for: 1) drawer animation, 2) navigation, 3) new screen composition
+        composeTestRule.mainClock.advanceTimeBy(500)  // Advance animation time
         composeTestRule.waitForIdle()
     }
 
