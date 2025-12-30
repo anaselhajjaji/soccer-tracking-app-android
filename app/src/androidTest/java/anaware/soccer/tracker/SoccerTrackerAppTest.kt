@@ -59,8 +59,8 @@ class SoccerTrackerAppTest {
 
         // Navigate to Progress Chart via drawer
         navigateToScreenViaDrawer("Progress Chart")
-        // Progress screen should show chart title
-        composeTestRule.onNodeWithText("Progress Chart").assertExists()
+        // Progress screen should show filter button (unique to Progress Chart)
+        composeTestRule.onNodeWithContentDescription("Toggle Filters").assertExists()
 
         // Navigate to Account via drawer
         navigateToScreenViaDrawer("Account")
@@ -188,8 +188,8 @@ class SoccerTrackerAppTest {
         // Navigate to Progress Chart screen via drawer
         navigateToScreenViaDrawer("Progress Chart")
 
-        // Should show title
-        composeTestRule.onNodeWithText("Progress Chart").assertExists()
+        // Should show unique Progress Chart filter button
+        composeTestRule.onNodeWithContentDescription("Toggle Filters").assertExists()
 
         // Click filter button to reveal filters
         composeTestRule.onNodeWithContentDescription("Toggle Filters").performClick()
@@ -302,8 +302,7 @@ class SoccerTrackerAppTest {
 
     @Test
     fun history_screen_has_filter_button() {
-        // Navigate to History via drawer
-        navigateToScreenViaDrawer("Actions History")
+        // Already on History screen (default starting screen)
 
         // Filter button should exist
         composeTestRule.onNodeWithContentDescription("Filter").assertExists()
@@ -349,8 +348,8 @@ class SoccerTrackerAppTest {
         // Navigate to Manage Matches via drawer
         navigateToScreenViaDrawer("Manage Matches")
 
-        // Should navigate to Match Management screen
-        composeTestRule.onNodeWithText("Manage Matches").assertExists()
+        // Should navigate to Match Management screen - check for unique FAB
+        composeTestRule.onNodeWithText("New Match", useUnmergedTree = true).assertExists()
     }
 
     @Test
@@ -358,8 +357,8 @@ class SoccerTrackerAppTest {
         // Navigate to Manage Players via drawer
         navigateToScreenViaDrawer("Manage Players")
 
-        // Should navigate to Player Management screen
-        composeTestRule.onNodeWithText("Manage Players").assertExists()
+        // Should navigate to Player Management screen - check for unique FAB
+        composeTestRule.onNodeWithText("New Player", useUnmergedTree = true).assertExists()
     }
 
     @Test
@@ -367,8 +366,8 @@ class SoccerTrackerAppTest {
         // Navigate to Manage Teams via drawer
         navigateToScreenViaDrawer("Manage Teams")
 
-        // Should navigate to Team Management screen
-        composeTestRule.onNodeWithText("Manage Teams").assertExists()
+        // Should navigate to Team Management screen - check for unique FAB
+        composeTestRule.onNodeWithText("New Team", useUnmergedTree = true).assertExists()
     }
 
     @Test
