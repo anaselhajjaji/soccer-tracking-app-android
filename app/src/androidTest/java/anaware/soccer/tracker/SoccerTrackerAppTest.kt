@@ -33,11 +33,10 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText(menuItemText).performClick()
         composeTestRule.waitForIdle()
 
-        // Wait for drawer to close completely by verifying the drawer header is gone
-        // The drawer header "Soccer Tracker" is only visible when drawer is open
+        // Wait for drawer to close by checking if "Management" section header (unique to drawer) disappears
         composeTestRule.waitUntil(timeoutMillis = 3000) {
-            composeTestRule.onAllNodesWithText("Soccer Tracker")
-                .fetchSemanticsNodes().size == 0
+            composeTestRule.onAllNodesWithText("Management")
+                .fetchSemanticsNodes().isEmpty()
         }
         composeTestRule.waitForIdle()
     }
