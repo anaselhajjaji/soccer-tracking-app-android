@@ -14,6 +14,71 @@ This document contains detailed context and notes from the AI-assisted developme
 
 ## Development History
 
+### v1.3.0 - Navigation Improvements with Hamburger Menu (December 2025)
+
+Navigation restructure replacing bottom navigation bar with hamburger menu and floating action button:
+
+**Navigation Changes**:
+
+1. **Hamburger Menu (Navigation Drawer)**:
+   - **ModalNavigationDrawer**: Material 3 drawer component replaces bottom navigation
+   - **Main Navigation Section**: Progress Chart, History, Account
+   - **Management Section**: Manage Players, Manage Teams, Manage Matches
+   - **DrawerContent Composable**: Custom drawer with header, menu items, and sections
+   - **NavigationDrawerItem**: Standard drawer items with icons and selection state
+   - **Swipe or Click**: Open drawer by swiping from left edge or clicking hamburger icon
+
+2. **Floating Action Button (FAB)**:
+   - **ExtendedFloatingActionButton**: Shows icon + "New Action" text label
+   - **Always Visible**: FAB present on all screens for quick Add Entry access
+   - **Primary Action**: Most frequent use case accessible with single tap
+   - **LaunchSingleTop**: Prevents navigation stack buildup
+
+3. **Top Bar Updates**:
+   - **Single Action Bar**: Removed duplicate TopAppBars from management screens
+   - **Hamburger Icon**: Menu icon to open/close navigation drawer
+   - **Dynamic Titles**: Screen-specific titles (Add Entry, Progress Chart, History, etc.)
+   - **Material 3 TopAppBar**: Primary container color with on-container text
+
+4. **Starting Screen Change**:
+   - **Default Route**: Changed from Screen.Add.route to Screen.History.route
+   - **History First**: Users see their action history on app launch
+   - **Add Entry via FAB**: Accessible from starting screen and all other screens
+
+**Benefits**:
+
+- **Better UX**: Primary action always accessible, reduces navigation steps
+- **More Screen Space**: Bottom navigation removed, content area increased
+- **Organized Structure**: Management features grouped in dedicated drawer section
+- **Standard Pattern**: Material Design 3 recommended navigation for 5+ destinations
+- **Scalability**: Easy to add more screens without cluttering UI
+
+**Technical Implementation**:
+
+- **File Modified**: [SoccerTrackerApp.kt](app/src/main/java/anaware/soccer/tracker/ui/SoccerTrackerApp.kt:1-328)
+  - Replaced Scaffold bottomBar with ModalNavigationDrawer
+  - Added DrawerContent() composable with DrawerItem() helper
+  - Updated navigationIcon in TopAppBar to toggle drawer
+  - Added ExtendedFloatingActionButton with "New Action" text for Add Entry navigation
+  - Changed startDestination from Screen.Add.route to Screen.History.route
+  - Updated popUpTo reference from Screen.Chart.route to Screen.History.route
+  - Removed duplicate TopAppBars from PlayerManagementScreen, TeamManagementScreen, MatchManagementScreen
+- **Navigation Logic**: rememberDrawerState, coroutineScope.launch for drawer animations
+- **State Management**: DrawerValue.Closed as initial state, toggle on icon click
+- **All 210 unit tests passing** - No changes needed to business logic
+- **All 34 UI tests updated and passing** - Helper function navigateToScreenViaDrawer() added, FAB references updated, added v1.3.0 navigation tests
+- **Documentation Updated**: README.md and CLAUDE.md reflect new navigation structure
+
+**Design Decisions**:
+
+- **History as Starting Screen**: Users most commonly want to review their data first
+- **Keep Add Entry as Full Screen**: Complex form with many fields unsuitable for dialog/bottom sheet
+- **Maintain Existing Screens**: Only navigation mechanism changed, all screen content unchanged
+- **Single Top Launch**: Prevents multiple instances of same screen in back stack
+- **Save State on Navigate**: Preserves screen state when switching between destinations
+- **Extended FAB with Text**: Makes primary action clearer with "New Action" label
+- **No Duplicate Action Bars**: Single TopAppBar throughout app for cleaner interface
+
 ### v1.0 - Initial Release (December 2025)
 
 The user requested an Android app with the following features:
@@ -191,7 +256,7 @@ Major feature release adding Match entity to group related actions into matches 
    - **SoccerActionTest.kt**: Tests for matchId field handling
    - **BackupDataTest.kt**: Updated for version 4 with BackupMatch tests including isHomeMatch serialization
    - **All 210 unit tests passing** (105 tests × 2 variants)
-   - **All 30 UI tests passing** on Firebase Test Lab
+   - **All 34 UI tests passing** on Firebase Test Lab
    - **Test Coverage**: Match entity has comprehensive unit test coverage
 
 12. **Progress Chart Filter Improvements** (v1.2.0 Update):
@@ -216,7 +281,7 @@ Major feature release adding Match entity to group related actions into matches 
 **Impact**:
 
 - All 210 unit tests passing (105 tests × 2 variants)
-- All 30 UI tests passing on Firebase Test Lab
+- All 34 UI tests passing on Firebase Test Lab
 - Full backward compatibility with existing data
 - Automatic match creation during action entry
 - Manual match CRUD through dedicated management UI
@@ -238,9 +303,9 @@ Focused release significantly improving test coverage across the entire codebase
 
 1. **Comprehensive Test Suite Expansion**:
    - **Unit Tests**: Increased from 55 to 210 tests (+155 tests, 282% increase)
-   - **UI Tests**: Increased from 17 to 30 tests (+13 tests, 76% increase)
+   - **UI Tests**: Increased from 17 to 34 tests (+17 tests, 100% increase)
    - All 210 unit tests passing (105 tests × 2 variants: debug and release)
-   - All 30 UI tests passing on Firebase Test Lab virtual devices
+   - All 34 UI tests passing on Firebase Test Lab virtual devices
 
 2. **Unit Test Coverage by File**:
    - **MatchTest.kt**: 29 tests covering all Match entity functionality
@@ -333,7 +398,7 @@ Focused release significantly improving test coverage across the entire codebase
 **Impact**:
 
 - All 210 unit tests passing in ~1.4 seconds
-- All 30 UI tests passing on Firebase Test Lab
+- All 34 UI tests passing on Firebase Test Lab
 - Coverage metrics now realistic and accurate
 - Test suite provides comprehensive coverage of business logic
 - Remaining untested code requires Android runtime (Firebase, Activities, UI screens)
@@ -668,15 +733,31 @@ val actions by viewModel.allActions.collectAsState()
 
 ### Navigation Structure
 
-**Bottom Navigation Bar** (4 tabs):
-1. **Add** (Home) - Primary action, most frequent use
-2. **History** - View and manage entries with advanced filters
-3. **Progress** - Charts and analytics with triple filtering
-4. **Account** - Sign-in status and sync information
+**Hamburger Menu (Navigation Drawer)**:
 
-**Design Decision**: 4 tabs is maximum for bottom navigation
-- **Rationale**: More than 4 gets cramped on small screens
-- **User Feedback**: Quick access to all features important for frequent use
+- **Top Bar**: Hamburger menu icon to access navigation drawer
+- **Main Navigation** (accessed via drawer):
+  1. **Progress Chart** - Default starting screen, charts and analytics with triple filtering
+  2. **History** - View and manage entries with advanced filters
+  3. **Account** - Sign-in status and sync information
+- **Management Section** (accessed via drawer):
+  1. **Manage Players** - Player CRUD operations
+  2. **Manage Teams** - Team CRUD operations
+  3. **Manage Matches** - Match CRUD operations
+
+**Floating Action Button (FAB)**:
+
+- **Add Entry** - Always visible FAB for quick action recording
+- **Primary Action**: Most frequent use, accessible from any screen
+- **Full Screen**: Navigates to dedicated Add Entry screen
+
+**Design Decisions**:
+
+- **Hamburger Menu**: Clean interface, more screen space for content
+- **FAB for Add**: Primary action always accessible, reduces navigation steps
+- **Drawer Organization**: Logical grouping (main navigation + management section)
+- **Starting Screen**: Progress Chart as default (data visualization first)
+- **Single Top Launch**: Prevents navigation stack buildup
 
 ### History Screen Filters
 
@@ -829,7 +910,7 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
 - Fixed JaCoCo exclusions to properly filter Kotlin/Compose compiler-generated synthetic classes
 - Coverage now accurately reflects testable business logic without inflated instruction counts
 
-**UI Tests** (32 tests on Firebase Test Lab):
+**UI Tests** (34 tests on Firebase Test Lab):
 
 **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/SoccerTrackerAppTest.kt`
 

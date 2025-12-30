@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -43,6 +45,8 @@ fun HistoryScreen(
     val totalCount by viewModel.totalActionCount.collectAsState()
     var actionToDelete by remember { mutableStateOf<SoccerAction?>(null) }
     var actionToEdit by remember { mutableStateOf<SoccerAction?>(null) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     // Filter states
     var selectedActionType by remember { mutableStateOf<ActionType?>(null) }
@@ -88,11 +92,27 @@ fun HistoryScreen(
     // Check if any filters are active
     val hasActiveFilters = selectedActionType != null || selectedSessionType != null || selectedOpponentTeamId != null || selectedPlayerId != null || selectedTeamId != null
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    // Pull-to-refresh function
+    val onRefresh: () -> Unit = {
+        isRefreshing = true
+        viewModel.attemptAutoSignIn(context)
+        // Delay to show refresh animation
+        scope.launch {
+            delay(500)
+            isRefreshing = false
+        }
+    }
+
+    androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize()
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
         // Header with statistics and filter button
         Card(
             modifier = Modifier
@@ -480,6 +500,7 @@ fun HistoryScreen(
                     )
                 }
             }
+        }
         }
     }
 

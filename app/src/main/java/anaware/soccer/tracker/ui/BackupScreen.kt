@@ -43,7 +43,6 @@ fun BackupScreen(
     var userEmail by remember { mutableStateOf<String?>(null) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
-    var showManagementMenu by remember { mutableStateOf(false) }
 
     val autoSyncEnabled by viewModel.autoSyncEnabled.collectAsState()
     val syncStatus by viewModel.syncStatus.collectAsState()
@@ -108,24 +107,13 @@ fun BackupScreen(
         }
     }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showManagementMenu = true },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Menu, contentDescription = "Management Menu")
-            }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         // Header
         Text(
             text = "Account & Sync",
@@ -339,68 +327,6 @@ fun BackupScreen(
                     modifier = Modifier.padding(16.dp)
                 )
             }
-        }
-        }
-
-        // Management Menu DropdownMenu
-        DropdownMenu(
-            expanded = showManagementMenu,
-            onDismissRequest = { showManagementMenu = false }
-        ) {
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 12.dp)
-                        )
-                        Text("Manage Players")
-                    }
-                },
-                onClick = {
-                    showManagementMenu = false
-                    navController.navigate(Screen.Players.route)
-                }
-            )
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Groups,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 12.dp)
-                        )
-                        Text("Manage Teams")
-                    }
-                },
-                onClick = {
-                    showManagementMenu = false
-                    navController.navigate(Screen.Teams.route)
-                }
-            )
-            DropdownMenuItem(
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.SportsScore,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 12.dp)
-                        )
-                        Text("Manage Matches")
-                    }
-                },
-                onClick = {
-                    showManagementMenu = false
-                    navController.navigate(Screen.Matches.route)
-                }
-            )
         }
     }
 }

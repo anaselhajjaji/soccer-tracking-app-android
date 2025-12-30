@@ -94,6 +94,23 @@ An Android app for tracking your son's offensive actions during soccer matches a
 - **Automatic Sync**: Seamless data synchronization across devices
 - **Instant Updates**: Immediate UI feedback with optimistic updates
 
+### UI & Navigation
+
+**Navigation Structure:**
+
+- **Hamburger Menu (Drawer)**: Main navigation with organized sections
+  - Main: Progress Chart, History, Account
+  - Management: Manage Players, Manage Teams, Manage Matches
+- **Floating Action Button**: Quick access to Add Entry from any screen
+- **Top Bar**: Hamburger icon and dynamic screen titles
+
+**Screen Flow:**
+
+- **Starting Screen**: History (default)
+- **Add Entry**: Accessed via "New Action" FAB, full-screen form with all input fields
+- **Navigation**: Click hamburger icon to access drawer menu
+- **Management**: Organized section in drawer for data management
+
 ## Tech Stack
 
 - **Language**: Kotlin 2.1.0
@@ -243,7 +260,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
 **Test configuration:**
 
 - **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
-- **Tests:** 30 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
+- **Tests:** 34 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
 - **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
 - **Test Coverage:**
   - 9 navigation and basic UI tests
@@ -252,6 +269,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
   - 4 match/team section display tests
   - 4 progress chart enhancement tests
   - 5 validation and UI polish tests
+  - 4 v1.3.0 navigation improvement tests (back button, context-aware FAB, pull-to-refresh, menu ordering)
 
 ### Running Tests Locally
 
@@ -559,9 +577,49 @@ For issues or questions:
 
 ## Version
 
-**v1.2.0** - Match Entity with Automatic Match Creation (December 2025)
+**v1.3.0** - Navigation Improvements with Hamburger Menu (December 2025)
 
 ### Latest Changes
+
+**Navigation Restructure:**
+
+The app now features an improved navigation structure with hamburger menu and floating action button:
+
+- **Hamburger Menu (Drawer)**: Replace bottom navigation with side drawer menu
+  - **Main Navigation**: Progress Chart, History, Account
+  - **Management Section**: Manage Players, Manage Teams, Manage Matches
+  - **Organized Layout**: Logical grouping of screens with clear sections
+- **Floating Action Button (FAB)**: Always-visible "New Action" FAB for quick Add Entry access
+  - **Primary Action**: Most frequent use case accessible from any screen
+  - **Single Tap**: Navigate directly to Add Entry screen
+  - **Clear Label**: Shows "New Action" text for better clarity
+- **Top Bar with Menu Icon**: Hamburger icon to open/close navigation drawer
+- **Starting Screen Changed**: History is now the default starting screen (instead of Add)
+- **Clean Interface**: More screen space for content, no duplicate action bars
+
+**Benefits:**
+
+- **Better UX**: Primary action (Add Entry) always accessible via FAB
+- **More Space**: Drawer navigation frees up bottom of screen for content
+- **Organized**: Management functions grouped together in dedicated section
+- **Consistent**: Standard Material Design 3 navigation pattern
+- **Scalable**: Easy to add more screens/features in the future
+
+**Technical Implementation:**
+
+- **ModalNavigationDrawer**: Material 3 drawer component with custom content
+- **DrawerContent**: Composable with header, main menu items, and management section
+- **NavigationDrawerItem**: Standard drawer items with icons and selection state
+- **ExtendedFloatingActionButton**: FAB with icon and "New Action" text label
+- **TopAppBar**: Dynamic titles based on current route, single action bar throughout
+- **No Duplicate Action Bars**: Management screens use only the main TopAppBar
+- **Starting Destination**: NavHost starts at History screen
+- **All 210 unit tests passing** (no changes needed)
+- **All 34 UI tests updated and passing** for new navigation structure
+
+---
+
+**v1.2.0** - Match Entity with Automatic Match Creation (December 2025)
 
 **Match Entity with Automatic Match Creation:**
 
@@ -597,7 +655,7 @@ The app now organizes actions into matches with automatic creation and complete 
 - MatchManagementScreen with complete CRUD interface
 - ViewModel methods: addMatch(), updateMatch(), deleteMatch(), getMatchById(), getActionsForMatch()
 - All 210 unit tests passing (105 tests × 2 variants)
-- All 30 UI tests passing on Firebase Test Lab
+- All 34 UI tests passing on Firebase Test Lab
 - Full backward compatibility with existing data
 
 **UI Improvements:**
@@ -668,7 +726,7 @@ The app now organizes actions into matches with automatic creation and complete 
 
 - Floating action menu on Account screen
 - Direct access to player and team management
-- Maintains 4-tab navigation (Add, History, Progress, Account)
+- Hamburger menu navigation with drawer + FAB for Add Entry
 
 **Technical:**
 
@@ -683,7 +741,7 @@ The app now organizes actions into matches with automatic creation and complete 
 **Test Suite Enhancements:**
 - Increased unit tests from 55 to 210 tests (+155 tests, 282% increase)
 - All 210 tests passing (105 tests × 2 variants: debug and release)
-- Increased UI tests from 17 to 30 tests (+13 tests, 76% increase)
+- Increased UI tests from 17 to 34 tests (+17 tests, 100% increase)
 - Added comprehensive Match entity tests (29 tests)
 - Added BackupData serialization tests with isHomeMatch field
 - Added comprehensive ViewModel filtering tests (77% coverage)

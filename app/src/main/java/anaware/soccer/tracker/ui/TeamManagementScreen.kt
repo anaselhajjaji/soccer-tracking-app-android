@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 fun TeamManagementScreen(
     viewModel: SoccerViewModel,
     onNavigateBack: () -> Unit,
+    onSetFabAction: ((()-> Unit) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -39,30 +40,18 @@ fun TeamManagementScreen(
     var editingTeam by remember { mutableStateOf<Team?>(null) }
     var deletingTeam by remember { mutableStateOf<Team?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Manage Teams") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Team")
-            }
+    // Register FAB action with parent
+    LaunchedEffect(Unit) {
+        onSetFabAction?.invoke {
+            showAddDialog = true
         }
-    ) { padding ->
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+    ) {
+        val padding = PaddingValues(0.dp)
         if (teams.isEmpty()) {
             // Empty state
             Box(
