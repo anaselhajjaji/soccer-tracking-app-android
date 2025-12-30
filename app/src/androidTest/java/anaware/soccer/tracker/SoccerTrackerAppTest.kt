@@ -29,8 +29,11 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithContentDescription("Open menu").performClick()
         composeTestRule.waitForIdle()
 
-        // Click the menu item
-        composeTestRule.onNodeWithText(menuItemText).performClick()
+        // Click the menu item - filter to find only the clickable drawer item
+        // This avoids conflicts with TopAppBar titles that may have the same text
+        composeTestRule.onAllNodesWithText(menuItemText)
+            .filterToOne(hasClickAction())
+            .performClick()
 
         // Wait for drawer to close and navigation to complete
         // Drawer closes in a coroutine launched by onNavigate callback
