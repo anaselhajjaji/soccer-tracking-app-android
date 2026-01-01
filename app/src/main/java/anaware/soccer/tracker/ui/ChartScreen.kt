@@ -650,6 +650,41 @@ private fun StatisticItem(
 }
 
 /**
+ * Calculate play time from training session PLAYER_IN/PLAYER_OUT actions.
+ * Uses the same pairing algorithm as Match.calculatePlayTime but without requiring a Match entity.
+ */
+private fun calculateTrainingPlayTime(actions: List<SoccerAction>): Int? {
+    // Sort actions by time
+    val sortedActions = actions.sortedBy { it.getLocalDateTime() }
+
+    var totalMinutes = 0
+    var inTime: java.time.LocalDateTime? = null
+
+    sortedActions.forEach { action ->
+        when (action.getActionTypeEnum()) {
+            ActionType.PLAYER_IN -> {
+                // If already in, ignore (invalid state)
+                if (inTime == null) {
+                    inTime = action.getLocalDateTime()
+                }
+            }
+            ActionType.PLAYER_OUT -> {
+                // If we have a matching IN, calculate duration
+                inTime?.let { start ->
+                    val end = action.getLocalDateTime()
+                    val duration = java.time.Duration.between(start, end)
+                    totalMinutes += duration.toMinutes().toInt()
+                    inTime = null // Reset for next pair
+                }
+            }
+            else -> {} // Ignore other action types
+        }
+    }
+
+    return if (totalMinutes > 0) totalMinutes else null
+}
+
+/**
  * Line chart component showing action count over time, or play time for time-tracking actions.
  */
 @Composable
@@ -662,25 +697,42 @@ private fun ActionProgressChart(
     // Create chart entries
     val chartEntries = remember(actions, showPlayTime, matches) {
         if (showPlayTime) {
-            // For time-tracking actions, group by date and calculate average play time per day
-            val dateToMatches = actions
-                .filter { it.matchId.isNotBlank() }
+            // For time-tracking actions, group by date and calculate play time per day
+            // Handle both match and training sessions
+            val dateToPlayTimes = actions
                 .groupBy { it.getLocalDateTime().toLocalDate() }
                 .mapValues { (_, actionsForDate) ->
-                    // Group by match within the date
-                    actionsForDate.groupBy { it.matchId }
-                        .mapNotNull { (matchId, matchActions) ->
+                    // Separate match and training actions
+                    val matchActions = actionsForDate.filter { it.matchId.isNotBlank() }
+                    val trainingActions = actionsForDate.filter { it.matchId.isBlank() }
+
+                    // Calculate match play times
+                    val matchPlayTimes = matchActions
+                        .groupBy { it.matchId }
+                        .mapNotNull { (matchId, actions) ->
                             val match = matches.find { it.id == matchId }
-                            val playerId = matchActions.firstOrNull()?.playerId ?: return@mapNotNull null
-                            match?.calculatePlayTime(matchActions, playerId)
+                            val playerId = actions.firstOrNull()?.playerId ?: return@mapNotNull null
+                            match?.calculatePlayTime(actions, playerId)
                         }
                         .filter { it > 0 }
+
+                    // Calculate training play times (group by player since no match)
+                    val trainingPlayTimes = trainingActions
+                        .groupBy { it.playerId }
+                        .mapNotNull { (playerId, actions) ->
+                            if (playerId.isBlank()) return@mapNotNull null
+                            calculateTrainingPlayTime(actions)
+                        }
+                        .filter { it > 0 }
+
+                    // Combine both match and training play times
+                    matchPlayTimes + trainingPlayTimes
                 }
                 .filter { it.value.isNotEmpty() }
                 .toSortedMap()
 
             // Calculate average play time per day
-            dateToMatches.entries.mapIndexed { index, (_, playTimes) ->
+            dateToPlayTimes.entries.mapIndexed { index, (_, playTimes) ->
                 val averagePlayTime = playTimes.average().toFloat()
                 FloatEntry(
                     x = index.toFloat(),
@@ -706,8 +758,8 @@ private fun ActionProgressChart(
     val dateFormatter = remember(actions, showPlayTime, matches) {
         if (showPlayTime) {
             // For time-tracking, we need to map index to dates from grouped data
+            // Include both match and training actions
             val dates = actions
-                .filter { it.matchId.isNotBlank() }
                 .groupBy { it.getLocalDateTime().toLocalDate() }
                 .keys
                 .sorted()
