@@ -102,8 +102,12 @@ fun ChartScreen(
 
     val totalCount = remember(actions, showPlayTime, matches) {
         if (showPlayTime) {
-            // Calculate total play time across all matches
-            actions.filter { it.matchId.isNotBlank() }
+            // Calculate total play time across all matches AND training sessions
+            val matchActions = actions.filter { it.matchId.isNotBlank() }
+            val trainingActions = actions.filter { it.matchId.isBlank() }
+
+            // Calculate match play times
+            val matchPlayTime = matchActions
                 .groupBy { it.matchId }
                 .mapNotNull { (matchId, matchActions) ->
                     val match = matches.find { it.id == matchId }
@@ -111,6 +115,17 @@ fun ChartScreen(
                     match?.calculatePlayTime(matchActions, playerId)
                 }
                 .sum()
+
+            // Calculate training play times
+            val trainingPlayTime = trainingActions
+                .groupBy { it.playerId }
+                .mapNotNull { (playerId, actions) ->
+                    if (playerId.isBlank()) return@mapNotNull null
+                    SoccerAction.calculatePlayTime(actions)
+                }
+                .sum()
+
+            matchPlayTime + trainingPlayTime
         } else {
             actions.sumOf { it.actionCount }
         }
@@ -649,40 +664,6 @@ private fun StatisticItem(
     }
 }
 
-/**
- * Calculate play time from training session PLAYER_IN/PLAYER_OUT actions.
- * Uses the same pairing algorithm as Match.calculatePlayTime but without requiring a Match entity.
- */
-private fun calculateTrainingPlayTime(actions: List<SoccerAction>): Int? {
-    // Sort actions by time
-    val sortedActions = actions.sortedBy { it.getLocalDateTime() }
-
-    var totalMinutes = 0
-    var inTime: java.time.LocalDateTime? = null
-
-    sortedActions.forEach { action ->
-        when (action.getActionTypeEnum()) {
-            ActionType.PLAYER_IN -> {
-                // If already in, ignore (invalid state)
-                if (inTime == null) {
-                    inTime = action.getLocalDateTime()
-                }
-            }
-            ActionType.PLAYER_OUT -> {
-                // If we have a matching IN, calculate duration
-                inTime?.let { start ->
-                    val end = action.getLocalDateTime()
-                    val duration = java.time.Duration.between(start, end)
-                    totalMinutes += duration.toMinutes().toInt()
-                    inTime = null // Reset for next pair
-                }
-            }
-            else -> {} // Ignore other action types
-        }
-    }
-
-    return if (totalMinutes > 0) totalMinutes else null
-}
 
 /**
  * Line chart component showing action count over time, or play time for time-tracking actions.
@@ -721,7 +702,7 @@ private fun ActionProgressChart(
                         .groupBy { it.playerId }
                         .mapNotNull { (playerId, actions) ->
                             if (playerId.isBlank()) return@mapNotNull null
-                            calculateTrainingPlayTime(actions)
+                            SoccerAction.calculatePlayTime(actions)
                         }
                         .filter { it > 0 }
 

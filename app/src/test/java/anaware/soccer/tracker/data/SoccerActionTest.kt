@@ -686,4 +686,384 @@ class SoccerActionTest {
 
         assertEquals("match-123", upgraded.matchId)
     }
+
+    // Play Time Calculation Tests
+
+    @Test
+    fun `calculatePlayTime returns null when no IN OUT actions`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 1,
+                actionType = "GOAL",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        assertNull(playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime returns null for empty actions list`() {
+        val playTime = SoccerAction.calculatePlayTime(emptyList())
+
+        assertNull(playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime calculates single IN OUT pair correctly`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 2,
+                dateTime = "2025-12-28T14:30:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        assertEquals(30, playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime ignores unpaired IN action`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        assertNull(playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime ignores unpaired OUT action`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        assertNull(playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime handles multiple IN OUT pairs`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 2,
+                dateTime = "2025-12-28T14:20:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 3,
+                dateTime = "2025-12-28T14:40:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 4,
+                dateTime = "2025-12-28T15:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        // 20 minutes (first pair) + 20 minutes (second pair) = 40 minutes
+        assertEquals(40, playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime ignores multiple consecutive IN actions`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 2,
+                dateTime = "2025-12-28T14:10:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 3,
+                dateTime = "2025-12-28T14:30:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        // Only counts from first IN (14:00) to OUT (14:30) = 30 minutes
+        assertEquals(30, playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime handles actions not in chronological order`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 3,
+                dateTime = "2025-12-28T14:30:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        // Should sort actions and calculate correctly = 30 minutes
+        assertEquals(30, playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime handles partial pair at end`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 2,
+                dateTime = "2025-12-28T14:20:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 3,
+                dateTime = "2025-12-28T14:40:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        // Only counts first pair (20 minutes), ignores unpaired final IN
+        assertEquals(20, playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime handles mixed IN OUT and scoring actions`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 2,
+                dateTime = "2025-12-28T14:15:00",
+                actionCount = 1,
+                actionType = "GOAL",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 3,
+                dateTime = "2025-12-28T14:30:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        // Ignores GOAL action, only counts IN to OUT = 30 minutes
+        assertEquals(30, playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime calculates very short play time correctly`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 2,
+                dateTime = "2025-12-28T14:01:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        assertEquals(1, playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime calculates very long play time correctly`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 2,
+                dateTime = "2025-12-28T16:30:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        // 2 hours and 30 minutes = 150 minutes
+        assertEquals(150, playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime works for training sessions without matchId`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = false,
+                playerId = "player-1",
+                matchId = ""
+            ),
+            SoccerAction(
+                id = 2,
+                dateTime = "2025-12-28T14:45:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = false,
+                playerId = "player-1",
+                matchId = ""
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        assertEquals(45, playTime)
+    }
+
+    @Test
+    fun `calculatePlayTime ignores consecutive OUT actions`() {
+        val actions = listOf(
+            SoccerAction(
+                id = 1,
+                dateTime = "2025-12-28T14:00:00",
+                actionCount = 0,
+                actionType = "PLAYER_IN",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 2,
+                dateTime = "2025-12-28T14:20:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            ),
+            SoccerAction(
+                id = 3,
+                dateTime = "2025-12-28T14:30:00",
+                actionCount = 0,
+                actionType = "PLAYER_OUT",
+                isMatch = true,
+                playerId = "player-1"
+            )
+        )
+
+        val playTime = SoccerAction.calculatePlayTime(actions)
+
+        // First pair: 20 minutes, second OUT ignored (no matching IN)
+        assertEquals(20, playTime)
+    }
 }
