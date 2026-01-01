@@ -35,6 +35,7 @@ fun ChartScreen(
     modifier: Modifier = Modifier
 ) {
     var selectedActionType by remember { mutableStateOf<ActionType?>(ActionType.default()) }
+    var showPlayTime by remember { mutableStateOf(false) } // true = show play time chart instead of action counts
     var selectedSessionType by remember {
         mutableStateOf<Boolean?>(
             null
@@ -63,16 +64,24 @@ fun ChartScreen(
     val actions = remember(
         allActions,
         selectedActionType,
+        showPlayTime,
         selectedSessionType,
         selectedOpponentTeamId,
         selectedPlayerId,
         selectedTeamId
     ) {
-        if (selectedActionType == null) {
+        if (!showPlayTime && selectedActionType == null) {
             emptyList()
         } else {
             allActions.filter { action ->
-                val matchesActionType = action.getActionTypeEnum() == selectedActionType
+                // For play time mode, filter for time-tracking actions
+                // For action count mode, filter for selected action type
+                val matchesActionType = if (showPlayTime) {
+                    action.getActionTypeEnum().isTimeTracking()
+                } else {
+                    action.getActionTypeEnum() == selectedActionType
+                }
+
                 val matchesSessionType = selectedSessionType == null || action.isMatch == selectedSessionType
 
                 // Match by opponent team via match
@@ -91,8 +100,8 @@ fun ChartScreen(
         }
     }
 
-    val totalCount = remember(actions, selectedActionType, matches) {
-        if (selectedActionType?.isTimeTracking() == true) {
+    val totalCount = remember(actions, showPlayTime, matches) {
+        if (showPlayTime) {
             // Calculate total play time across all matches
             actions.filter { it.matchId.isNotBlank() }
                 .groupBy { it.matchId }
@@ -169,24 +178,48 @@ fun ChartScreen(
                 ) {
                     // Action Type Filter
                     Text(
-                        text = "Select Action Type",
+                        text = "Select Metric",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
 
+                    // First row: Scoring actions
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Individual action type filters (no "All" option)
-                        ActionType.all().forEach { type ->
+                        ActionType.scoringActions().forEach { type ->
                             FilterChip(
-                                selected = selectedActionType == type,
-                                onClick = { selectedActionType = type },
+                                selected = !showPlayTime && selectedActionType == type,
+                                onClick = {
+                                    showPlayTime = false
+                                    selectedActionType = type
+                                },
                                 label = { Text(type.displayName()) },
                                 modifier = Modifier.weight(1f)
                             )
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Second row: Play Time option
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = showPlayTime,
+                            onClick = {
+                                showPlayTime = true
+                                selectedActionType = null
+                            },
+                            label = { Text("Play Time") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        // Empty spacers to maintain layout
+                        Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f))
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -446,7 +479,7 @@ fun ChartScreen(
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                if (selectedActionType?.isTimeTracking() == true) {
+                if (showPlayTime) {
                     // Statistics for time-tracking actions
                     val uniqueDates = actions
                         .filter { it.matchId.isNotBlank() }
@@ -545,7 +578,7 @@ fun ChartScreen(
                 ) {
                     ActionProgressChart(
                         actions = actions,
-                        actionType = selectedActionType,
+                        showPlayTime = showPlayTime,
                         matches = matches
                     )
                 }
@@ -622,13 +655,13 @@ private fun StatisticItem(
 @Composable
 private fun ActionProgressChart(
     actions: List<SoccerAction>,
-    actionType: ActionType?,
+    showPlayTime: Boolean,
     matches: List<anaware.soccer.tracker.data.Match>,
     modifier: Modifier = Modifier
 ) {
     // Create chart entries
-    val chartEntries = remember(actions, actionType, matches) {
-        if (actionType?.isTimeTracking() == true) {
+    val chartEntries = remember(actions, showPlayTime, matches) {
+        if (showPlayTime) {
             // For time-tracking actions, group by date and calculate average play time per day
             val dateToMatches = actions
                 .filter { it.matchId.isNotBlank() }
@@ -670,8 +703,8 @@ private fun ActionProgressChart(
     }
 
     // Format dates for X-axis
-    val dateFormatter = remember(actions, actionType, matches) {
-        if (actionType?.isTimeTracking() == true) {
+    val dateFormatter = remember(actions, showPlayTime, matches) {
+        if (showPlayTime) {
             // For time-tracking, we need to map index to dates from grouped data
             val dates = actions
                 .filter { it.matchId.isNotBlank() }
@@ -701,7 +734,7 @@ private fun ActionProgressChart(
         }
     }
 
-    val axisTitle = if (actionType?.isTimeTracking() == true) "Play Time (min)" else "Actions"
+    val axisTitle = if (showPlayTime) "Play Time (min)" else "Actions"
 
     ProvideChartStyle {
         Chart(

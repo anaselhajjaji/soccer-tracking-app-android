@@ -713,9 +713,11 @@ fun AddActionScreen(
                             onValueChange = { },
                             readOnly = true,
                             label = { Text("Player Team *") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = newMatchPlayerTeamExpanded
-                            ) },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = newMatchPlayerTeamExpanded
+                                )
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor()
@@ -747,9 +749,11 @@ fun AddActionScreen(
                             onValueChange = { },
                             readOnly = true,
                             label = { Text("Opponent Team *") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = newMatchOpponentTeamExpanded
-                            ) },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = newMatchOpponentTeamExpanded
+                                )
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor()

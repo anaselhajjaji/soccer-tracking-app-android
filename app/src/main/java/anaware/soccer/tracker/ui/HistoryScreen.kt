@@ -314,9 +314,11 @@ fun HistoryScreen(
                                         onValueChange = { },
                                         readOnly = true,
                                         label = { Text("Opponent") },
-                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = opponentTeamDropdownExpanded
-                                        ) },
+                                        trailingIcon = {
+                                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                                expanded = opponentTeamDropdownExpanded
+                                            )
+                                        },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .menuAnchor()
@@ -432,9 +434,11 @@ fun HistoryScreen(
                                         onValueChange = { },
                                         readOnly = true,
                                         label = { Text("Team") },
-                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = teamDropdownExpanded
-                                        ) },
+                                        trailingIcon = {
+                                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                                expanded = teamDropdownExpanded
+                                            )
+                                        },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .menuAnchor()
