@@ -10,6 +10,8 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Goals
   - Assists
   - General Offensive Actions
+  - Player In (time-tracking)
+  - Player Out (time-tracking)
 - **Multi-Player Support**: Track multiple players with detailed profiles
   - Player name, birthdate, and jersey number
   - Assign player to each action entry
@@ -29,7 +31,12 @@ An Android app for tracking your son's offensive actions during soccer matches a
 - **Optional Date & Time**: Choose current time or select custom date/time
   - "Use current date & time" checkbox (default)
   - Custom selection available when needed
-- **Increment Controls**: Easy +/- buttons for quick data entry (minimum 1 action required)
+- **Increment Controls**: Easy +/- buttons for quick data entry (minimum 1 action required for scoring actions)
+- **Time Tracking**: Record player participation time with PLAYER_IN/PLAYER_OUT actions
+  - Automatic pairing of IN/OUT actions chronologically
+  - Calculates total play time in minutes per match
+  - Handles multiple IN/OUT pairs within same match
+  - Unpaired actions (standalone IN or OUT) ignored in calculations
 - **Edit Entries**: Modify any recorded action from history screen
 
 ### Data Visualization
@@ -51,13 +58,17 @@ An Android app for tracking your son's offensive actions during soccer matches a
     - Visual filter button highlights when filters are active
     - One-tap "Clear All" to reset filters
 - **Advanced Progress Chart**: Interactive chart with advanced filtering
-  - Select action type: Goals, Assists, or Offensive Actions (required)
+  - Select action type: Goals, Assists, Offensive Actions, Player In, or Player Out (required)
   - Filter by session type: Both, Match, or Training
   - Filter by opponent: All or specific opponent
   - Filter by player: All or specific player
   - Filter by team: All or specific team
   - Combine filters for specific insights (e.g., "Goals by Player #10 vs Team A in Matches")
-  - Statistics card showing total actions, session count, and averages
+  - **Time-Tracking Display**: When Player In or Player Out selected:
+    - Chart shows average play time per day (when multiple matches on same date)
+    - Y-axis labeled "Play Time (min)"
+    - Statistics card shows "Total Play Time", "Days", and "Avg per Day"
+  - Statistics card showing total actions, session count, and averages (for scoring actions)
 
 ### Data Management
 
@@ -260,7 +271,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
 **Test configuration:**
 
 - **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
-- **Tests:** 34 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
+- **Tests:** 42 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
 - **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
 - **Test Coverage:**
   - 9 navigation and basic UI tests
@@ -270,6 +281,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
   - 4 progress chart enhancement tests
   - 5 validation and UI polish tests
   - 4 v1.3.0 navigation improvement tests (back button, context-aware FAB, pull-to-refresh, menu ordering)
+  - 8 v1.4.0 Play Time feature tests (time-tracking filters, action types, chart display)
 
 ### Running Tests Locally
 
@@ -577,9 +589,39 @@ For issues or questions:
 
 ## Version
 
-**v1.3.0** - Navigation Improvements with Hamburger Menu (December 2025)
+**v1.4.0** - Player Time Tracking (January 2026)
 
 ### Latest Changes
+
+**Player Time Tracking:**
+
+The app now tracks player participation time during matches with PLAYER_IN and PLAYER_OUT actions:
+
+- **New Action Types**: PLAYER_IN and PLAYER_OUT for time-tracking
+- **Automatic Pairing**: System pairs IN/OUT actions chronologically to calculate play time
+- **Play Time Calculation**: Tracks minutes played between each IN/OUT pair
+- **Multiple Sessions**: Handles multiple IN/OUT pairs within same match
+- **Unpaired Actions Ignored**: Standalone IN or OUT without matching pair not counted
+- **Per-Player Tracking**: Each player's time tracked independently
+- **Chart Display**: Shows average play time per day when multiple matches on same date
+- **UI Adaptations**:
+  - Action count hidden for time-tracking actions
+  - History shows timestamp ("at HH:mm") for IN/OUT actions
+  - Progress chart displays "Play Time (min)" for time-tracking
+  - Statistics card shows "Total Play Time", "Days", "Avg per Day"
+- **Zero Breaking Changes**: Fully backward compatible with existing data
+- **Comprehensive Testing**: All 493 tests passing (480 unit tests + 13 time calculation tests in 2 variants)
+
+**Technical Implementation:**
+
+- State machine algorithm pairs IN/OUT actions chronologically
+- Handles edge cases (unpaired actions, multiple subs, unordered data)
+- No database schema changes (reuses existing dateTime field)
+- actionCount automatically set to 0 for time-tracking actions
+
+---
+
+**v1.3.0** - Navigation Improvements with Hamburger Menu (December 2025)
 
 **Navigation Restructure:**
 

@@ -66,4 +66,52 @@ data class SoccerAction(
     fun isLegacyAction(): Boolean {
         return playerId.isBlank()
     }
+
+    companion object {
+        /**
+         * Calculate play time from PLAYER_IN/PLAYER_OUT actions.
+         * Uses a state machine algorithm to pair IN/OUT actions chronologically.
+         *
+         * @param actions List of SoccerAction entries (should be filtered to single player if needed)
+         * @return Total play time in minutes, or null if no valid pairs found
+         *
+         * Algorithm:
+         * - Sort actions chronologically
+         * - Pair each PLAYER_IN with the next PLAYER_OUT
+         * - Ignore unpaired actions (standalone IN or OUT)
+         * - Handle multiple IN/OUT pairs within same session
+         * - Ignore consecutive IN actions (take first, ignore rest until OUT)
+         */
+        fun calculatePlayTime(actions: List<SoccerAction>): Int? {
+            // Sort actions by time
+            val sortedActions = actions.sortedBy { it.getLocalDateTime() }
+
+            var totalMinutes = 0
+            var inTime: LocalDateTime? = null
+
+            sortedActions.forEach { action ->
+                when (action.getActionTypeEnum()) {
+                    ActionType.PLAYER_IN -> {
+                        // If already in, ignore (invalid state - player can't be in twice)
+                        if (inTime == null) {
+                            inTime = action.getLocalDateTime()
+                        }
+                    }
+                    ActionType.PLAYER_OUT -> {
+                        // If we have a matching IN, calculate duration
+                        inTime?.let { start ->
+                            val end = action.getLocalDateTime()
+                            val duration = java.time.Duration.between(start, end)
+                            totalMinutes += duration.toMinutes().toInt()
+                            inTime = null // Reset for next pair
+                        }
+                        // If no matching IN, ignore (unpaired OUT)
+                    }
+                    else -> {} // Ignore other action types
+                }
+            }
+
+            return if (totalMinutes > 0) totalMinutes else null
+        }
+    }
 }

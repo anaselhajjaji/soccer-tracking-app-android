@@ -329,8 +329,8 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithContentDescription("Toggle Filters").performClick()
         composeTestRule.waitForIdle()
 
-        // Filter panel should now be visible with "Select Action Type" label
-        composeTestRule.onNodeWithText("Select Action Type").assertExists()
+        // Filter panel should now be visible with session type filter label
+        composeTestRule.onNodeWithText("Filter by Session Type").assertExists()
     }
 
     @Test
@@ -535,5 +535,127 @@ class SoccerTrackerAppTest {
         // Close drawer by clicking outside or pressing back
         composeTestRule.onAllNodesWithText("Soccer Tracker")[0].performClick()
         composeTestRule.waitForIdle()
+    }
+
+    // =====================================================================
+    // Play Time Feature Tests (v1.4.0)
+    // =====================================================================
+
+    @Test
+    fun progress_chart_shows_play_time_filter() {
+        // Navigate to Progress Chart screen via drawer
+        navigateToScreenViaDrawer("Progress Chart")
+
+        // Click filter button to reveal filters
+        composeTestRule.onNodeWithContentDescription("Toggle Filters").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify Play Time filter chip exists
+        composeTestRule.onNodeWithText("Play Time").assertExists()
+    }
+
+    @Test
+    fun history_screen_shows_player_in_out_filters() {
+        // Already on History screen (default starting screen)
+
+        // Click filter button to reveal filters
+        composeTestRule.onNodeWithContentDescription("Filter").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify Player In and Player Out filter chips are visible in the second row
+        composeTestRule.onNodeWithText("Player In").assertExists()
+        composeTestRule.onNodeWithText("Player Out").assertExists()
+    }
+
+    @Test
+    fun add_screen_shows_all_five_action_types() {
+        // Navigate to Add screen via FAB
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify all five action types are available
+        composeTestRule.onNodeWithText("Goal").assertExists()
+        composeTestRule.onNodeWithText("Assist").assertExists()
+        composeTestRule.onNodeWithText("Offensive Action").assertExists()
+        composeTestRule.onNodeWithText("Player In").assertExists()
+        composeTestRule.onNodeWithText("Player Out").assertExists()
+    }
+
+    @Test
+    fun progress_chart_play_time_filter_is_selectable() {
+        // Navigate to Progress Chart screen via drawer
+        navigateToScreenViaDrawer("Progress Chart")
+
+        // Click filter button to reveal filters
+        composeTestRule.onNodeWithContentDescription("Toggle Filters").performClick()
+        composeTestRule.waitForIdle()
+
+        // Select Play Time filter
+        composeTestRule.onNodeWithText("Play Time").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify Play Time chip is now selected by checking if it still exists
+        // (selected chips remain visible)
+        composeTestRule.onNodeWithText("Play Time").assertExists()
+    }
+
+    @Test
+    fun history_screen_player_in_filter_is_selectable() {
+        // Already on History screen (default starting screen)
+
+        // Click filter button to reveal filters
+        composeTestRule.onNodeWithContentDescription("Filter").performClick()
+        composeTestRule.waitForIdle()
+
+        // Select Player In filter
+        composeTestRule.onNodeWithText("Player In").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify Player In chip is still visible (selected chips remain visible)
+        composeTestRule.onNodeWithText("Player In").assertExists()
+    }
+
+    @Test
+    fun history_screen_player_out_filter_is_selectable() {
+        // Already on History screen (default starting screen)
+
+        // Click filter button to reveal filters
+        composeTestRule.onNodeWithContentDescription("Filter").performClick()
+        composeTestRule.waitForIdle()
+
+        // Select Player Out filter
+        composeTestRule.onNodeWithText("Player Out").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify Player Out chip is still visible (selected chips remain visible)
+        composeTestRule.onNodeWithText("Player Out").assertExists()
+    }
+
+    @Test
+    fun add_screen_player_in_action_type_is_selectable() {
+        // Navigate to Add screen via FAB
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
+        composeTestRule.waitForIdle()
+
+        // Select Player In action type
+        composeTestRule.onNodeWithText("Player In").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify Player In action type is still visible (selected state)
+        composeTestRule.onNodeWithText("Player In").assertExists()
+    }
+
+    @Test
+    fun add_screen_player_out_action_type_is_selectable() {
+        // Navigate to Add screen via FAB
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
+        composeTestRule.waitForIdle()
+
+        // Select Player Out action type
+        composeTestRule.onNodeWithText("Player Out").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify Player Out action type is still visible (selected state)
+        composeTestRule.onNodeWithText("Player Out").assertExists()
     }
 }

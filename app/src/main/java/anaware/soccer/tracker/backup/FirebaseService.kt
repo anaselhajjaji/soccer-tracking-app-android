@@ -227,7 +227,7 @@ class FirebaseService(private val context: Context) {
                 .document(userId)
                 .collection("actions")
                 .document(action.id.toString())
-                .set(backupAction)  // set() will create or update
+                .set(backupAction) // set() will create or update
                 .await()
 
             Result.success(Unit)

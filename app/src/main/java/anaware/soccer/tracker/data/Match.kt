@@ -74,6 +74,53 @@ data class Match(
     fun hasScores(): Boolean {
         return playerScore >= 0 && opponentScore >= 0
     }
+
+    /**
+     * Calculates total play time in minutes for a specific player in this match.
+     * Only counts time between matched PLAYER_IN and PLAYER_OUT actions.
+     * Ignores unpaired IN or OUT actions.
+     *
+     * @param actions All actions for this match
+     * @param playerId The player ID to calculate play time for
+     * @return Total play time in minutes, or null if no valid IN/OUT pairs found
+     */
+    fun calculatePlayTime(actions: List<SoccerAction>, playerId: String): Int? {
+        // Filter to this player's IN/OUT actions, sorted by time
+        val timeActions = actions
+            .filter { it.matchId == this.id && it.playerId == playerId }
+            .filter { it.getActionTypeEnum().isTimeTracking() }
+            .sortedBy { it.getLocalDateTime() }
+
+        if (timeActions.isEmpty()) return null
+
+        var totalMinutes = 0
+        var lastInTime: java.time.LocalDateTime? = null
+
+        for (action in timeActions) {
+            when (action.getActionTypeEnum()) {
+                ActionType.PLAYER_IN -> {
+                    // Record IN time if we don't have one pending
+                    if (lastInTime == null) {
+                        lastInTime = action.getLocalDateTime()
+                    }
+                }
+                ActionType.PLAYER_OUT -> {
+                    // Calculate time if we have a pending IN
+                    if (lastInTime != null) {
+                        val outTime = action.getLocalDateTime()
+                        val duration = java.time.Duration.between(lastInTime, outTime)
+                        totalMinutes += duration.toMinutes().toInt()
+                        lastInTime = null // Reset for next pair
+                    }
+                }
+                else -> {
+                    // Ignore non-time-tracking actions
+                }
+            }
+        }
+
+        return if (totalMinutes > 0) totalMinutes else null
+    }
 }
 
 /**

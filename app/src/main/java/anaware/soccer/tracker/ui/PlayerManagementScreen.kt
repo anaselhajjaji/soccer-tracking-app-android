@@ -27,7 +27,7 @@ import java.time.format.DateTimeFormatter
 fun PlayerManagementScreen(
     viewModel: SoccerViewModel,
     onNavigateBack: () -> Unit,
-    onSetFabAction: ((()-> Unit) -> Unit)? = null,
+    onSetFabAction: ((() -> Unit) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
