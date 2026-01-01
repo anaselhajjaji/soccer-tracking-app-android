@@ -14,6 +14,182 @@ This document contains detailed context and notes from the AI-assisted developme
 
 ## Development History
 
+### v1.4.0 - Player Time Tracking (January 2026)
+
+Added time-tracking functionality to monitor player play time during matches:
+
+**New Action Types**:
+
+1. **PLAYER_IN**: Records when a player enters the game
+2. **PLAYER_OUT**: Records when a player exits the game
+
+**Play Time Calculation**:
+
+- **Automatic Pairing**: System pairs PLAYER_IN and PLAYER_OUT actions chronologically
+- **Duration Tracking**: Calculates minutes played between each IN/OUT pair
+- **Unpaired Actions Ignored**: Standalone IN or OUT actions without matching pair are not counted
+- **Multiple Sessions**: Handles multiple IN/OUT pairs within same match
+- **Per-Player Tracking**: Each player's time tracked independently via playerId
+
+**Chart Display Updates**:
+
+- **Average Play Time**: When multiple matches occur on same date, displays average play time per day
+- **Time-Based Y-Axis**: Chart shows "Play Time (min)" instead of action counts for time-tracking
+- **Grouped Statistics**: Shows "Total Play Time", "Days", and "Avg per Day" in statistics card
+
+**UI Adaptations**:
+
+1. **Add Entry Screen**:
+   - Action count controls hidden for PLAYER_IN/PLAYER_OUT
+   - Action count automatically set to 0 for time-tracking actions
+   - Both action types appear in action type dropdown
+
+2. **History Screen**:
+   - Time-tracking actions display type name only (no count)
+   - Shows timestamp "at HH:mm" for IN/OUT actions
+   - Standard display for scoring actions (goals, assists, offensive actions)
+
+3. **Progress Chart Screen**:
+   - When time-tracking action selected, chart shows average play time per day
+   - Y-axis labeled "Play Time (min)"
+   - Statistics card shows different metrics (Total Play Time, Days, Avg per Day)
+   - About section explains average calculation for multiple matches per day
+
+**Technical Implementation**:
+
+- **File Modified**: [ActionType.kt](app/src/main/java/anaware/soccer/tracker/data/ActionType.kt)
+  - Added PLAYER_IN and PLAYER_OUT enum values
+  - Added isTimeTracking() method to identify time-tracking actions
+  - Added scoringActions() helper returning [GOAL, ASSIST, OFFENSIVE_ACTION]
+  - Added timeTrackingActions() helper returning [PLAYER_IN, PLAYER_OUT]
+
+- **File Modified**: [Match.kt](app/src/main/java/anaware/soccer/tracker/data/Match.kt)
+  - Added calculatePlayTime(actions, playerId) method
+  - Implements state machine algorithm: tracks lastInTime, calculates duration on OUT
+  - Filters actions by matchId and playerId
+  - Sorts chronologically before processing
+  - Returns total minutes or null if no valid pairs
+
+- **File Modified**: [AddActionScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/AddActionScreen.kt)
+  - Wrapped action count Card in conditional: if (!actionType.isTimeTracking())
+  - Added LaunchedEffect to auto-reset actionCount to 0 when switching to time-tracking type
+  - Updated validation to allow actionCount=0 for time-tracking actions
+  - Updated validation message for clarity
+
+- **File Modified**: [HistoryScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/HistoryScreen.kt)
+  - Updated display text logic: shows type name only for time-tracking actions
+  - Added time display "at HH:mm" for PLAYER_IN/PLAYER_OUT actions
+  - Standard display with count for scoring actions
+
+- **File Modified**: [ChartScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/ChartScreen.kt)
+  - Complete chart logic overhaul for time-tracking display
+  - Groups actions by date, then by matchId
+  - Calculates play time for each match using Match.calculatePlayTime()
+  - Averages play times when multiple matches on same date
+  - Updated Y-axis label: "Play Time (min)" for time-tracking
+  - Updated statistics card: "Total Play Time", "Days", "Avg per Day"
+  - Updated "About the Chart" description for average calculation
+
+**Algorithm Design**:
+
+```kotlin
+// State machine for pairing IN/OUT actions
+fun calculatePlayTime(actions: List<SoccerAction>, playerId: String): Int? {
+    val timeActions = actions
+        .filter { it.matchId == this.id && it.playerId == playerId }
+        .filter { it.getActionTypeEnum().isTimeTracking() }
+        .sortedBy { it.getLocalDateTime() }
+
+    if (timeActions.isEmpty()) return null
+
+    var totalMinutes = 0
+    var lastInTime: LocalDateTime? = null
+
+    for (action in timeActions) {
+        when (action.getActionTypeEnum()) {
+            ActionType.PLAYER_IN -> {
+                if (lastInTime == null) {
+                    lastInTime = action.getLocalDateTime()
+                }
+            }
+            ActionType.PLAYER_OUT -> {
+                if (lastInTime != null) {
+                    val outTime = action.getLocalDateTime()
+                    val duration = Duration.between(lastInTime, outTime)
+                    totalMinutes += duration.toMinutes().toInt()
+                    lastInTime = null
+                }
+            }
+            else -> {}
+        }
+    }
+
+    return if (totalMinutes > 0) totalMinutes else null
+}
+```
+
+**Edge Cases Handled**:
+
+- ✅ Unpaired PLAYER_IN (no matching OUT) → ignored, returns null
+- ✅ Unpaired PLAYER_OUT (no previous IN) → ignored
+- ✅ Multiple consecutive PLAYER_IN → only first one used
+- ✅ Multiple valid IN/OUT pairs → durations accumulated
+- ✅ Actions not in chronological order → sorted before processing
+- ✅ Mixed scoring and time-tracking actions → time-tracking filtered out
+- ✅ Actions from different matches → filtered by matchId
+- ✅ Actions from different players → filtered by playerId
+
+**Testing**:
+
+- **File Modified**: [ActionTypeTest.kt](app/src/test/java/anaware/soccer/tracker/data/ActionTypeTest.kt)
+  - Updated `all returns five action types` test (was 3, now 5)
+  - Added test for isTimeTracking() method
+  - Added test for scoringActions() helper
+  - Added test for timeTrackingActions() helper
+  - Updated displayName() test to include new types
+  - Updated valueOf() test to include new types
+
+- **File Added**: 13 new tests in [MatchTest.kt](app/src/test/java/anaware/soccer/tracker/data/MatchTest.kt)
+  - `calculatePlayTime returns null when no IN OUT actions`
+  - `calculatePlayTime returns null for empty actions list`
+  - `calculatePlayTime calculates single IN OUT pair correctly`
+  - `calculatePlayTime ignores unpaired IN action`
+  - `calculatePlayTime ignores unpaired OUT action`
+  - `calculatePlayTime handles multiple IN OUT pairs`
+  - `calculatePlayTime ignores multiple consecutive IN actions`
+  - `calculatePlayTime filters by player ID`
+  - `calculatePlayTime filters by match ID`
+  - `calculatePlayTime handles mixed IN OUT and scoring actions`
+  - `calculatePlayTime handles actions not in chronological order`
+  - `calculatePlayTime handles partial pair at end`
+
+- **All 227+ tests passing** - Comprehensive unit test coverage for all edge cases
+
+**Data Compatibility**:
+
+- **Backward Compatible**: No database schema changes required
+- **SoccerAction.kt**: Existing dateTime field (ISO-8601) stores timestamps for IN/OUT
+- **BackupData.kt**: No changes needed, actionType stored as String automatically handles new enum values
+- **Firebase**: PLAYER_IN and PLAYER_OUT stored as strings "PLAYER_IN" and "PLAYER_OUT"
+- **Action Count**: Set to 0 for time-tracking actions, distinguishes from scoring actions
+
+**Design Decisions**:
+
+- **Reuse Existing Fields**: dateTime field already perfect for time tracking, no schema changes
+- **State Machine Algorithm**: Cleanly handles all edge cases with simple lastInTime tracking
+- **Average for Multiple Matches**: User requirement to show average when multiple matches per day
+- **Hide Action Count**: Time-tracking actions don't need count controls, cleaner UI
+- **Independent Filtering**: Time-tracking and scoring actions filter/display separately in chart
+
+**Benefits**:
+
+- ✅ Track player participation time during matches
+- ✅ Visual analytics for play time trends over time
+- ✅ Per-player time tracking for team rotation analysis
+- ✅ Handles complex scenarios (multiple subs, partial data)
+- ✅ Zero breaking changes to existing functionality
+- ✅ Comprehensive test coverage ensures reliability
+
 ### v1.3.0 - Navigation Improvements with Hamburger Menu (December 2025)
 
 Navigation restructure replacing bottom navigation bar with hamburger menu and floating action button:

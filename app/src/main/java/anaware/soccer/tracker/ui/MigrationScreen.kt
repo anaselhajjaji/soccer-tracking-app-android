@@ -1,6 +1,5 @@
 package anaware.soccer.tracker.ui
 
-import anaware.soccer.tracker.data.ActionType
 import anaware.soccer.tracker.data.Player
 import anaware.soccer.tracker.data.SoccerAction
 import anaware.soccer.tracker.data.Team
@@ -250,10 +249,11 @@ private fun MigrationActionCard(
                     onClick = { },
                     label = { Text(if (action.isMatch) "Match" else "Training") },
                     colors = AssistChipDefaults.assistChipColors(
-                        containerColor = if (action.isMatch)
+                        containerColor = if (action.isMatch) {
                             MaterialTheme.colorScheme.primaryContainer
-                        else
+                        } else {
                             MaterialTheme.colorScheme.secondaryContainer
+                        }
                     )
                 )
             }

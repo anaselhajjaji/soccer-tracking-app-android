@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 fun TeamManagementScreen(
     viewModel: SoccerViewModel,
     onNavigateBack: () -> Unit,
-    onSetFabAction: ((()-> Unit) -> Unit)? = null,
+    onSetFabAction: ((() -> Unit) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -335,10 +335,11 @@ private fun TeamDialog(
                                         .background(parseColor(colorHex))
                                         .border(
                                             width = if (selectedColor == colorHex) 3.dp else 1.dp,
-                                            color = if (selectedColor == colorHex)
+                                            color = if (selectedColor == colorHex) {
                                                 MaterialTheme.colorScheme.primary
-                                            else
-                                                MaterialTheme.colorScheme.outline,
+                                            } else {
+                                                MaterialTheme.colorScheme.outline
+                                            },
                                             shape = CircleShape
                                         )
                                         .clickable { selectedColor = colorHex },

@@ -82,7 +82,7 @@ class UiStateTest {
     @Test
     fun `UiState with long message handles text correctly`() {
         val longMessage = "This is a very long error message that might occur in the application " +
-                "when something goes wrong with Firebase operations or network connectivity"
+            "when something goes wrong with Firebase operations or network connectivity"
 
         val uiState = UiState(message = longMessage)
 

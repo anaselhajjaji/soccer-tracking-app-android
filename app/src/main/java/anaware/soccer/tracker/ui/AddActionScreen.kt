@@ -73,6 +73,13 @@ fun AddActionScreen(
         }
     }
 
+    // Reset actionCount to 0 when switching to time-tracking action type
+    LaunchedEffect(actionType) {
+        if (actionType.isTimeTracking()) {
+            actionCount = 0
+        }
+    }
+
     // Date and Time state
     var useCurrentDateTime by remember { mutableStateOf(true) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -105,68 +112,70 @@ fun AddActionScreen(
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        // Action Count Section
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
-        ) {
-            Column(
+        // Action Count Section (hidden for time-tracking actions)
+        if (!actionType.isTimeTracking()) {
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
             ) {
-                Text(
-                    text = "Number of Actions",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                // Large action count display
-                Text(
-                    text = actionCount.toString(),
-                    style = MaterialTheme.typography.displayLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
-
-                // Plus/Minus buttons
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    FilledIconButton(
-                        onClick = { if (actionCount > 0) actionCount-- },
-                        modifier = Modifier.size(56.dp)
+                    Text(
+                        text = "Number of Actions",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    // Large action count display
+                    Text(
+                        text = actionCount.toString(),
+                        style = MaterialTheme.typography.displayLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+
+                    // Plus/Minus buttons
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Remove,
-                            contentDescription = "Decrease count"
-                        )
+                        FilledIconButton(
+                            onClick = { if (actionCount > 0) actionCount-- },
+                            modifier = Modifier.size(56.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Remove,
+                                contentDescription = "Decrease count"
+                            )
+                        }
+
+                        FilledIconButton(
+                            onClick = { actionCount++ },
+                            modifier = Modifier.size(56.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Increase count"
+                            )
+                        }
                     }
 
-                    FilledIconButton(
-                        onClick = { actionCount++ },
-                        modifier = Modifier.size(56.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Increase count"
-                        )
-                    }
+                    // Info text about minimum actions
+                    Text(
+                        text = "Tip: At least 1 action is required to save an entry",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
                 }
-
-                // Info text about minimum actions
-                Text(
-                    text = "Tip: At least 1 action is required to save an entry",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(top = 12.dp)
-                )
             }
         }
 
@@ -552,9 +561,9 @@ fun AddActionScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Save Button validation
-        val canSave = actionCount > 0 && selectedPlayerId.isNotEmpty() &&
-                (if (isMatch) selectedMatchId.isNotEmpty() else selectedTeamId.isNotEmpty())
+        // Save Button validation (time-tracking actions don't need actionCount > 0)
+        val canSave = (actionType.isTimeTracking() || actionCount > 0) && selectedPlayerId.isNotEmpty() &&
+            (if (isMatch) selectedMatchId.isNotEmpty() else selectedTeamId.isNotEmpty())
 
         Button(
             onClick = {
@@ -612,7 +621,7 @@ fun AddActionScreen(
         if (!canSave) {
             Text(
                 text = when {
-                    actionCount == 0 -> "Add at least 1 action to save"
+                    actionCount == 0 && !actionType.isTimeTracking() -> "Add at least 1 action to save"
                     selectedPlayerId.isEmpty() -> "Select a player to save"
                     isMatch && selectedMatchId.isEmpty() -> "Select or create a match to save"
                     !isMatch && selectedTeamId.isEmpty() -> "Select a team to save"
@@ -704,7 +713,9 @@ fun AddActionScreen(
                             onValueChange = { },
                             readOnly = true,
                             label = { Text("Player Team *") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = newMatchPlayerTeamExpanded) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = newMatchPlayerTeamExpanded
+                            ) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor()
@@ -736,7 +747,9 @@ fun AddActionScreen(
                             onValueChange = { },
                             readOnly = true,
                             label = { Text("Opponent Team *") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = newMatchOpponentTeamExpanded) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = newMatchOpponentTeamExpanded
+                            ) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor()
@@ -826,7 +839,9 @@ fun AddActionScreen(
         // Date picker for new match
         if (showNewMatchDatePicker) {
             val newMatchDatePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = newMatchDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                initialSelectedDateMillis = newMatchDate.atStartOfDay(
+                    java.time.ZoneId.systemDefault()
+                ).toInstant().toEpochMilli()
             )
             DatePickerDialog(
                 onDismissRequest = { showNewMatchDatePicker = false },

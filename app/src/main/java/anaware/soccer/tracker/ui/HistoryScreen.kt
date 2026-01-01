@@ -21,9 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 /**
@@ -70,24 +68,32 @@ fun HistoryScreen(
     }
 
     // Apply filters
-    val filteredActions = remember(allActions, selectedActionType, selectedSessionType, selectedOpponentTeamId, selectedPlayerId, selectedTeamId) {
-        allActions.filter { action ->
-            val matchesActionType = selectedActionType == null || action.getActionTypeEnum() == selectedActionType
-            val matchesSessionType = selectedSessionType == null || action.isMatch == selectedSessionType
+    val filteredActions =
+        remember(
+            allActions,
+            selectedActionType,
+            selectedSessionType,
+            selectedOpponentTeamId,
+            selectedPlayerId,
+            selectedTeamId
+        ) {
+            allActions.filter { action ->
+                val matchesActionType = selectedActionType == null || action.getActionTypeEnum() == selectedActionType
+                val matchesSessionType = selectedSessionType == null || action.isMatch == selectedSessionType
 
-            // Match by opponent team via match
-            val matchesOpponentTeam = if (selectedOpponentTeamId == null) {
-                true
-            } else {
-                val actionMatch = matches.find { it.id == action.matchId }
-                actionMatch?.opponentTeamId == selectedOpponentTeamId
+                // Match by opponent team via match
+                val matchesOpponentTeam = if (selectedOpponentTeamId == null) {
+                    true
+                } else {
+                    val actionMatch = matches.find { it.id == action.matchId }
+                    actionMatch?.opponentTeamId == selectedOpponentTeamId
+                }
+
+                val matchesPlayer = selectedPlayerId == null || action.playerId == selectedPlayerId
+                val matchesTeam = selectedTeamId == null || action.teamId == selectedTeamId
+                matchesActionType && matchesSessionType && matchesOpponentTeam && matchesPlayer && matchesTeam
             }
-
-            val matchesPlayer = selectedPlayerId == null || action.playerId == selectedPlayerId
-            val matchesTeam = selectedTeamId == null || action.teamId == selectedTeamId
-            matchesActionType && matchesSessionType && matchesOpponentTeam && matchesPlayer && matchesTeam
         }
-    }
 
     // Check if any filters are active
     val hasActiveFilters = selectedActionType != null || selectedSessionType != null || selectedOpponentTeamId != null || selectedPlayerId != null || selectedTeamId != null
@@ -113,273 +119,337 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-        // Header with statistics and filter button
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Total Actions",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = "${totalCount ?: 0}",
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    FilledTonalIconButton(
-                        onClick = { showFilters = !showFilters },
-                        colors = IconButtonDefaults.filledTonalIconButtonColors(
-                            containerColor = if (hasActiveFilters) {
-                                MaterialTheme.colorScheme.tertiary
-                            } else {
-                                MaterialTheme.colorScheme.surface
-                            }
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "Filter",
-                            tint = if (hasActiveFilters) {
-                                MaterialTheme.colorScheme.onTertiary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            }
-                        )
-                    }
-                    Text(
-                        text = "${filteredActions.size} entries",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-        }
-
-        // Filter section
-        if (showFilters) {
+            // Header with statistics and filter button
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Column {
                         Text(
-                            text = "Filters",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            text = "Total Actions",
+                            style = MaterialTheme.typography.titleMedium
                         )
-                        if (hasActiveFilters) {
-                            TextButton(
-                                onClick = {
-                                    selectedActionType = null
-                                    selectedSessionType = null
-                                    selectedOpponentTeamId = null
-                                    selectedPlayerId = null
-                                    selectedTeamId = null
-                                }
-                            ) {
-                                Text("Clear All")
-                            }
-                        }
+                        Text(
+                            text = "${totalCount ?: 0}",
+                            style = MaterialTheme.typography.displayMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
 
-                    // Action Type Filter
-                    Text(
-                        text = "Action Type",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        FilterChip(
-                            selected = selectedActionType == null,
-                            onClick = { selectedActionType = null },
-                            label = { Text("All") }
-                        )
-                        ActionType.all().forEach { type ->
-                            FilterChip(
-                                selected = selectedActionType == type,
-                                onClick = {
-                                    selectedActionType = if (selectedActionType == type) null else type
-                                },
-                                label = { Text(type.displayName()) }
+                    Column(horizontalAlignment = Alignment.End) {
+                        FilledTonalIconButton(
+                            onClick = { showFilters = !showFilters },
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = if (hasActiveFilters) {
+                                    MaterialTheme.colorScheme.tertiary
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                }
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = "Filter",
+                                tint = if (hasActiveFilters) {
+                                    MaterialTheme.colorScheme.onTertiary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                }
                             )
                         }
-                    }
-
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-                    // Session Type Filter
-                    Text(
-                        text = "Session Type",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        FilterChip(
-                            selected = selectedSessionType == null,
-                            onClick = { selectedSessionType = null },
-                            label = { Text("Both") }
-                        )
-                        FilterChip(
-                            selected = selectedSessionType == true,
-                            onClick = {
-                                selectedSessionType = if (selectedSessionType == true) null else true
-                            },
-                            label = { Text("Match") }
-                        )
-                        FilterChip(
-                            selected = selectedSessionType == false,
-                            onClick = {
-                                selectedSessionType = if (selectedSessionType == false) null else false
-                            },
-                            label = { Text("Training") }
-                        )
-                    }
-
-                    // Opponent Filter (only show if there are opponent teams)
-                    if (opponentTeams.isNotEmpty()) {
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
                         Text(
-                            text = "Filter by Opponent",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = "${filteredActions.size} entries",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(top = 4.dp)
                         )
+                    }
+                }
+            }
 
+            // Filter section
+            if (showFilters) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // "All" opponents chip
-                            FilterChip(
-                                selected = selectedOpponentTeamId == null,
-                                onClick = { selectedOpponentTeamId = null },
-                                label = { Text("All") }
+                            Text(
+                                text = "Filters",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
                             )
-
-                            // Opponent team dropdown
-                            ExposedDropdownMenuBox(
-                                expanded = opponentTeamDropdownExpanded,
-                                onExpandedChange = { opponentTeamDropdownExpanded = it },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                OutlinedTextField(
-                                    value = if (selectedOpponentTeamId != null) {
-                                        opponentTeams.find { it.id == selectedOpponentTeamId }?.name ?: "Select Team"
-                                    } else {
-                                        "Select Team"
-                                    },
-                                    onValueChange = { },
-                                    readOnly = true,
-                                    label = { Text("Opponent") },
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = opponentTeamDropdownExpanded) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .menuAnchor()
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = opponentTeamDropdownExpanded,
-                                    onDismissRequest = { opponentTeamDropdownExpanded = false }
-                                ) {
-                                    opponentTeams.forEach { team ->
-                                        DropdownMenuItem(
-                                            text = { Text(team.name) },
-                                            onClick = {
-                                                selectedOpponentTeamId = team.id
-                                                opponentTeamDropdownExpanded = false
-                                            }
-                                        )
+                            if (hasActiveFilters) {
+                                TextButton(
+                                    onClick = {
+                                        selectedActionType = null
+                                        selectedSessionType = null
+                                        selectedOpponentTeamId = null
+                                        selectedPlayerId = null
+                                        selectedTeamId = null
                                     }
+                                ) {
+                                    Text("Clear All")
                                 }
                             }
                         }
-                    }
 
-                    // Player Filter (only show if there are players)
-                    if (players.isNotEmpty()) {
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
+                        // Action Type Filter
                         Text(
-                            text = "Filter by Player",
+                            text = "Action Type",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             FilterChip(
-                                selected = selectedPlayerId == null,
-                                onClick = { selectedPlayerId = null },
+                                selected = selectedActionType == null,
+                                onClick = { selectedActionType = null },
                                 label = { Text("All") }
                             )
-
-                            players.take(2).forEach { player ->
+                            ActionType.all().forEach { type ->
                                 FilterChip(
-                                    selected = selectedPlayerId == player.id,
+                                    selected = selectedActionType == type,
                                     onClick = {
-                                        selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
+                                        selectedActionType = if (selectedActionType == type) null else type
                                     },
-                                    label = { Text(player.getDisplayName()) }
+                                    label = { Text(type.displayName()) }
                                 )
                             }
                         }
 
-                        // Show remaining players if more than 2
-                        if (players.size > 2) {
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                        // Session Type Filter
+                        Text(
+                            text = "Session Type",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            FilterChip(
+                                selected = selectedSessionType == null,
+                                onClick = { selectedSessionType = null },
+                                label = { Text("Both") }
+                            )
+                            FilterChip(
+                                selected = selectedSessionType == true,
+                                onClick = {
+                                    selectedSessionType = if (selectedSessionType == true) null else true
+                                },
+                                label = { Text("Match") }
+                            )
+                            FilterChip(
+                                selected = selectedSessionType == false,
+                                onClick = {
+                                    selectedSessionType = if (selectedSessionType == false) null else false
+                                },
+                                label = { Text("Training") }
+                            )
+                        }
+
+                        // Opponent Filter (only show if there are opponent teams)
+                        if (opponentTeams.isNotEmpty()) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                            Text(
+                                text = "Filter by Opponent",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // "All" opponents chip
+                                FilterChip(
+                                    selected = selectedOpponentTeamId == null,
+                                    onClick = { selectedOpponentTeamId = null },
+                                    label = { Text("All") }
+                                )
+
+                                // Opponent team dropdown
+                                ExposedDropdownMenuBox(
+                                    expanded = opponentTeamDropdownExpanded,
+                                    onExpandedChange = { opponentTeamDropdownExpanded = it },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    OutlinedTextField(
+                                        value = if (selectedOpponentTeamId != null) {
+                                            opponentTeams.find { it.id == selectedOpponentTeamId }?.name ?: "Select Team"
+                                        } else {
+                                            "Select Team"
+                                        },
+                                        onValueChange = { },
+                                        readOnly = true,
+                                        label = { Text("Opponent") },
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = opponentTeamDropdownExpanded
+                                        ) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .menuAnchor()
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = opponentTeamDropdownExpanded,
+                                        onDismissRequest = { opponentTeamDropdownExpanded = false }
+                                    ) {
+                                        opponentTeams.forEach { team ->
+                                            DropdownMenuItem(
+                                                text = { Text(team.name) },
+                                                onClick = {
+                                                    selectedOpponentTeamId = team.id
+                                                    opponentTeamDropdownExpanded = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Player Filter (only show if there are players)
+                        if (players.isNotEmpty()) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                            Text(
+                                text = "Filter by Player",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                players.drop(2).chunked(2).forEach { chunk ->
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        modifier = Modifier.fillMaxWidth()
+                                FilterChip(
+                                    selected = selectedPlayerId == null,
+                                    onClick = { selectedPlayerId = null },
+                                    label = { Text("All") }
+                                )
+
+                                players.take(2).forEach { player ->
+                                    FilterChip(
+                                        selected = selectedPlayerId == player.id,
+                                        onClick = {
+                                            selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
+                                        },
+                                        label = { Text(player.getDisplayName()) }
+                                    )
+                                }
+                            }
+
+                            // Show remaining players if more than 2
+                            if (players.size > 2) {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    players.drop(2).chunked(2).forEach { chunk ->
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            chunk.forEach { player ->
+                                                FilterChip(
+                                                    selected = selectedPlayerId == player.id,
+                                                    onClick = {
+                                                        selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
+                                                    },
+                                                    label = { Text(player.getDisplayName()) }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Team Filter (only show if there are teams)
+                        if (teams.isNotEmpty()) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                            Text(
+                                text = "Filter by Team",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                FilterChip(
+                                    selected = selectedTeamId == null,
+                                    onClick = { selectedTeamId = null },
+                                    label = { Text("All") }
+                                )
+
+                                // Team dropdown
+                                ExposedDropdownMenuBox(
+                                    expanded = teamDropdownExpanded,
+                                    onExpandedChange = { teamDropdownExpanded = it },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    OutlinedTextField(
+                                        value = if (selectedTeamId != null) {
+                                            teams.find { it.id == selectedTeamId }?.getDisplayName() ?: "Select Team"
+                                        } else {
+                                            "Select Team"
+                                        },
+                                        onValueChange = { },
+                                        readOnly = true,
+                                        label = { Text("Team") },
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = teamDropdownExpanded
+                                        ) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .menuAnchor()
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = teamDropdownExpanded,
+                                        onDismissRequest = { teamDropdownExpanded = false }
                                     ) {
-                                        chunk.forEach { player ->
-                                            FilterChip(
-                                                selected = selectedPlayerId == player.id,
+                                        teams.forEach { team ->
+                                            DropdownMenuItem(
+                                                text = { Text(team.getDisplayName()) },
                                                 onClick = {
-                                                    selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
-                                                },
-                                                label = { Text(player.getDisplayName()) }
+                                                    selectedTeamId = team.id
+                                                    teamDropdownExpanded = false
+                                                }
                                             )
                                         }
                                     }
@@ -387,120 +457,60 @@ fun HistoryScreen(
                             }
                         }
                     }
+                }
+            }
 
-                    // Team Filter (only show if there are teams)
-                    if (teams.isNotEmpty()) {
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
+            // List of actions
+            if (filteredActions.isEmpty()) {
+                // Empty state
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.SportsScore,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(64.dp)
+                                .padding(bottom = 16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
                         Text(
-                            text = "Filter by Team",
-                            style = MaterialTheme.typography.labelLarge,
+                            text = if (hasActiveFilters) "No matching entries" else "No entries yet",
+                            style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            FilterChip(
-                                selected = selectedTeamId == null,
-                                onClick = { selectedTeamId = null },
-                                label = { Text("All") }
-                            )
-
-                            // Team dropdown
-                            ExposedDropdownMenuBox(
-                                expanded = teamDropdownExpanded,
-                                onExpandedChange = { teamDropdownExpanded = it },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                OutlinedTextField(
-                                    value = if (selectedTeamId != null) {
-                                        teams.find { it.id == selectedTeamId }?.getDisplayName() ?: "Select Team"
-                                    } else {
-                                        "Select Team"
-                                    },
-                                    onValueChange = { },
-                                    readOnly = true,
-                                    label = { Text("Team") },
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = teamDropdownExpanded) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .menuAnchor()
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = teamDropdownExpanded,
-                                    onDismissRequest = { teamDropdownExpanded = false }
-                                ) {
-                                    teams.forEach { team ->
-                                        DropdownMenuItem(
-                                            text = { Text(team.getDisplayName()) },
-                                            onClick = {
-                                                selectedTeamId = team.id
-                                                teamDropdownExpanded = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                        Text(
+                            text = if (hasActiveFilters) "Try adjusting your filters" else "Start tracking offensive actions!",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(filteredActions, key = { it.id }) { action ->
+                        ActionEntryCard(
+                            action = action,
+                            viewModel = viewModel,
+                            teams = teams,
+                            matches = matches,
+                            onEditClick = { actionToEdit = action },
+                            onDeleteClick = { actionToDelete = action }
+                        )
                     }
                 }
             }
-        }
-
-        // List of actions
-        if (filteredActions.isEmpty()) {
-            // Empty state
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.SportsScore,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(64.dp)
-                            .padding(bottom = 16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
-                    Text(
-                        text = if (hasActiveFilters) "No matching entries" else "No entries yet",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = if (hasActiveFilters) "Try adjusting your filters" else "Start tracking offensive actions!",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(filteredActions, key = { it.id }) { action ->
-                    ActionEntryCard(
-                        action = action,
-                        viewModel = viewModel,
-                        teams = teams,
-                        matches = matches,
-                        onEditClick = { actionToEdit = action },
-                        onDeleteClick = { actionToDelete = action }
-                    )
-                }
-            }
-        }
         }
     }
 
@@ -601,13 +611,29 @@ private fun ActionEntryCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Action count and type
+                // Action count and type (or just action type for time-tracking)
                 Text(
-                    text = "${action.actionCount} ${action.getActionTypeEnum().displayName()}${if (action.actionCount != 1) "s" else ""}",
+                    text = if (action.getActionTypeEnum().isTimeTracking()) {
+                        // For time-tracking, just show the action type
+                        action.getActionTypeEnum().displayName()
+                    } else {
+                        // For scoring actions, show count + type
+                        "${action.actionCount} ${action.getActionTypeEnum().displayName()}${if (action.actionCount != 1) "s" else ""}"
+                    },
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
                 )
+
+                // Show time for time-tracking actions
+                if (action.getActionTypeEnum().isTimeTracking()) {
+                    Text(
+                        text = "at ${action.getFormattedTime()}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
 
                 // Session type and action type badges
                 Row(

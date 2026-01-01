@@ -60,7 +60,14 @@ fun ChartScreen(
         }.distinctBy { it.id }
     }
 
-    val actions = remember(allActions, selectedActionType, selectedSessionType, selectedOpponentTeamId, selectedPlayerId, selectedTeamId) {
+    val actions = remember(
+        allActions,
+        selectedActionType,
+        selectedSessionType,
+        selectedOpponentTeamId,
+        selectedPlayerId,
+        selectedTeamId
+    ) {
         if (selectedActionType == null) {
             emptyList()
         } else {
@@ -84,15 +91,27 @@ fun ChartScreen(
         }
     }
 
-    val totalCount = remember(actions) {
-        actions.sumOf { it.actionCount }
+    val totalCount = remember(actions, selectedActionType, matches) {
+        if (selectedActionType?.isTimeTracking() == true) {
+            // Calculate total play time across all matches
+            actions.filter { it.matchId.isNotBlank() }
+                .groupBy { it.matchId }
+                .mapNotNull { (matchId, matchActions) ->
+                    val match = matches.find { it.id == matchId }
+                    val playerId = matchActions.firstOrNull()?.playerId ?: return@mapNotNull null
+                    match?.calculatePlayTime(matchActions, playerId)
+                }
+                .sum()
+        } else {
+            actions.sumOf { it.actionCount }
+        }
     }
 
     // Check if any filters are active
     val hasActiveFilters = selectedSessionType != null ||
-                          selectedOpponentTeamId != null ||
-                          selectedPlayerId != null ||
-                          selectedTeamId != null
+        selectedOpponentTeamId != null ||
+        selectedPlayerId != null ||
+        selectedTeamId != null
 
     Column(
         modifier = modifier
@@ -148,190 +167,66 @@ fun ChartScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                // Action Type Filter
-                Text(
-                    text = "Select Action Type",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Individual action type filters (no "All" option)
-                    ActionType.all().forEach { type ->
-                        FilterChip(
-                            selected = selectedActionType == type,
-                            onClick = { selectedActionType = type },
-                            label = { Text(type.displayName()) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Session Type Filter
-                Text(
-                    text = "Filter by Session Type",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilterChip(
-                        selected = selectedSessionType == null,
-                        onClick = { selectedSessionType = null },
-                        label = { Text("Both") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    FilterChip(
-                        selected = selectedSessionType == true,
-                        onClick = { selectedSessionType = true },
-                        label = { Text("Match") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    FilterChip(
-                        selected = selectedSessionType == false,
-                        onClick = { selectedSessionType = false },
-                        label = { Text("Training") },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Opponent Team Filter
-                Text(
-                    text = "Filter by Opponent",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // "All" opponents chip
-                    FilterChip(
-                        selected = selectedOpponentTeamId == null,
-                        onClick = { selectedOpponentTeamId = null },
-                        label = { Text("All") }
-                    )
-
-                    // Opponent team dropdown
-                    if (opponentTeams.isNotEmpty()) {
-                        ExposedDropdownMenuBox(
-                            expanded = opponentTeamDropdownExpanded,
-                            onExpandedChange = { opponentTeamDropdownExpanded = it },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            OutlinedTextField(
-                                value = if (selectedOpponentTeamId != null) {
-                                    opponentTeams.find { it.id == selectedOpponentTeamId }?.name ?: "Select Team"
-                                } else {
-                                    "Select Team"
-                                },
-                                onValueChange = { },
-                                readOnly = true,
-                                label = { Text("Opponent") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = opponentTeamDropdownExpanded) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor()
-                            )
-                            ExposedDropdownMenu(
-                                expanded = opponentTeamDropdownExpanded,
-                                onDismissRequest = { opponentTeamDropdownExpanded = false }
-                            ) {
-                                opponentTeams.forEach { team ->
-                                    DropdownMenuItem(
-                                        text = { Text(team.name) },
-                                        onClick = {
-                                            selectedOpponentTeamId = team.id
-                                            opponentTeamDropdownExpanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Player Filter (only show if there are players)
-                if (players.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(16.dp))
-
+                    // Action Type Filter
                     Text(
-                        text = "Filter by Player",
+                        text = "Select Action Type",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        FilterChip(
-                            selected = selectedPlayerId == null,
-                            onClick = { selectedPlayerId = null },
-                            label = { Text("All") }
-                        )
-
-                        players.take(3).forEach { player ->
+                        // Individual action type filters (no "All" option)
+                        ActionType.all().forEach { type ->
                             FilterChip(
-                                selected = selectedPlayerId == player.id,
-                                onClick = {
-                                    selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
-                                },
-                                label = { Text(player.getDisplayName()) }
+                                selected = selectedActionType == type,
+                                onClick = { selectedActionType = type },
+                                label = { Text(type.displayName()) },
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
 
-                    if (players.size > 3) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        var showAllPlayers by remember { mutableStateOf(false) }
-
-                        if (showAllPlayers) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                players.drop(3).forEach { player ->
-                                    FilterChip(
-                                        selected = selectedPlayerId == player.id,
-                                        onClick = {
-                                            selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
-                                        },
-                                        label = { Text(player.getDisplayName()) }
-                                    )
-                                }
-                            }
-                            TextButton(onClick = { showAllPlayers = false }) {
-                                Text("Show Less")
-                            }
-                        } else {
-                            TextButton(onClick = { showAllPlayers = true }) {
-                                Text("Show More (${players.size - 3} more)")
-                            }
-                        }
-                    }
-                }
-
-                // Team Filter (only show if there are teams)
-                if (teams.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // Session Type Filter
                     Text(
-                        text = "Filter by Team",
+                        text = "Filter by Session Type",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = selectedSessionType == null,
+                            onClick = { selectedSessionType = null },
+                            label = { Text("Both") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = selectedSessionType == true,
+                            onClick = { selectedSessionType = true },
+                            label = { Text("Match") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = selectedSessionType == false,
+                            onClick = { selectedSessionType = false },
+                            label = { Text("Training") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Opponent Team Filter
+                    Text(
+                        text = "Filter by Opponent",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
@@ -341,49 +236,181 @@ fun ChartScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // "All" opponents chip
                         FilterChip(
-                            selected = selectedTeamId == null,
-                            onClick = { selectedTeamId = null },
+                            selected = selectedOpponentTeamId == null,
+                            onClick = { selectedOpponentTeamId = null },
                             label = { Text("All") }
                         )
 
-                        // Team dropdown
-                        ExposedDropdownMenuBox(
-                            expanded = playerTeamDropdownExpanded,
-                            onExpandedChange = { playerTeamDropdownExpanded = it },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            OutlinedTextField(
-                                value = if (selectedTeamId != null) {
-                                    teams.find { it.id == selectedTeamId }?.getDisplayName() ?: "Select Team"
-                                } else {
-                                    "Select Team"
-                                },
-                                onValueChange = { },
-                                readOnly = true,
-                                label = { Text("Team") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = playerTeamDropdownExpanded) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor()
-                            )
-                            ExposedDropdownMenu(
-                                expanded = playerTeamDropdownExpanded,
-                                onDismissRequest = { playerTeamDropdownExpanded = false }
+                        // Opponent team dropdown
+                        if (opponentTeams.isNotEmpty()) {
+                            ExposedDropdownMenuBox(
+                                expanded = opponentTeamDropdownExpanded,
+                                onExpandedChange = { opponentTeamDropdownExpanded = it },
+                                modifier = Modifier.weight(1f)
                             ) {
-                                teams.forEach { team ->
-                                    DropdownMenuItem(
-                                        text = { Text(team.getDisplayName()) },
-                                        onClick = {
-                                            selectedTeamId = team.id
-                                            playerTeamDropdownExpanded = false
-                                        }
-                                    )
+                                OutlinedTextField(
+                                    value = if (selectedOpponentTeamId != null) {
+                                        opponentTeams.find { it.id == selectedOpponentTeamId }?.name ?: "Select Team"
+                                    } else {
+                                        "Select Team"
+                                    },
+                                    onValueChange = { },
+                                    readOnly = true,
+                                    label = { Text("Opponent") },
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = opponentTeamDropdownExpanded
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = opponentTeamDropdownExpanded,
+                                    onDismissRequest = { opponentTeamDropdownExpanded = false }
+                                ) {
+                                    opponentTeams.forEach { team ->
+                                        DropdownMenuItem(
+                                            text = { Text(team.name) },
+                                            onClick = {
+                                                selectedOpponentTeamId = team.id
+                                                opponentTeamDropdownExpanded = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                }
+
+                    // Player Filter (only show if there are players)
+                    if (players.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Filter by Player",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FilterChip(
+                                selected = selectedPlayerId == null,
+                                onClick = { selectedPlayerId = null },
+                                label = { Text("All") }
+                            )
+
+                            players.take(3).forEach { player ->
+                                FilterChip(
+                                    selected = selectedPlayerId == player.id,
+                                    onClick = {
+                                        selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
+                                    },
+                                    label = { Text(player.getDisplayName()) }
+                                )
+                            }
+                        }
+
+                        if (players.size > 3) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            var showAllPlayers by remember { mutableStateOf(false) }
+
+                            if (showAllPlayers) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    players.drop(3).forEach { player ->
+                                        FilterChip(
+                                            selected = selectedPlayerId == player.id,
+                                            onClick = {
+                                                selectedPlayerId = if (selectedPlayerId == player.id) null else player.id
+                                            },
+                                            label = { Text(player.getDisplayName()) }
+                                        )
+                                    }
+                                }
+                                TextButton(onClick = { showAllPlayers = false }) {
+                                    Text("Show Less")
+                                }
+                            } else {
+                                TextButton(onClick = { showAllPlayers = true }) {
+                                    Text("Show More (${players.size - 3} more)")
+                                }
+                            }
+                        }
+                    }
+
+                    // Team Filter (only show if there are teams)
+                    if (teams.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Filter by Team",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FilterChip(
+                                selected = selectedTeamId == null,
+                                onClick = { selectedTeamId = null },
+                                label = { Text("All") }
+                            )
+
+                            // Team dropdown
+                            ExposedDropdownMenuBox(
+                                expanded = playerTeamDropdownExpanded,
+                                onExpandedChange = { playerTeamDropdownExpanded = it },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                OutlinedTextField(
+                                    value = if (selectedTeamId != null) {
+                                        teams.find { it.id == selectedTeamId }?.getDisplayName() ?: "Select Team"
+                                    } else {
+                                        "Select Team"
+                                    },
+                                    onValueChange = { },
+                                    readOnly = true,
+                                    label = { Text("Team") },
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = playerTeamDropdownExpanded
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = playerTeamDropdownExpanded,
+                                    onDismissRequest = { playerTeamDropdownExpanded = false }
+                                ) {
+                                    teams.forEach { team ->
+                                        DropdownMenuItem(
+                                            text = { Text(team.getDisplayName()) },
+                                            onClick = {
+                                                selectedTeamId = team.id
+                                                playerTeamDropdownExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     // Clear All Filters Button
                     if (hasActiveFilters) {
@@ -419,22 +446,49 @@ fun ChartScreen(
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                StatisticItem(
-                    label = "Total Actions",
-                    value = "${totalCount ?: 0}"
-                )
-                StatisticItem(
-                    label = "Sessions",
-                    value = "${actions.size}"
-                )
-                StatisticItem(
-                    label = "Average",
-                    value = if (actions.isNotEmpty()) {
-                        String.format(java.util.Locale.US, "%.1f", (totalCount ?: 0).toFloat() / actions.size)
-                    } else {
-                        "0"
-                    }
-                )
+                if (selectedActionType?.isTimeTracking() == true) {
+                    // Statistics for time-tracking actions
+                    val uniqueDates = actions
+                        .filter { it.matchId.isNotBlank() }
+                        .map { it.getLocalDateTime().toLocalDate() }
+                        .distinct()
+                        .size
+
+                    StatisticItem(
+                        label = "Total Play Time",
+                        value = "$totalCount min"
+                    )
+                    StatisticItem(
+                        label = "Days",
+                        value = "$uniqueDates"
+                    )
+                    StatisticItem(
+                        label = "Avg per Day",
+                        value = if (uniqueDates > 0) {
+                            String.format(java.util.Locale.US, "%.1f min", totalCount.toFloat() / uniqueDates)
+                        } else {
+                            "0 min"
+                        }
+                    )
+                } else {
+                    // Statistics for scoring actions
+                    StatisticItem(
+                        label = "Total Actions",
+                        value = "$totalCount"
+                    )
+                    StatisticItem(
+                        label = "Sessions",
+                        value = "${actions.size}"
+                    )
+                    StatisticItem(
+                        label = "Average",
+                        value = if (actions.isNotEmpty()) {
+                            String.format(java.util.Locale.US, "%.1f", totalCount.toFloat() / actions.size)
+                        } else {
+                            "0"
+                        }
+                    )
+                }
             }
         }
 
@@ -489,7 +543,11 @@ fun ChartScreen(
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
-                    ActionProgressChart(actions = actions)
+                    ActionProgressChart(
+                        actions = actions,
+                        actionType = selectedActionType,
+                        matches = matches
+                    )
                 }
             }
 
@@ -512,10 +570,17 @@ fun ChartScreen(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
-                        text = "• Each point represents a training or match session\n" +
-                            "• The Y-axis shows the number of offensive actions\n" +
-                            "• The X-axis shows the date of each session\n" +
-                            "• Track improvement trends over time",
+                        text = if (selectedActionType?.isTimeTracking() == true) {
+                            "• Each point represents average play time per day\n" +
+                                "• The Y-axis shows play time in minutes\n" +
+                                "• The X-axis shows the date\n" +
+                                "• If multiple matches occur on the same day, the average is shown"
+                        } else {
+                            "• Each point represents a training or match session\n" +
+                                "• The Y-axis shows the number of offensive actions\n" +
+                                "• The X-axis shows the date of each session\n" +
+                                "• Track improvement trends over time"
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -552,20 +617,51 @@ private fun StatisticItem(
 }
 
 /**
- * Line chart component showing action count over time.
+ * Line chart component showing action count over time, or play time for time-tracking actions.
  */
 @Composable
 private fun ActionProgressChart(
     actions: List<SoccerAction>,
+    actionType: ActionType?,
+    matches: List<anaware.soccer.tracker.data.Match>,
     modifier: Modifier = Modifier
 ) {
     // Create chart entries
-    val chartEntries = remember(actions) {
-        actions.mapIndexed { index, action ->
-            FloatEntry(
-                x = index.toFloat(),
-                y = action.actionCount.toFloat()
-            )
+    val chartEntries = remember(actions, actionType, matches) {
+        if (actionType?.isTimeTracking() == true) {
+            // For time-tracking actions, group by date and calculate average play time per day
+            val dateToMatches = actions
+                .filter { it.matchId.isNotBlank() }
+                .groupBy { it.getLocalDateTime().toLocalDate() }
+                .mapValues { (_, actionsForDate) ->
+                    // Group by match within the date
+                    actionsForDate.groupBy { it.matchId }
+                        .mapNotNull { (matchId, matchActions) ->
+                            val match = matches.find { it.id == matchId }
+                            val playerId = matchActions.firstOrNull()?.playerId ?: return@mapNotNull null
+                            match?.calculatePlayTime(matchActions, playerId)
+                        }
+                        .filter { it > 0 }
+                }
+                .filter { it.value.isNotEmpty() }
+                .toSortedMap()
+
+            // Calculate average play time per day
+            dateToMatches.entries.mapIndexed { index, (_, playTimes) ->
+                val averagePlayTime = playTimes.average().toFloat()
+                FloatEntry(
+                    x = index.toFloat(),
+                    y = averagePlayTime
+                )
+            }
+        } else {
+            // For scoring actions, show action count
+            actions.mapIndexed { index, action ->
+                FloatEntry(
+                    x = index.toFloat(),
+                    y = action.actionCount.toFloat()
+                )
+            }
         }
     }
 
@@ -574,17 +670,38 @@ private fun ActionProgressChart(
     }
 
     // Format dates for X-axis
-    val dateFormatter = remember(actions) {
-        AxisValueFormatter<AxisPosition.Horizontal.Bottom> { value, _ ->
-            val index = value.toInt()
-            if (index in actions.indices) {
-                val dateTime = actions[index].getLocalDateTime()
-                dateTime.format(DateTimeFormatter.ofPattern("MM/dd"))
-            } else {
-                ""
+    val dateFormatter = remember(actions, actionType, matches) {
+        if (actionType?.isTimeTracking() == true) {
+            // For time-tracking, we need to map index to dates from grouped data
+            val dates = actions
+                .filter { it.matchId.isNotBlank() }
+                .groupBy { it.getLocalDateTime().toLocalDate() }
+                .keys
+                .sorted()
+
+            AxisValueFormatter<AxisPosition.Horizontal.Bottom> { value, _ ->
+                val index = value.toInt()
+                if (index in dates.indices) {
+                    dates.elementAt(index).format(DateTimeFormatter.ofPattern("MM/dd"))
+                } else {
+                    ""
+                }
+            }
+        } else {
+            // For scoring actions, use individual action dates
+            AxisValueFormatter<AxisPosition.Horizontal.Bottom> { value, _ ->
+                val index = value.toInt()
+                if (index in actions.indices) {
+                    val dateTime = actions[index].getLocalDateTime()
+                    dateTime.format(DateTimeFormatter.ofPattern("MM/dd"))
+                } else {
+                    ""
+                }
             }
         }
     }
+
+    val axisTitle = if (actionType?.isTimeTracking() == true) "Play Time (min)" else "Actions"
 
     ProvideChartStyle {
         Chart(
@@ -593,7 +710,7 @@ private fun ActionProgressChart(
             ),
             chartModelProducer = chartEntryModelProducer,
             startAxis = rememberStartAxis(
-                title = "Actions",
+                title = axisTitle,
                 titleComponent = null
             ),
             bottomAxis = rememberBottomAxis(

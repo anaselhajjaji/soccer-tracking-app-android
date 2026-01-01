@@ -31,7 +31,7 @@ import java.time.format.DateTimeFormatter
 fun MatchManagementScreen(
     viewModel: SoccerViewModel,
     onNavigateBack: () -> Unit,
-    onSetFabAction: ((()-> Unit) -> Unit)? = null,
+    onSetFabAction: ((() -> Unit) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -156,7 +156,9 @@ fun MatchManagementScreen(
             onDismissRequest = { deletingMatch = null },
             title = { Text("Delete Match") },
             text = {
-                Text("Are you sure you want to delete the match \"$matchName\"? This will clear the match reference from all associated actions.")
+                Text(
+                    "Are you sure you want to delete the match \"$matchName\"? This will clear the match reference from all associated actions."
+                )
             },
             confirmButton = {
                 TextButton(
@@ -521,7 +523,9 @@ private fun MatchDialog(
     // Date picker dialog
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+            initialSelectedDateMillis = selectedDate.atStartOfDay(
+                java.time.ZoneId.systemDefault()
+            ).toInstant().toEpochMilli()
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },

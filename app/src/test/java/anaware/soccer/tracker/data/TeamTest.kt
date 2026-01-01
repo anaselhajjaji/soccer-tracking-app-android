@@ -116,7 +116,7 @@ class TeamTest {
             "#FF00FF", // Magenta
             "#00FFFF", // Cyan
             "#FFFFFF", // White
-            "#000000"  // Black
+            "#000000" // Black
         )
 
         colors.forEach { color ->
