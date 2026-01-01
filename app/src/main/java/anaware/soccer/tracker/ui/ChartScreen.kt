@@ -678,39 +678,54 @@ private fun ActionProgressChart(
     // Create chart entries
     val chartEntries = remember(actions, showPlayTime, matches) {
         if (showPlayTime) {
-            // For time-tracking actions, group by date and calculate play time per day
+            // For time-tracking actions, calculate play times and organize by date
             // Handle both match and training sessions
-            val dateToPlayTimes = actions
-                .groupBy { it.getLocalDateTime().toLocalDate() }
-                .mapValues { (_, actionsForDate) ->
-                    // Separate match and training actions
-                    val matchActions = actionsForDate.filter { it.matchId.isNotBlank() }
-                    val trainingActions = actionsForDate.filter { it.matchId.isBlank() }
 
-                    // Calculate match play times
-                    val matchPlayTimes = matchActions
-                        .groupBy { it.matchId }
-                        .mapNotNull { (matchId, actions) ->
-                            val match = matches.find { it.id == matchId }
-                            val playerId = actions.firstOrNull()?.playerId ?: return@mapNotNull null
-                            match?.calculatePlayTime(actions, playerId)
-                        }
-                        .filter { it > 0 }
+            // Separate match and training actions
+            val matchActions = actions.filter { it.matchId.isNotBlank() }
+            val trainingActions = actions.filter { it.matchId.isBlank() }
 
-                    // Calculate training play times (group by player since no match)
-                    val trainingPlayTimes = trainingActions
-                        .groupBy { it.playerId }
-                        .mapNotNull { (playerId, actions) ->
-                            if (playerId.isBlank()) return@mapNotNull null
-                            SoccerAction.calculatePlayTime(actions)
-                        }
-                        .filter { it > 0 }
-
-                    // Combine both match and training play times
-                    matchPlayTimes + trainingPlayTimes
+            // Calculate play time for each match (pass ALL actions for each match)
+            val matchPlayTimesByDate = matchActions
+                .groupBy { it.matchId }
+                .mapNotNull { (matchId, matchActionsForMatch) ->
+                    val match = matches.find { it.id == matchId }
+                    val playerId = matchActionsForMatch.firstOrNull()?.playerId ?: return@mapNotNull null
+                    val playTime = match?.calculatePlayTime(actions, playerId) // Pass ALL actions, not just for this date
+                    if (playTime != null && playTime > 0) {
+                        // Get the date from any action in this match
+                        val date = matchActionsForMatch.first().getLocalDateTime().toLocalDate()
+                        date to playTime
+                    } else {
+                        null
+                    }
                 }
-                .filter { it.value.isNotEmpty() }
-                .toSortedMap()
+                .groupBy { it.first }
+                .mapValues { (_, datePlayTimePairs) -> datePlayTimePairs.map { it.second } }
+
+            // Calculate play time for each training session (group by player and date)
+            val trainingPlayTimesByDate = trainingActions
+                .groupBy { it.getLocalDateTime().toLocalDate() to it.playerId }
+                .mapNotNull { (datePlayerPair, actions) ->
+                    val (date, playerId) = datePlayerPair
+                    if (playerId.isBlank()) return@mapNotNull null
+                    val playTime = SoccerAction.calculatePlayTime(actions)
+                    if (playTime != null && playTime > 0) {
+                        date to playTime
+                    } else {
+                        null
+                    }
+                }
+                .groupBy { it.first }
+                .mapValues { (_, datePlayTimePairs) -> datePlayTimePairs.map { it.second } }
+
+            // Combine match and training play times by date
+            val allDates = (matchPlayTimesByDate.keys + trainingPlayTimesByDate.keys).toSortedSet()
+            val dateToPlayTimes = allDates.associateWith { date ->
+                val matchTimes = matchPlayTimesByDate[date] ?: emptyList()
+                val trainingTimes = trainingPlayTimesByDate[date] ?: emptyList()
+                matchTimes + trainingTimes
+            }.filter { it.value.isNotEmpty() }
 
             // Calculate average play time per day
             dateToPlayTimes.entries.mapIndexed { index, (_, playTimes) ->
@@ -738,17 +753,23 @@ private fun ActionProgressChart(
     // Format dates for X-axis
     val dateFormatter = remember(actions, showPlayTime, matches) {
         if (showPlayTime) {
-            // For time-tracking, we need to map index to dates from grouped data
-            // Include both match and training actions
-            val dates = actions
-                .groupBy { it.getLocalDateTime().toLocalDate() }
+            // For time-tracking, get unique dates from all play time sessions
+            val matchActions = actions.filter { it.matchId.isNotBlank() }
+            val trainingActions = actions.filter { it.matchId.isBlank() }
+
+            val matchDates = matchActions.map { it.getLocalDateTime().toLocalDate() }.toSet()
+            val trainingDates = trainingActions
+                .groupBy { it.getLocalDateTime().toLocalDate() to it.playerId }
                 .keys
-                .sorted()
+                .map { it.first }
+                .toSet()
+
+            val dates = (matchDates + trainingDates).sorted()
 
             AxisValueFormatter<AxisPosition.Horizontal.Bottom> { value, _ ->
                 val index = value.toInt()
                 if (index in dates.indices) {
-                    dates.elementAt(index).format(DateTimeFormatter.ofPattern("MM/dd"))
+                    dates[index].format(DateTimeFormatter.ofPattern("MM/dd"))
                 } else {
                     ""
                 }

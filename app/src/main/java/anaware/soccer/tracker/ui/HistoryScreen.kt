@@ -230,6 +230,8 @@ fun HistoryScreen(
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+
+                        // First row: All + scoring actions (3 chips)
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -239,7 +241,25 @@ fun HistoryScreen(
                                 onClick = { selectedActionType = null },
                                 label = { Text("All") }
                             )
-                            ActionType.all().forEach { type ->
+                            ActionType.scoringActions().forEach { type ->
+                                FilterChip(
+                                    selected = selectedActionType == type,
+                                    onClick = {
+                                        selectedActionType = if (selectedActionType == type) null else type
+                                    },
+                                    label = { Text(type.displayName()) }
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Second row: Time-tracking actions (2 chips)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            ActionType.timeTrackingActions().forEach { type ->
                                 FilterChip(
                                     selected = selectedActionType == type,
                                     onClick = {
