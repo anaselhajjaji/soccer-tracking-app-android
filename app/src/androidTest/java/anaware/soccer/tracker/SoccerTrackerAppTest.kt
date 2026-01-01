@@ -329,8 +329,8 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithContentDescription("Toggle Filters").performClick()
         composeTestRule.waitForIdle()
 
-        // Filter panel should now be visible with "Select Action Type" label
-        composeTestRule.onNodeWithText("Select Action Type").assertExists()
+        // Filter panel should now be visible with session type filter label
+        composeTestRule.onNodeWithText("Filter by Session Type").assertExists()
     }
 
     @Test
