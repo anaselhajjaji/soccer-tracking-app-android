@@ -271,7 +271,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
 **Test configuration:**
 
 - **Device:** MediumPhone.arm (virtual), Android 11 (API 30)
-- **Tests:** 34 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
+- **Tests:** 42 UI tests covering navigation, input controls, validation, filters, management screens, and screen interactions
 - **Location:** `app/src/androidTest/java/anaware/soccer/tracker/`
 - **Test Coverage:**
   - 9 navigation and basic UI tests
@@ -281,6 +281,7 @@ UI tests run automatically on Firebase Test Lab when pushing to `main` or `maste
   - 4 progress chart enhancement tests
   - 5 validation and UI polish tests
   - 4 v1.3.0 navigation improvement tests (back button, context-aware FAB, pull-to-refresh, menu ordering)
+  - 8 v1.4.0 Play Time feature tests (time-tracking filters, action types, chart display)
 
 ### Running Tests Locally
 
@@ -609,7 +610,7 @@ The app now tracks player participation time during matches with PLAYER_IN and P
   - Progress chart displays "Play Time (min)" for time-tracking
   - Statistics card shows "Total Play Time", "Days", "Avg per Day"
 - **Zero Breaking Changes**: Fully backward compatible with existing data
-- **Comprehensive Testing**: All 227+ tests passing with 13 new time calculation tests
+- **Comprehensive Testing**: All 493 tests passing (480 unit tests + 13 time calculation tests in 2 variants)
 
 **Technical Implementation:**
 

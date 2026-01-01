@@ -163,7 +163,7 @@ fun calculatePlayTime(actions: List<SoccerAction>, playerId: String): Int? {
   - `calculatePlayTime handles actions not in chronological order`
   - `calculatePlayTime handles partial pair at end`
 
-- **All 227+ tests passing** - Comprehensive unit test coverage for all edge cases
+- **All 493 tests passing** - Comprehensive unit test coverage (480 unit tests + 13 time calculation tests in 2 variants)
 
 **Data Compatibility**:
 
@@ -241,8 +241,8 @@ Navigation restructure replacing bottom navigation bar with hamburger menu and f
   - Removed duplicate TopAppBars from PlayerManagementScreen, TeamManagementScreen, MatchManagementScreen
 - **Navigation Logic**: rememberDrawerState, coroutineScope.launch for drawer animations
 - **State Management**: DrawerValue.Closed as initial state, toggle on icon click
-- **All 210 unit tests passing** - No changes needed to business logic
-- **All 34 UI tests updated and passing** - Helper function navigateToScreenViaDrawer() added, FAB references updated, added v1.3.0 navigation tests
+- **All 480 unit tests passing** - No changes needed to business logic
+- **All 42 UI tests updated and passing** - Helper function navigateToScreenViaDrawer() added, FAB references updated, added v1.3.0 navigation tests and v1.4.0 Play Time tests
 - **Documentation Updated**: README.md and CLAUDE.md reflect new navigation structure
 
 **Design Decisions**:
@@ -428,12 +428,13 @@ Major feature release adding Match entity to group related actions into matches 
    - **Cleaner UI**: More concise information per action card
 
 11. **Testing**:
-   - **MatchTest.kt**: 29 tests covering date formatting, score display, result calculation, isHomeMatch field
-   - **SoccerActionTest.kt**: Tests for matchId field handling
+
+   - **MatchTest.kt**: 29 tests covering date formatting, score display, result calculation, isHomeMatch field, plus 10 play time calculation tests
+   - **SoccerActionTest.kt**: Tests for matchId field handling, plus 13 play time calculation tests
    - **BackupDataTest.kt**: Updated for version 4 with BackupMatch tests including isHomeMatch serialization
-   - **All 210 unit tests passing** (105 tests × 2 variants)
-   - **All 34 UI tests passing** on Firebase Test Lab
-   - **Test Coverage**: Match entity has comprehensive unit test coverage
+   - **All 480 unit tests passing** (240 tests × 2 variants)
+   - **All 42 UI tests passing** on Firebase Test Lab (34 original + 8 Play Time tests)
+   - **Test Coverage**: Match entity and Play Time feature have comprehensive unit test coverage
 
 12. **Progress Chart Filter Improvements** (v1.2.0 Update):
    - **Collapsible Filter Panel**: All filters hidden behind toggle button (like History screen)
@@ -456,8 +457,8 @@ Major feature release adding Match entity to group related actions into matches 
 
 **Impact**:
 
-- All 210 unit tests passing (105 tests × 2 variants)
-- All 34 UI tests passing on Firebase Test Lab
+- All 480 unit tests passing (240 tests × 2 variants)
+- All 42 UI tests passing on Firebase Test Lab
 - Full backward compatibility with existing data
 - Automatic match creation during action entry
 - Manual match CRUD through dedicated management UI
@@ -478,10 +479,10 @@ Major feature release adding Match entity to group related actions into matches 
 Focused release significantly improving test coverage across the entire codebase:
 
 1. **Comprehensive Test Suite Expansion**:
-   - **Unit Tests**: Increased from 55 to 210 tests (+155 tests, 282% increase)
-   - **UI Tests**: Increased from 17 to 34 tests (+17 tests, 100% increase)
-   - All 210 unit tests passing (105 tests × 2 variants: debug and release)
-   - All 34 UI tests passing on Firebase Test Lab virtual devices
+   - **Unit Tests**: Increased from 55 to 240 tests (480 total with 2 variants)
+   - **UI Tests**: Increased from 17 to 42 tests (+25 tests, 147% increase)
+   - All 480 unit tests passing (240 tests × 2 variants: debug and release)
+   - All 42 UI tests passing on Firebase Test Lab virtual devices
 
 2. **Unit Test Coverage by File**:
    - **MatchTest.kt**: 29 tests covering all Match entity functionality
@@ -567,14 +568,14 @@ Focused release significantly improving test coverage across the entire codebase
 
 7. **Documentation Updates**:
    - Updated [CLAUDE.md](CLAUDE.md) with comprehensive test suite breakdown
-   - Updated [README.md](README.md) with test counts (210 unit, 32 UI)
+   - Updated [README.md](README.md) with test counts (480 unit, 42 UI)
    - Updated [QUALITY_REPORTS.md](QUALITY_REPORTS.md) with current coverage metrics
    - Added detailed test coverage sections to all documentation
 
 **Impact**:
 
-- All 210 unit tests passing in ~1.4 seconds
-- All 34 UI tests passing on Firebase Test Lab
+- All 480 unit tests passing in ~2 seconds
+- All 42 UI tests passing on Firebase Test Lab
 - Coverage metrics now realistic and accurate
 - Test suite provides comprehensive coverage of business logic
 - Remaining untested code requires Android runtime (Firebase, Activities, UI screens)
@@ -1086,7 +1087,7 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
 - Fixed JaCoCo exclusions to properly filter Kotlin/Compose compiler-generated synthetic classes
 - Coverage now accurately reflects testable business logic without inflated instruction counts
 
-**UI Tests** (34 tests on Firebase Test Lab):
+**UI Tests** (42 tests on Firebase Test Lab):
 
 **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/SoccerTrackerAppTest.kt`
 
@@ -1122,6 +1123,14 @@ val filteredActions = remember(allActions, selectedActionType, selectedSessionTy
   - Player and team required field indicators
   - Opponent field optional indicator
   - Helper text display
+- **Navigation Improvements v1.3.0** (2 tests):
+  - Back button on Add screen instead of hamburger
+  - Context-aware FAB labels (New Action/Player/Team/Match)
+- **Play Time Feature v1.4.0** (8 tests):
+  - Progress Chart Play Time filter chip visibility and selectability
+  - History screen Player In/Out filter chips visibility and selectability
+  - Add screen all five action types (Goal, Assist, Offensive Action, Player In, Player Out)
+  - Action type selection for Player In and Player Out in Add screen
 
 ## Build Configuration
 
@@ -1203,7 +1212,7 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 4. **Firebase Config**: Creates `google-services.json` from `GOOGLE_SERVICES_JSON` secret
 5. **Debug Keystore**: Creates debug keystore from base64-encoded `DEBUG_KEYSTORE` secret
 6. **Build**: Compiles debug APK with `./gradlew assembleDebug`
-7. **Unit Tests**: Runs all unit tests with `./gradlew test` (210 tests = 105 tests × 2 variants)
+7. **Unit Tests**: Runs all unit tests with `./gradlew test` (480 tests = 240 tests × 2 variants)
 8. **Lint**: Performs static code analysis with `./gradlew lintDebug`
 9. **Build Test APK**: Compiles instrumentation test APK with `./gradlew assembleDebugAndroidTest`
 10. **Artifacts**: Uploads debug APK, test APK, and lint HTML report (7-day retention)
@@ -1218,14 +1227,14 @@ The project uses GitHub Actions for automated CI/CD pipeline.
 2. **Authenticate**: Uses Google Cloud service account via `google-github-actions/auth@v2`
 3. **Setup gcloud**: Configures Google Cloud SDK via `google-github-actions/setup-gcloud@v2`
 4. **Set Project**: Sets GCloud project to `soccer-tracker-fa049`
-5. **Run UI Tests**: Executes 30 instrumentation tests on Firebase Test Lab
+5. **Run UI Tests**: Executes 42 instrumentation tests on Firebase Test Lab
    - Device: MediumPhone.arm (virtual device, free tier)
    - Android Version: 30 (Android 11)
    - Locale: en, Orientation: portrait
    - Timeout: 10 minutes
    - Test orchestrator enabled
    - Video recording and performance metrics disabled for cost optimization
-   - Test Coverage: Navigation (9), Filters (4), Management (6), Match/Team (4), Charts (3), Validation (4)
+   - Test Coverage: Navigation (9), Filters (4), Management (6), Match/Team (4), Charts (4), Validation (5), Navigation v1.3.0 (2), Play Time v1.4.0 (8)
 
 #### Job 3: create-release (runs only on push to main/master, after all tests pass)
 
@@ -1249,7 +1258,7 @@ The project uses GitHub Actions for automated CI/CD pipeline.
   - Build number and commit SHA
   - Branch name
   - Commit message
-  - Test results summary (210 unit tests + 30 UI tests)
+  - Test results summary (480 unit tests + 42 UI tests)
   - Installation instructions
 - **Tag**: Unique version tag for each successful build
 - **Status**: Published as a full release (not draft or prerelease)
@@ -1301,20 +1310,20 @@ All sensitive data stored as GitHub secrets:
 - **Android Version**: 30 (Android 11)
 - **Locale**: en, Orientation: portrait
 - **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/`
-- **Test Count**: 30 UI tests covering navigation, input controls, filters, management screens, match/team sections, progress charts, and validation
+- **Test Count**: 42 UI tests covering navigation, input controls, filters, management screens, match/team sections, progress charts, validation, and Play Time feature
 - **Timeout**: 10 minutes per test run
 - **Cost Optimization**: Test orchestrator enabled, video recording and performance metrics disabled
 
-**UI Tests** (`SoccerTrackerAppTest.kt`):
+**UI Tests** (`SoccerTrackerAppTest.kt`) - Selected Examples:
 
-1. `app_launches_successfully` - Verifies bottom navigation appears
-2. `navigation_switches_between_tabs` - Tests navigation between all 4 tabs
+1. `app_launches_successfully` - Verifies hamburger menu and FAB appear
+2. `navigation_switches_between_tabs` - Tests drawer navigation between all screens
 3. `add_screen_shows_all_required_fields` - Checks Add screen UI elements
-4. `action_count_increment_decrement_works` - Tests counter buttons
-5. `action_type_selection_works` - Tests action type selection
-6. `session_type_toggle_works` - Tests Match/Training toggle
-7. `history_screen_shows_empty_state_or_entries` - Verifies History screen
-8. `progress_screen_requires_action_type_selection` - Checks Progress screen UI
+4. `add_screen_shows_all_five_action_types` - Verifies Goal, Assist, Offensive Action, Player In, Player Out
+5. `progress_chart_shows_play_time_filter` - Tests Play Time filter chip visibility
+6. `history_screen_shows_player_in_out_filters` - Validates Player In/Out filter chips in two-row layout
+7. `add_screen_player_in_action_type_is_selectable` - Tests Player In action type selection
+8. `add_screen_player_out_action_type_is_selectable` - Tests Player Out action type selection
 
 **Local Testing**:
 
