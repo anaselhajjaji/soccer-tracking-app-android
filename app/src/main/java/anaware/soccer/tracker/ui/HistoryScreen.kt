@@ -238,7 +238,7 @@ fun HistoryScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        // First row: All + scoring actions (3 chips)
+                        // First row: All chip
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -248,20 +248,30 @@ fun HistoryScreen(
                                 onClick = { selectedActionType = null },
                                 label = { Text("All") }
                             )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Second row: Scoring actions (4 chips)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             ActionType.scoringActions().forEach { type ->
                                 FilterChip(
                                     selected = selectedActionType == type,
                                     onClick = {
                                         selectedActionType = if (selectedActionType == type) null else type
                                     },
-                                    label = { Text(type.displayName()) }
+                                    label = { Text(type.displayName()) },
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Second row: Time-tracking actions (2 chips)
+                        // Third row: Time-tracking actions (2 chips)
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -272,9 +282,12 @@ fun HistoryScreen(
                                     onClick = {
                                         selectedActionType = if (selectedActionType == type) null else type
                                     },
-                                    label = { Text(type.displayName()) }
+                                    label = { Text(type.displayName()) },
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
+                            // Add empty space to balance the row (2 items vs 4 in second row)
+                            Spacer(modifier = Modifier.weight(2f))
                         }
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
@@ -844,11 +857,12 @@ private fun EditActionDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
+                // First row: Scoring actions
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 ) {
-                    ActionType.all().forEach { type ->
+                    ActionType.scoringActions().forEach { type ->
                         FilterChip(
                             selected = actionType == type,
                             onClick = { actionType = type },
@@ -856,6 +870,22 @@ private fun EditActionDialog(
                             modifier = Modifier.weight(1f)
                         )
                     }
+                }
+                // Second row: Time-tracking actions
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    ActionType.timeTrackingActions().forEach { type ->
+                        FilterChip(
+                            selected = actionType == type,
+                            onClick = { actionType = type },
+                            label = { Text(type.displayName(), style = MaterialTheme.typography.labelSmall) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Add empty space to balance the row (2 items vs 4 in first row)
+                    Spacer(modifier = Modifier.weight(2f))
                 }
 
                 // Session Type

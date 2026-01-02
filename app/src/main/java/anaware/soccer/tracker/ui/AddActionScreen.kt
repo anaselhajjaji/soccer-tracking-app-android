@@ -279,11 +279,12 @@ fun AddActionScreen(
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
+                // First row: Scoring actions
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    ActionType.all().forEach { type ->
+                    ActionType.scoringActions().forEach { type ->
                         FilterChip(
                             selected = actionType == type,
                             onClick = { actionType = type },
@@ -291,6 +292,25 @@ fun AddActionScreen(
                             modifier = Modifier.weight(1f)
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Second row: Time-tracking actions
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ActionType.timeTrackingActions().forEach { type ->
+                        FilterChip(
+                            selected = actionType == type,
+                            onClick = { actionType = type },
+                            label = { Text(type.displayName()) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Add empty space to balance the row (2 items vs 4 in first row)
+                    Spacer(modifier = Modifier.weight(2f))
                 }
             }
         }

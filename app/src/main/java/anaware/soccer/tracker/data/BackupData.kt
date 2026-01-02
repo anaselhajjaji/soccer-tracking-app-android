@@ -167,7 +167,9 @@ data class BackupMatch(
     val league: String = "",
     val playerScore: Int = -1,
     val opponentScore: Int = -1,
-    val isHomeMatch: Boolean = true
+    @get:com.google.firebase.firestore.PropertyName("homeMatch")
+    @set:com.google.firebase.firestore.PropertyName("homeMatch")
+    var isHomeMatch: Boolean = true
 ) {
     /**
      * Converts this backup match to a Match entity.
