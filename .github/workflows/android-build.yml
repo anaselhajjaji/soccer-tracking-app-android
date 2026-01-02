@@ -101,6 +101,8 @@ jobs:
   firebase-test-lab:
     needs: build-and-test
     runs-on: ubuntu-latest
+    # Only create releases on push to main/master, not on PRs
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
 
     steps:
     - name: Checkout code
@@ -160,7 +162,7 @@ jobs:
     - name: Generate release tag
       id: tag
       run: |
-        TAG="v1.4.0-build-${{ github.run_number }}"
+        TAG="v1.5.0-build-${{ github.run_number }}"
         echo "tag=$TAG" >> $GITHUB_OUTPUT
         echo "Generated tag: $TAG"
 

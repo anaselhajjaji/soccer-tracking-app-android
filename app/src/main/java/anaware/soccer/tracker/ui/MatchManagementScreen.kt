@@ -15,9 +15,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -557,8 +562,37 @@ private fun MatchDialog(
 /**
  * Helper function to get match name from team IDs.
  */
-private fun getMatchName(match: Match, teams: List<Team>): String {
+/**
+ * Generates match name with home team first and player's team underlined.
+ * Format: "Home Team vs Away Team" with player's team underlined.
+ */
+private fun getMatchName(match: Match, teams: List<Team>): AnnotatedString {
     val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
     val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
-    return "$playerTeam vs $opponentTeam"
+
+    // Determine home and away teams based on isHomeMatch
+    val homeTeam = if (match.isHomeMatch) playerTeam else opponentTeam
+    val awayTeam = if (match.isHomeMatch) opponentTeam else playerTeam
+
+    return buildAnnotatedString {
+        // Add home team (underline if it's the player's team)
+        if (match.isHomeMatch) {
+            withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                append(homeTeam)
+            }
+        } else {
+            append(homeTeam)
+        }
+
+        append(" vs ")
+
+        // Add away team (underline if it's the player's team)
+        if (!match.isHomeMatch) {
+            withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                append(awayTeam)
+            }
+        } else {
+            append(awayTeam)
+        }
+    }
 }

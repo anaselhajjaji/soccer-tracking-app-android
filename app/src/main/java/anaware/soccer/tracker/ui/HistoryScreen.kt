@@ -1,7 +1,9 @@
 package anaware.soccer.tracker.ui
 
 import anaware.soccer.tracker.data.ActionType
+import anaware.soccer.tracker.data.Match
 import anaware.soccer.tracker.data.SoccerAction
+import anaware.soccer.tracker.data.Team
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,7 +21,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -698,10 +705,8 @@ private fun ActionEntryCard(
                 if (action.matchId.isNotBlank()) {
                     val match = matches.find { it.id == action.matchId }
                     if (match != null) {
-                        val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
-                        val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
                         Text(
-                            text = "$playerTeam vs $opponentTeam",
+                            text = getMatchName(match, teams),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium,
@@ -998,6 +1003,41 @@ private fun EditActionDialog(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Generates match name with home team first and player's team underlined.
+ * Format: "Home Team vs Away Team" with player's team underlined.
+ */
+private fun getMatchName(match: Match, teams: List<Team>): AnnotatedString {
+    val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
+    val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
+
+    // Determine home and away teams based on isHomeMatch
+    val homeTeam = if (match.isHomeMatch) playerTeam else opponentTeam
+    val awayTeam = if (match.isHomeMatch) opponentTeam else playerTeam
+
+    return buildAnnotatedString {
+        // Add home team (underline if it's the player's team)
+        if (match.isHomeMatch) {
+            withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                append(homeTeam)
+            }
+        } else {
+            append(homeTeam)
+        }
+
+        append(" vs ")
+
+        // Add away team (underline if it's the player's team)
+        if (!match.isHomeMatch) {
+            withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                append(awayTeam)
+            }
+        } else {
+            append(awayTeam)
         }
     }
 }

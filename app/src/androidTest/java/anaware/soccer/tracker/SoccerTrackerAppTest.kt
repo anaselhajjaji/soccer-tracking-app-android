@@ -202,6 +202,7 @@ class SoccerTrackerAppTest {
         composeTestRule.onNodeWithText("Goal").assertExists()
         composeTestRule.onNodeWithText("Assist").assertExists()
         composeTestRule.onNodeWithText("Offensive Action").assertExists()
+        composeTestRule.onNodeWithText("Duel Win").assertExists()
     }
 
     @Test
@@ -279,7 +280,7 @@ class SoccerTrackerAppTest {
     // Opponent field replaced by match selection UI with "Opponent Team *" in Create New Match dialog
 
     @Test
-    fun action_type_section_shows_all_three_types() {
+    fun action_type_section_shows_all_scoring_types() {
         // Navigate to Add screen via FAB
         composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
@@ -287,10 +288,11 @@ class SoccerTrackerAppTest {
         // Check for Action Type section
         composeTestRule.onNodeWithText("Action Type").assertExists()
 
-        // Verify all three action types are available
+        // Verify all scoring action types are available
         composeTestRule.onNodeWithText("Goal").assertExists()
         composeTestRule.onNodeWithText("Assist").assertExists()
         composeTestRule.onNodeWithText("Offensive Action").assertExists()
+        composeTestRule.onNodeWithText("Duel Win").assertExists()
     }
 
     @Test
@@ -411,8 +413,8 @@ class SoccerTrackerAppTest {
 
         // Statistics card should show labels
         composeTestRule.onNodeWithText("Total Actions").assertExists()
-        composeTestRule.onNodeWithText("Sessions").assertExists()
-        composeTestRule.onNodeWithText("Average").assertExists()
+        composeTestRule.onNodeWithText("Days").assertExists()
+        composeTestRule.onNodeWithText("Avg per Day").assertExists()
     }
 
     // Note: progress_chart_shows_about_section test removed in v1.2.0
@@ -568,15 +570,16 @@ class SoccerTrackerAppTest {
     }
 
     @Test
-    fun add_screen_shows_all_five_action_types() {
+    fun add_screen_shows_all_six_action_types() {
         // Navigate to Add screen via FAB
         composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
 
-        // Verify all five action types are available
+        // Verify all six action types are available
         composeTestRule.onNodeWithText("Goal").assertExists()
         composeTestRule.onNodeWithText("Assist").assertExists()
         composeTestRule.onNodeWithText("Offensive Action").assertExists()
+        composeTestRule.onNodeWithText("Duel Win").assertExists()
         composeTestRule.onNodeWithText("Player In").assertExists()
         composeTestRule.onNodeWithText("Player Out").assertExists()
     }

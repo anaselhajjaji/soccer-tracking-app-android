@@ -520,18 +520,23 @@ fun ChartScreen(
                     )
                 } else {
                     // Statistics for scoring actions
+                    val uniqueDates = actions
+                        .map { it.getLocalDateTime().toLocalDate() }
+                        .distinct()
+                        .size
+
                     StatisticItem(
                         label = "Total Actions",
                         value = "$totalCount"
                     )
                     StatisticItem(
-                        label = "Sessions",
-                        value = "${actions.size}"
+                        label = "Days",
+                        value = "$uniqueDates"
                     )
                     StatisticItem(
-                        label = "Average",
-                        value = if (actions.isNotEmpty()) {
-                            String.format(java.util.Locale.US, "%.1f", totalCount.toFloat() / actions.size)
+                        label = "Avg per Day",
+                        value = if (uniqueDates > 0) {
+                            String.format(java.util.Locale.US, "%.1f", totalCount.toFloat() / uniqueDates)
                         } else {
                             "0"
                         }
@@ -624,10 +629,10 @@ fun ChartScreen(
                                 "• The X-axis shows the date\n" +
                                 "• If multiple matches occur on the same day, the average is shown"
                         } else {
-                            "• Each point represents a training or match session\n" +
-                                "• The Y-axis shows the number of offensive actions\n" +
-                                "• The X-axis shows the date of each session\n" +
-                                "• Track improvement trends over time"
+                            "• Each point represents average action count per day\n" +
+                                "• The Y-axis shows the number of actions\n" +
+                                "• The X-axis shows the date\n" +
+                                "• If multiple sessions occur on the same day, the average is shown"
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -736,11 +741,16 @@ private fun ActionProgressChart(
                 )
             }
         } else {
-            // For scoring actions, show action count
-            actions.mapIndexed { index, action ->
+            // For scoring actions, calculate average action count per day
+            val actionsByDate = actions.groupBy { it.getLocalDateTime().toLocalDate() }
+            val sortedDates = actionsByDate.keys.sorted()
+
+            sortedDates.mapIndexed { index, date ->
+                val actionsForDate = actionsByDate[date] ?: emptyList()
+                val averageCount = actionsForDate.map { it.actionCount }.average().toFloat()
                 FloatEntry(
                     x = index.toFloat(),
-                    y = action.actionCount.toFloat()
+                    y = averageCount
                 )
             }
         }
@@ -775,12 +785,16 @@ private fun ActionProgressChart(
                 }
             }
         } else {
-            // For scoring actions, use individual action dates
+            // For scoring actions, use unique dates (averaged per day)
+            val uniqueDates = actions
+                .map { it.getLocalDateTime().toLocalDate() }
+                .distinct()
+                .sorted()
+
             AxisValueFormatter<AxisPosition.Horizontal.Bottom> { value, _ ->
                 val index = value.toInt()
-                if (index in actions.indices) {
-                    val dateTime = actions[index].getLocalDateTime()
-                    dateTime.format(DateTimeFormatter.ofPattern("MM/dd"))
+                if (index in uniqueDates.indices) {
+                    uniqueDates[index].format(DateTimeFormatter.ofPattern("MM/dd"))
                 } else {
                     ""
                 }

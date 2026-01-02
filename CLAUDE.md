@@ -14,6 +14,115 @@ This document contains detailed context and notes from the AI-assisted developme
 
 ## Development History
 
+### v1.5.0 - Duel Win Action Type + Chart Per-Day Averaging (January 2026)
+
+#### Part 1: Duel Win Action Type
+
+Added new "Duel Win" action type to track defensive actions and duels won by players:
+
+**New Action Type**:
+
+1. **DUEL_WIN**: Records when a player wins a duel/tackle/defensive action
+
+**Implementation Details**:
+
+- **File Modified**: [ActionType.kt](app/src/main/java/anaware/soccer/tracker/data/ActionType.kt)
+  - Added DUEL_WIN enum value between OFFENSIVE_ACTION and PLAYER_IN
+  - Added "Duel Win" display name
+  - Included in scoringActions() helper (4 scoring types total)
+  - Not a time-tracking action (isTimeTracking() returns false)
+
+**UI Integration**:
+
+1. **Add Entry Screen**: DUEL_WIN automatically appears in action type selection (uses ActionType.all())
+2. **History Screen**: DUEL_WIN automatically appears in filter chips first row (uses ActionType.scoringActions())
+3. **Progress Chart**: DUEL_WIN automatically appears in filter options (uses ActionType.scoringActions())
+
+**Testing**:
+
+- **File Modified**: [ActionTypeTest.kt](app/src/test/java/anaware/soccer/tracker/data/ActionTypeTest.kt)
+  - Updated `all returns six action types` test (was 5, now 6)
+  - Updated `scoringActions returns four types` test (was 3, now 4)
+  - Updated `displayName returns correct names` test
+  - Updated `enum valueOf works correctly` test
+  - Updated `isTimeTracking returns false for scoring actions` test
+  - Updated `timeTrackingActions returns two types` test
+
+- **File Modified**: [SoccerTrackerAppTest.kt](app/src/androidTest/java/anaware/soccer/tracker/SoccerTrackerAppTest.kt)
+  - Updated `action_type_section_shows_all_scoring_types` test
+  - Updated `add_screen_shows_all_six_action_types` test
+  - Updated `progress_screen_requires_action_type_selection` test
+
+**Data Compatibility**:
+
+- **Backward Compatible**: No database schema changes required
+- **Firebase**: DUEL_WIN stored as string "DUEL_WIN" in Firestore
+- **Existing Data**: All existing actions remain unchanged
+
+**Benefits**:
+
+- ✅ Track defensive actions and duels won
+- ✅ Complete performance tracking (offensive + defensive metrics)
+- ✅ Filter and chart duel wins separately or combined
+- ✅ Zero breaking changes to existing functionality
+- ✅ Seamless integration using existing helper methods
+
+#### Part 2: Chart Per-Day Averaging for Scoring Actions
+
+Extended per-day averaging behavior from Play Time to all scoring actions (Goals, Assists, Offensive Actions, Duel Wins):
+
+**User Request**:
+
+User wanted tournament scenarios handled properly: when a player has multiple matches on same day, show average performance per day instead of separate points for each session.
+
+**Implementation Details**:
+
+- **File Modified**: [ChartScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/ChartScreen.kt)
+  - **Chart Data Calculation** (lines 738-751):
+    - Groups scoring actions by date using `groupBy { it.getLocalDateTime().toLocalDate() }`
+    - Calculates average action count per day: `actionsForDate.map { it.actionCount }.average()`
+    - Mirrors the Play Time averaging behavior for consistency
+  - **Statistics Card** (lines 521-544):
+    - Changed "Sessions" to "Days" (counts unique dates)
+    - Changed "Average" to "Avg per Day" (total actions ÷ days)
+    - Matches Play Time statistics display pattern
+  - **X-Axis Date Formatting** (lines 787-802):
+    - Uses unique dates instead of individual action dates
+    - Groups actions by date and displays one point per day
+    - Sorted chronologically with MM/dd format
+  - **Chart Legend** (lines 625-636):
+    - Updated text: "Each point represents average action count per day"
+    - Added clarification: "If multiple sessions occur on the same day, the average is shown"
+
+**Benefits**:
+
+- ✅ **Tournament Support**: Handles multiple matches per day correctly
+- ✅ **Consistent Behavior**: All action types (scoring + time-tracking) use same averaging approach
+- ✅ **Clearer Insights**: Statistics show "Days" and "Avg per Day" instead of "Sessions" and "Average"
+- ✅ **Better Trend Visualization**: One point per day makes patterns easier to identify
+- ✅ **User-Requested Feature**: Directly addresses tournament scenario use case
+- ✅ **Zero Breaking Changes**: Existing data and functionality remain unchanged
+
+**Chart Display Behavior**:
+
+| Action Type | Chart Point Represents | Y-Axis Label | Statistics Card |
+|-------------|------------------------|--------------|-----------------|
+| Goals | Average goals per day | Actions | Total Actions, Days, Avg per Day |
+| Assists | Average assists per day | Actions | Total Actions, Days, Avg per Day |
+| Offensive Actions | Average actions per day | Actions | Total Actions, Days, Avg per Day |
+| Duel Wins | Average duel wins per day | Actions | Total Actions, Days, Avg per Day |
+| Player In / Out | Average play time per day | Play Time (min) | Total Play Time, Days, Avg per Day |
+
+**Example Scenario**:
+
+Tournament day with 3 matches:
+- Match 1: 2 goals at 9:00 AM
+- Match 2: 1 goal at 12:00 PM
+- Match 3: 3 goals at 3:00 PM
+
+**Before**: Chart showed 3 separate points (2, 1, 3) for same date
+**After**: Chart shows 1 point with average (2 goals/day average)
+
 ### v1.4.0 - Player Time Tracking (January 2026)
 
 Added time-tracking functionality to monitor player play time during matches:

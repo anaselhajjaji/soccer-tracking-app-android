@@ -7,6 +7,7 @@ enum class ActionType {
     GOAL,
     ASSIST,
     OFFENSIVE_ACTION,
+    DUEL_WIN,
     PLAYER_IN,
     PLAYER_OUT;
 
@@ -17,6 +18,7 @@ enum class ActionType {
         GOAL -> "Goal"
         ASSIST -> "Assist"
         OFFENSIVE_ACTION -> "Offensive Action"
+        DUEL_WIN -> "Duel Win"
         PLAYER_IN -> "Player In"
         PLAYER_OUT -> "Player Out"
     }
@@ -33,12 +35,12 @@ enum class ActionType {
         /**
          * Returns all action types as a list.
          */
-        fun all(): List<ActionType> = listOf(GOAL, ASSIST, OFFENSIVE_ACTION, PLAYER_IN, PLAYER_OUT)
+        fun all(): List<ActionType> = listOf(GOAL, ASSIST, OFFENSIVE_ACTION, DUEL_WIN, PLAYER_IN, PLAYER_OUT)
 
         /**
          * Returns scoring action types (for filtering).
          */
-        fun scoringActions(): List<ActionType> = listOf(GOAL, ASSIST, OFFENSIVE_ACTION)
+        fun scoringActions(): List<ActionType> = listOf(GOAL, ASSIST, OFFENSIVE_ACTION, DUEL_WIN)
 
         /**
          * Returns time-tracking action types.

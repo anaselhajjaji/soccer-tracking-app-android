@@ -10,6 +10,7 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Goals
   - Assists
   - General Offensive Actions
+  - Duel Wins
   - Player In (time-tracking)
   - Player Out (time-tracking)
 - **Multi-Player Support**: Track multiple players with detailed profiles
@@ -49,7 +50,7 @@ An Android app for tracking your son's offensive actions during soccer matches a
   - Player and team information
   - Edit and delete buttons for each entry
   - **Advanced Filters**: Quickly find specific entries
-    - Filter by action type: All, Goals, Assists, or Offensive Actions
+    - Filter by action type: All, Goals, Assists, Offensive Actions, or Duel Wins
     - Filter by session type: Both, Match, or Training
     - Filter by opponent: All, No Opponent, or specific opponent
     - Filter by player: All, Legacy Entries, or specific player
@@ -58,17 +59,21 @@ An Android app for tracking your son's offensive actions during soccer matches a
     - Visual filter button highlights when filters are active
     - One-tap "Clear All" to reset filters
 - **Advanced Progress Chart**: Interactive chart with advanced filtering
-  - Select action type: Goals, Assists, Offensive Actions, Player In, or Player Out (required)
+  - Select action type: Goals, Assists, Offensive Actions, Duel Wins, Player In, or Player Out (required)
   - Filter by session type: Both, Match, or Training
   - Filter by opponent: All or specific opponent
   - Filter by player: All or specific player
   - Filter by team: All or specific team
   - Combine filters for specific insights (e.g., "Goals by Player #10 vs Team A in Matches")
+  - **Per-Day Averaging**: All action types show average per day when multiple sessions occur on same date
   - **Time-Tracking Display**: When Player In or Player Out selected:
     - Chart shows average play time per day (when multiple matches on same date)
     - Y-axis labeled "Play Time (min)"
     - Statistics card shows "Total Play Time", "Days", and "Avg per Day"
-  - Statistics card showing total actions, session count, and averages (for scoring actions)
+  - **Scoring Actions Display**: When Goals, Assists, Offensive Actions, or Duel Wins selected:
+    - Chart shows average action count per day (when multiple sessions on same date)
+    - Y-axis labeled "Actions"
+    - Statistics card shows "Total Actions", "Days", and "Avg per Day"
 
 ### Data Management
 
@@ -363,13 +368,21 @@ See [QUALITY_REPORTS.md](QUALITY_REPORTS.md) for detailed information about each
 ### Viewing Progress
 
 1. Tap the "Progress" tab at the bottom
-2. **Select an action type** (required): Goal, Assist, or Offensive Action
+2. **Select an action type** (required): Goals, Assists, Offensive Actions, Duel Wins, Player In, or Player Out
 3. Optionally apply additional filters:
    - **Session Type Filter**: Both, Match, or Training
    - **Opponent Filter**: All opponents, or select a specific opponent
-4. View the line chart showing action counts over time for the selected filters
-5. See statistics: Total Actions, Number of Sessions, and Average per session
-6. Each point on the chart represents one session
+   - **Player Filter**: All players, or select a specific player
+   - **Team Filter**: All teams, or select a specific team
+4. View the line chart showing performance over time for the selected filters
+5. **For Scoring Actions** (Goals, Assists, Offensive Actions, Duel Wins):
+   - Each point represents the average action count per day
+   - Statistics show: Total Actions, Days, and Avg per Day
+   - When multiple sessions occur on the same day, the average is displayed
+6. **For Time-Tracking Actions** (Player In, Player Out):
+   - Each point represents the average play time per day
+   - Statistics show: Total Play Time, Days, and Avg per Day
+   - When multiple matches occur on the same day, the average is displayed
 7. Use "Show More" to see additional opponents if you've faced many teams
 
 ### Account & Sync
@@ -589,9 +602,52 @@ For issues or questions:
 
 ## Version
 
-**v1.4.0** - Player Time Tracking (January 2026)
+**v1.5.0** - Duel Win Action Type + Chart Per-Day Averaging (January 2026)
 
 ### Latest Changes
+
+**Duel Win Tracking:**
+
+The app now includes a new action type for tracking defensive actions:
+
+- **New Action Type**: "Duel Win" for recording defensive actions and duels won
+- **Full Integration**: Available in Add Entry screen, History filters, and Progress Chart
+- **Filter Support**: Can filter history by Duel Win action type
+- **Chart Analytics**: View Duel Win metrics over time with session/opponent filtering
+- **Complete Tracking**: Track both offensive (Goals, Assists, Offensive Actions) and defensive (Duel Wins) metrics
+- **Zero Breaking Changes**: Fully backward compatible with existing data
+- **Comprehensive Testing**: All tests updated and passing (227 unit tests + 42 UI tests)
+
+**Technical Implementation:**
+
+- Added DUEL_WIN enum value to ActionType
+- Included in scoringActions() helper for automatic UI propagation
+- Updated 10 tests (7 unit tests + 3 UI tests)
+- No UI code changes required due to helper method architecture
+
+**Chart Per-Day Averaging:**
+
+All action types now display average performance per day in the Progress Chart:
+
+- **Consistent Behavior**: Both scoring actions and time-tracking now use per-day averaging
+- **Tournament Support**: When multiple sessions occur on same day, chart shows the average
+- **Scoring Actions**: Goals, Assists, Offensive Actions, and Duel Wins show average count per day
+- **Time-Tracking**: Player In/Out continues to show average play time per day
+- **Updated Statistics**: Card displays "Days" and "Avg per Day" for all action types
+- **Updated Chart Legend**: Clarifies that chart shows per-day averages
+- **Better Trend Analysis**: Easier to identify performance patterns over time
+
+**Technical Implementation:**
+
+- Modified ChartScreen.kt to group scoring actions by date
+- Calculates average action count for each day (matching Play Time behavior)
+- Updated X-axis formatter to display unique dates
+- Updated statistics card to show "Days" instead of "Sessions"
+- Updated chart legend to reflect per-day averaging
+
+---
+
+**v1.4.0** - Player Time Tracking (January 2026)
 
 **Player Time Tracking:**
 
@@ -825,7 +881,7 @@ The app now organizes actions into matches with automatic creation and complete 
 **v1.0.0** - Initial Release (December 2025)
 
 **Core Features:**
-- Action tracking with specific types (Goals, Assists, Offensive Actions)
+- Action tracking with specific types (Goals, Assists, Offensive Actions, Duel Wins)
 - Session type differentiation (Match/Training)
 - Opponent tracking with autocomplete
 - Custom date/time selection
