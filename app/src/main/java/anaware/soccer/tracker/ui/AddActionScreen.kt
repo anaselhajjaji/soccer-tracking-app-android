@@ -1,6 +1,8 @@
 package anaware.soccer.tracker.ui
 
 import anaware.soccer.tracker.data.ActionType
+import anaware.soccer.tracker.data.Match
+import anaware.soccer.tracker.data.Team
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,6 +18,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -272,11 +279,12 @@ fun AddActionScreen(
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
+                // First row: Scoring actions
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    ActionType.all().forEach { type ->
+                    ActionType.scoringActions().forEach { type ->
                         FilterChip(
                             selected = actionType == type,
                             onClick = { actionType = type },
@@ -284,6 +292,25 @@ fun AddActionScreen(
                             modifier = Modifier.weight(1f)
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Second row: Time-tracking actions
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ActionType.timeTrackingActions().forEach { type ->
+                        FilterChip(
+                            selected = actionType == type,
+                            onClick = { actionType = type },
+                            label = { Text(type.displayName()) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Add empty space to balance the row (2 items vs 4 in first row)
+                    Spacer(modifier = Modifier.weight(2f))
                 }
             }
         }
@@ -365,14 +392,15 @@ fun AddActionScreen(
                                     text = if (selectedMatchId.isNotEmpty()) {
                                         val match = viewModel.getMatchById(selectedMatchId)
                                         if (match != null) {
-                                            val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
-                                            val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
-                                            "$playerTeam vs $opponentTeam (${match.getFormattedDate()})"
+                                            buildAnnotatedString {
+                                                append(getMatchName(match, teams))
+                                                append(" (${match.getFormattedDate()})")
+                                            }
                                         } else {
-                                            "Select Match"
+                                            AnnotatedString("Select Match")
                                         }
                                     } else {
-                                        "Select Match"
+                                        AnnotatedString("Select Match")
                                     }
                                 )
                             }
@@ -384,12 +412,10 @@ fun AddActionScreen(
                             ) {
                                 // List existing matches (sorted by date, most recent first)
                                 matches.sortedByDescending { it.date }.forEach { match ->
-                                    val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
-                                    val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
                                     DropdownMenuItem(
                                         text = {
                                             Column {
-                                                Text("$playerTeam vs $opponentTeam")
+                                                Text(getMatchName(match, teams))
                                                 Text(
                                                     text = match.getFormattedDate(),
                                                     style = MaterialTheme.typography.bodySmall,
@@ -928,5 +954,40 @@ fun AddActionScreen(
                 TimePicker(state = timePickerState)
             }
         )
+    }
+}
+
+/**
+ * Generates match name with home team first and player's team underlined.
+ * Format: "Home Team vs Away Team" with player's team underlined.
+ */
+private fun getMatchName(match: Match, teams: List<Team>): AnnotatedString {
+    val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
+    val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
+
+    // Determine home and away teams based on isHomeMatch
+    val homeTeam = if (match.isHomeMatch) playerTeam else opponentTeam
+    val awayTeam = if (match.isHomeMatch) opponentTeam else playerTeam
+
+    return buildAnnotatedString {
+        // Add home team (underline if it's the player's team)
+        if (match.isHomeMatch) {
+            withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                append(homeTeam)
+            }
+        } else {
+            append(homeTeam)
+        }
+
+        append(" vs ")
+
+        // Add away team (underline if it's the player's team)
+        if (!match.isHomeMatch) {
+            withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                append(awayTeam)
+            }
+        } else {
+            append(awayTeam)
+        }
     }
 }

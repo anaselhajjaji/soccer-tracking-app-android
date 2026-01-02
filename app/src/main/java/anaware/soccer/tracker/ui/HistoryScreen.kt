@@ -1,7 +1,9 @@
 package anaware.soccer.tracker.ui
 
 import anaware.soccer.tracker.data.ActionType
+import anaware.soccer.tracker.data.Match
 import anaware.soccer.tracker.data.SoccerAction
+import anaware.soccer.tracker.data.Team
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,7 +21,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -231,7 +238,7 @@ fun HistoryScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        // First row: All + scoring actions (3 chips)
+                        // First row: All chip
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -241,20 +248,30 @@ fun HistoryScreen(
                                 onClick = { selectedActionType = null },
                                 label = { Text("All") }
                             )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Second row: Scoring actions (4 chips)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             ActionType.scoringActions().forEach { type ->
                                 FilterChip(
                                     selected = selectedActionType == type,
                                     onClick = {
                                         selectedActionType = if (selectedActionType == type) null else type
                                     },
-                                    label = { Text(type.displayName()) }
+                                    label = { Text(type.displayName()) },
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Second row: Time-tracking actions (2 chips)
+                        // Third row: Time-tracking actions (2 chips)
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -265,9 +282,12 @@ fun HistoryScreen(
                                     onClick = {
                                         selectedActionType = if (selectedActionType == type) null else type
                                     },
-                                    label = { Text(type.displayName()) }
+                                    label = { Text(type.displayName()) },
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
+                            // Add empty space to balance the row (2 items vs 4 in second row)
+                            Spacer(modifier = Modifier.weight(2f))
                         }
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
@@ -698,10 +718,8 @@ private fun ActionEntryCard(
                 if (action.matchId.isNotBlank()) {
                     val match = matches.find { it.id == action.matchId }
                     if (match != null) {
-                        val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
-                        val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
                         Text(
-                            text = "$playerTeam vs $opponentTeam",
+                            text = getMatchName(match, teams),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium,
@@ -839,11 +857,12 @@ private fun EditActionDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
+                // First row: Scoring actions
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 ) {
-                    ActionType.all().forEach { type ->
+                    ActionType.scoringActions().forEach { type ->
                         FilterChip(
                             selected = actionType == type,
                             onClick = { actionType = type },
@@ -851,6 +870,22 @@ private fun EditActionDialog(
                             modifier = Modifier.weight(1f)
                         )
                     }
+                }
+                // Second row: Time-tracking actions
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    ActionType.timeTrackingActions().forEach { type ->
+                        FilterChip(
+                            selected = actionType == type,
+                            onClick = { actionType = type },
+                            label = { Text(type.displayName(), style = MaterialTheme.typography.labelSmall) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Add empty space to balance the row (2 items vs 4 in first row)
+                    Spacer(modifier = Modifier.weight(2f))
                 }
 
                 // Session Type
@@ -998,6 +1033,41 @@ private fun EditActionDialog(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Generates match name with home team first and player's team underlined.
+ * Format: "Home Team vs Away Team" with player's team underlined.
+ */
+private fun getMatchName(match: Match, teams: List<Team>): AnnotatedString {
+    val playerTeam = teams.find { it.id == match.playerTeamId }?.name ?: "Unknown"
+    val opponentTeam = teams.find { it.id == match.opponentTeamId }?.name ?: "Unknown"
+
+    // Determine home and away teams based on isHomeMatch
+    val homeTeam = if (match.isHomeMatch) playerTeam else opponentTeam
+    val awayTeam = if (match.isHomeMatch) opponentTeam else playerTeam
+
+    return buildAnnotatedString {
+        // Add home team (underline if it's the player's team)
+        if (match.isHomeMatch) {
+            withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                append(homeTeam)
+            }
+        } else {
+            append(homeTeam)
+        }
+
+        append(" vs ")
+
+        // Add away team (underline if it's the player's team)
+        if (!match.isHomeMatch) {
+            withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                append(awayTeam)
+            }
+        } else {
+            append(awayTeam)
         }
     }
 }

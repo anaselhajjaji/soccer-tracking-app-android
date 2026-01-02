@@ -160,7 +160,7 @@ jobs:
     - name: Generate release tag
       id: tag
       run: |
-        TAG="v1.4.0-build-${{ github.run_number }}"
+        TAG="v1.5.0-build-${{ github.run_number }}"
         echo "tag=$TAG" >> $GITHUB_OUTPUT
         echo "Generated tag: $TAG"
 
@@ -181,7 +181,7 @@ jobs:
 
           ### Test Results
           ✅ All unit tests passed (227+ tests: 113+ tests × 2 variants)
-          ✅ All UI tests passed (34 tests)
+          ✅ All UI tests passed (44 tests)
           ✅ Lint checks passed
 
           ### Installation
