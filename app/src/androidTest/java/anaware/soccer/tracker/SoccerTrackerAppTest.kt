@@ -557,14 +557,24 @@ class SoccerTrackerAppTest {
     }
 
     @Test
-    fun history_screen_shows_player_in_out_filters() {
+    fun history_screen_shows_all_action_type_filters() {
         // Already on History screen (default starting screen)
 
         // Click filter button to reveal filters
         composeTestRule.onNodeWithContentDescription("Filter").performClick()
         composeTestRule.waitForIdle()
 
-        // Verify Player In and Player Out filter chips are visible in the second row
+        // Verify all action type filter chips are visible
+        // First row: "All" chip
+        composeTestRule.onNodeWithText("All").assertExists()
+
+        // Second row: Scoring actions
+        composeTestRule.onNodeWithText("Goal").assertExists()
+        composeTestRule.onNodeWithText("Assist").assertExists()
+        composeTestRule.onNodeWithText("Offensive Action").assertExists()
+        composeTestRule.onNodeWithText("Duel Win").assertExists()
+
+        // Third row: Time-tracking actions
         composeTestRule.onNodeWithText("Player In").assertExists()
         composeTestRule.onNodeWithText("Player Out").assertExists()
     }
@@ -660,5 +670,35 @@ class SoccerTrackerAppTest {
 
         // Verify Player Out action type is still visible (selected state)
         composeTestRule.onNodeWithText("Player Out").assertExists()
+    }
+
+    @Test
+    fun history_screen_duel_win_filter_is_selectable() {
+        // Already on History screen (default starting screen)
+
+        // Click filter button to reveal filters
+        composeTestRule.onNodeWithContentDescription("Filter").performClick()
+        composeTestRule.waitForIdle()
+
+        // Select Duel Win filter
+        composeTestRule.onNodeWithText("Duel Win").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify Duel Win chip is still visible (selected chips remain visible)
+        composeTestRule.onNodeWithText("Duel Win").assertExists()
+    }
+
+    @Test
+    fun add_screen_duel_win_action_type_is_selectable() {
+        // Navigate to Add screen via FAB
+        composeTestRule.onNodeWithText("New Action", useUnmergedTree = true).performClick()
+        composeTestRule.waitForIdle()
+
+        // Select Duel Win action type
+        composeTestRule.onNodeWithText("Duel Win").performClick()
+        composeTestRule.waitForIdle()
+
+        // Verify Duel Win action type is still visible (selected state)
+        composeTestRule.onNodeWithText("Duel Win").assertExists()
     }
 }

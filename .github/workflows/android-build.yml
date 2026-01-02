@@ -101,8 +101,6 @@ jobs:
   firebase-test-lab:
     needs: build-and-test
     runs-on: ubuntu-latest
-    # Only create releases on push to main/master, not on PRs
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
 
     steps:
     - name: Checkout code
@@ -183,7 +181,7 @@ jobs:
 
           ### Test Results
           ✅ All unit tests passed (227+ tests: 113+ tests × 2 variants)
-          ✅ All UI tests passed (34 tests)
+          ✅ All UI tests passed (44 tests)
           ✅ Lint checks passed
 
           ### Installation

@@ -123,6 +123,46 @@ Tournament day with 3 matches:
 **Before**: Chart showed 3 separate points (2, 1, 3) for same date
 **After**: Chart shows 1 point with average (2 goals/day average)
 
+#### Part 3: UI Improvements & Bug Fixes (January 2026)
+
+Fixed display issues and added comprehensive UI test coverage for v1.5.0 features:
+
+**Bug Fixes**:
+
+1. **Home/Away Match Display Bug** - Fixed matches always displaying as "Home" even when stored as away
+   - **Root Cause**: Firestore naming convention mismatch (`isHomeMatch` vs `homeMatch`)
+   - **File Modified**: [BackupData.kt](app/src/main/java/anaware/soccer/tracker/data/BackupData.kt:170-172)
+   - **Solution**: Added `@PropertyName("homeMatch")` annotations, changed from `val` to `var`
+
+2. **Action Type Button Display** - Fixed text wrapping/truncation in Add screen action type buttons
+   - **File Modified**: [AddActionScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/AddActionScreen.kt:282-314)
+   - **Solution**: Split into 2 rows (4 scoring + 2 time-tracking with spacer)
+
+3. **History Filter Missing Duel Win** - Fixed "Duel Win" not visible in History screen filters
+   - **File Modified**: [HistoryScreen.kt](app/src/main/java/anaware/soccer/tracker/ui/HistoryScreen.kt:234-291)
+   - **Solution**: Split filters into 3 rows ("All" + 4 scoring + 2 time-tracking)
+   - **Also Fixed**: Edit dialog action type layout (same 2-row pattern)
+
+**UI Enhancements**:
+
+1. **Match Name Display Format** - Show "Home Team vs Away Team" with player's team underlined
+   - **Files Modified**: MatchManagementScreen.kt, HistoryScreen.kt, AddActionScreen.kt
+   - **Implementation**: `getMatchName()` returns `AnnotatedString` with conditional underline based on `isHomeMatch`
+
+**Testing**:
+
+- **Added 2 new UI tests** (44 total, was 42):
+  - `history_screen_shows_all_action_type_filters` - Verifies all 6 action types display properly
+  - `history_screen_duel_win_filter_is_selectable` - Tests Duel Win filter selection
+  - `add_screen_duel_win_action_type_is_selectable` - Tests Duel Win in Add screen
+- **Updated test documentation** in README.md, CLAUDE.md, android-build.yml
+
+**Test Results**:
+
+- ✅ All 227 unit tests passing (113+ tests × 2 variants)
+- ✅ All 44 UI tests compile successfully
+- ✅ Debug and test APKs build successfully
+
 ### v1.4.0 - Player Time Tracking (January 2026)
 
 Added time-tracking functionality to monitor player play time during matches:
@@ -1419,7 +1459,7 @@ All sensitive data stored as GitHub secrets:
 - **Android Version**: 30 (Android 11)
 - **Locale**: en, Orientation: portrait
 - **Test Location**: `app/src/androidTest/java/anaware/soccer/tracker/`
-- **Test Count**: 42 UI tests covering navigation, input controls, filters, management screens, match/team sections, progress charts, validation, and Play Time feature
+- **Test Count**: 44 UI tests covering navigation, input controls, filters, management screens, match/team sections, progress charts, validation, Play Time feature, and Duel Win filters
 - **Timeout**: 10 minutes per test run
 - **Cost Optimization**: Test orchestrator enabled, video recording and performance metrics disabled
 
@@ -1428,11 +1468,11 @@ All sensitive data stored as GitHub secrets:
 1. `app_launches_successfully` - Verifies hamburger menu and FAB appear
 2. `navigation_switches_between_tabs` - Tests drawer navigation between all screens
 3. `add_screen_shows_all_required_fields` - Checks Add screen UI elements
-4. `add_screen_shows_all_five_action_types` - Verifies Goal, Assist, Offensive Action, Player In, Player Out
+4. `add_screen_shows_all_six_action_types` - Verifies all 6 action types including Duel Win
 5. `progress_chart_shows_play_time_filter` - Tests Play Time filter chip visibility
-6. `history_screen_shows_player_in_out_filters` - Validates Player In/Out filter chips in two-row layout
-7. `add_screen_player_in_action_type_is_selectable` - Tests Player In action type selection
-8. `add_screen_player_out_action_type_is_selectable` - Tests Player Out action type selection
+6. `history_screen_shows_all_action_type_filters` - Validates all filter chips in three-row layout
+7. `history_screen_duel_win_filter_is_selectable` - Tests Duel Win filter selection
+8. `add_screen_duel_win_action_type_is_selectable` - Tests Duel Win action type selection
 
 **Local Testing**:
 
